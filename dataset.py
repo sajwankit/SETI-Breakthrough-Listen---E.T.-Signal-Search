@@ -31,7 +31,7 @@ class SetiDataset:
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
-        if targets is not None:
+        if self.targets is not None:
             return{'images': torch.tensor(image, dtype = torch.float), 
                     'targets': torch.tensor(targets, dtype = torch.long)}
         else:

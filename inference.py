@@ -44,7 +44,7 @@ if __name__ == '__main__':
     def get_test_file_path(image_id):
             return f"{data_path}test/{image_id[0]}/{image_id}.npy"
 
-    inference_df = pd.read_csv(data_path+'sample_submission.csv')
+    inference_df = pd.read_csv(data_path+'sample_submission.csv')[:10]
     inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
 
     
