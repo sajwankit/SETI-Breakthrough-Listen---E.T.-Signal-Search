@@ -76,8 +76,8 @@ def train(data_loader, model, optimizer, device):
             print('Batch_number: '+str(batch_number)+' of '+str(len_data_loader)+', loss: '+str(loss)+', auc: '+str(auc)+'. Time elapsed: '+str((et-st)//60)+' minutes')
             progressDisp_step = progressDisp_step*2
 
-        final_targets.extend(targets)
-        final_outputs.extend(outputs)
+        final_targets.extend(targets.detach().cpu().numpy().tolist())
+        final_outputs.extend(outputs.detach().cpu().numpy().tolist())
     return final_outputs, final_targets, losses.avg
 
 
