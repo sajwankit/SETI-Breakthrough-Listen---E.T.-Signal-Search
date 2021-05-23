@@ -39,7 +39,7 @@ def train(data_loader, model, optimizer, device):
     final_targets = []
     final_outputs = []
 
-    len_data_loader = len(data_loader)
+#    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
     progressDisp_step = 1
     #go over every batch of data in data_loader
@@ -70,14 +70,14 @@ def train(data_loader, model, optimizer, device):
         losses.update(loss.item(), config.BATCH_SIZE)
         
         optimizer.step()
-
-        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
-            et = time.time()
-            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
-            progressDisp_step = progressDisp_step*2
+#
+#        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
+#            et = time.time()
+#            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
+#            progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_outputs.extend(outputs.detach().cpu().numpy().tolist())
+        final_outputs.extend(torch.sigmoid(outputs).detach().cpu().numpy().tolist())
     return final_outputs, final_targets, losses.avg
 
 
@@ -87,7 +87,7 @@ def evaluate(data_loader, model, device):
     losses = AverageMeter()
 
 
-    len_data_loader = len(data_loader)
+#    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
     progressDisp_step = 1
 
@@ -115,15 +115,15 @@ def evaluate(data_loader, model, device):
             losses.update(loss.item(), config.BATCH_SIZE)
 
             targets = targets.detach().cpu().numpy().tolist()
-            outputs = outputs.detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)
-
-            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
-                et = time.time()
-                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
-                progressDisp_step = progressDisp_step*2
+#
+#            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
+#                et = time.time()
+#                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
+#                progressDisp_step = progressDisp_step*2
 
     return final_outputs, final_targets, losses.avg
 
@@ -131,7 +131,7 @@ def evaluate(data_loader, model, device):
 def predict(data_loader, model, device):
     #this function does evaluation for one epoch
 
-    len_data_loader = len(data_loader)
+#    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
     progressDisp_step = 1
 
@@ -150,14 +150,14 @@ def predict(data_loader, model, device):
 
             #do forward step to generat prediction
             outputs = model(inputs)
-            outputs = outputs.detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
 
             final_outputs.extend(outputs)
 
-            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
-                et = time.time()
-                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
-                progressDisp_step = progressDisp_step*2
+#            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
+#                et = time.time()
+#                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
+#                progressDisp_step = progressDisp_step*2
 
     return final_outputs
 

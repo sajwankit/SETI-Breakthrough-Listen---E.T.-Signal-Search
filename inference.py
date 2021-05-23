@@ -21,24 +21,25 @@ if __name__ == '__main__':
 
     model = models.Model(pretrained = False, target_size = target_size)
     model.to(device)
-    states = [torch.load(config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth') for fold in range(4)]
+    states = [torch.load(f'config.OUTPUT_PATH{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
 
-#    def get_oof_df(state):
-#        df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
-#        df['predictions'] = np.array(state['predictions']).reshape(-1)
-#        df['targets'] = np.array(state['valid_targets']).reshape(-1)
-#        return df
-#
-#    oof_df = None
-#    for fold in range(4):
-#        _oof_df = get_oof_df(states[fold])
-#        oof_df = pd.concat([oof_df, _oof_df])
-#
-#    oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}.csv', index = False)
-#    oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
-#    
-#    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
-#    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
+    def get_oof_df(state):
+        df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
+        df['predictions'] = np.array(state['predictions']).reshape(-1)
+        df['targets'] = np.array(state['valid_targets']).reshape(-1)
+        return df
+
+    oof_df = None
+    for fold in range(config.FOLDS):
+        _oof_df = get_oof_df(states[fold])
+        oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.csv', index = False)
+        oof_df = pd.concat([oof_df, _oof_df])
+
+    oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_dt{config.DATETIME}.csv', index = False)
+    oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
+    
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
+    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
 
     def get_test_file_path(image_id):
@@ -51,19 +52,19 @@ if __name__ == '__main__':
     test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist())
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
                                          shuffle=False, 
-                                        num_workers=4, pin_memory=True)
+                                        num_workers=4)
 
     
     predictions_all_folds = []
     mean_predictions = np.array([0]*len(inference_df))
-    for fold in range(4):
+    for fold in range(config.FOLDS):
         model.load_state_dict(states[fold]['model'])                                    
         predictions = engine.predict(test_loader, model, device)
         mean_predictions = mean_predictions + np.array(predictions)
         # predictions_all_folds.append(predictions)
-    mean_predictions = mean_predictions/4
+    mean_predictions = mean_predictions/config.FOLDS
 
     inference_df['target'] = mean_predictions
-    inference_df[['id', 'target']].to_csv(config.OUTPUT_PATH+'submission.csv', index=False)
+    inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_dt{config.DATETIME}_{config.MODEL_NAME}.csv', index=False)
     print(inference_df[['id', 'target']].head())
     
