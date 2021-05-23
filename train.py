@@ -47,7 +47,7 @@ if __name__ == '__main__':
                                 seed = 2021,
                                 shuffle = True)
 
-
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
     for fold, foldData in enumerate(skFoldData):
         trIDs = foldData['trIDs']
         vIDs = foldData['vIDs']
@@ -92,9 +92,8 @@ if __name__ == '__main__':
                                                             factor=config.FACTOR, patience=config.PATIENCE,
                                                             verbose=True, eps=config.EPS)
 
-        logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_f{fold}_bs_{bs}.pth')
         logger.info(f'***************************************************************************************************************************')
-        logger.info(f'device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
+        logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
         logger.info(f'***************************************************************************************************************************')
 
         best_valid_loss = 999
