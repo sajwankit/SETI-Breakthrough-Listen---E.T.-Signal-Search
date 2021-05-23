@@ -1,10 +1,14 @@
+import datetime as dt
+DATETIME = dt.date.today().strftime('%m%d_%H%M')
+
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 DEVICE = 'cuda'
-EPOCHS = 5
+EPOCHS = 7
 BATCH_SIZE = 32
 TARGET_SIZE = 1
+FOLDS = 4
 
 MODEL_NAME = 'nfnet_l0'
 CHANNELS = 6
