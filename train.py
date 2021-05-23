@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument( '--nfolds', type = int)
     parser.add_argument('--fold', type = int)
     args = parser.parse_args()
-    args.nfolds = 3
+    args.nfolds = 4
     args.fold = 1
 
     data_path = config.DATA_PATH
@@ -34,7 +34,6 @@ if __name__ == '__main__':
     target_size = config.TARGET_SIZE
 
     df = pd.read_csv(data_path+'train_labels.csv')
-    df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//40), df.query('target == 0').sample(len(df.query('target == 0'))//400)]).sample(frac=1).reset_index(drop=True)
     images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
