@@ -45,7 +45,7 @@ if __name__ == '__main__':
     skFoldData = vs.get_SKFold(ids = df.index.values,
                                 targets = targets,
                                 n_folds = args.nfolds,
-                                seed = 2021,
+                                seed = config.SEED,
                                 shuffle = True)
 
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
