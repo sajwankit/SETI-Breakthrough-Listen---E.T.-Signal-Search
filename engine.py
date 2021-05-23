@@ -128,5 +128,39 @@ def evaluate(data_loader, model, device):
     return final_outputs, final_targets, losses.avg
 
 
+def predict(data_loader, model, device):
+    #this function does evaluation for one epoch
+
+    len_data_loader = len(data_loader)
+    progressDisp_stepsize = 0.05
+    progressDisp_step = 1
+
+    #putting model to eval mode
+    model.eval()
+
+    final_targets = []
+    final_outputs = []
+
+    #we use no_grad context:
+    with torch.no_grad():
+
+        st = time.time()
+        for batch_number, data in enumerate(data_loader):
+            inputs = data['images']
+            inputs = inputs.to(device, dtype = torch.float)
+
+            #do forward step to generat prediction
+            outputs = model(inputs)
+            outputs = outputs.detach().cpu().numpy().tolist()
+
+            final_outputs.extend(outputs)
+
+            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
+                et = time.time()
+                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
+                progressDisp_step = progressDisp_step*2
+
+    return final_outputs
+
     
 
