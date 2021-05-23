@@ -1,6 +1,6 @@
 DATA_PATH = '/content/drive/MyDrive/SETI/input/'
 DEVICE = 'cuda'
-EPOCHS = 3
+EPOCHS = 2
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 

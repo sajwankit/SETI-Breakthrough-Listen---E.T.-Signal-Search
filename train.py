@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import glob
 import argparse
+import time
 
 import albumentations
 import torch
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument( '--nfolds', type = int)
     parser.add_argument('--fold', type = int)
     args = parser.parse_args()
-    args.nfolds = 5
+    args.nfolds = 3
     args.fold = 1
 
     data_path = config.DATA_PATH
@@ -48,6 +49,8 @@ if __name__ == '__main__':
                                 shuffle = True)
 
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
+    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
+
     for fold, foldData in enumerate(skFoldData):
         trIDs = foldData['trIDs']
         vIDs = foldData['vIDs']
@@ -92,22 +95,24 @@ if __name__ == '__main__':
                                                             factor=config.FACTOR, patience=config.PATIENCE,
                                                             verbose=True, eps=config.EPS)
 
-        logger.info(f'***************************************************************************************************************************')
-        logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
-        logger.info(f'***************************************************************************************************************************')
+        # logger.info(f'***************************************************************************************************************************')
+        # logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
+        # logger.info(f'***************************************************************************************************************************')
 
         best_valid_loss = 999
         for epoch in range(epochs):
+            st = time.time()
             train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device)
             predictions, valid_targets, valid_loss = engine.evaluate(valid_loader, model, device)
             scheduler.step(valid_loss)
             train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
             valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
-            logger.info(f"Epoch = {epoch}, Valid Loss = {valid_loss}, Valid ROC AUC = {valid_roc_auc}, Train ROC AUC = {train_roc_auc}")
+            et = time.time()
+            logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{(et-st)/60}')
             if valid_loss <= best_valid_loss:
                 best_valid_loss = valid_loss
                 torch.save({'model': model.state_dict(), 
-                            'preds': predictions},
+                            'predictions': predictions},
                             config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth')
 
 

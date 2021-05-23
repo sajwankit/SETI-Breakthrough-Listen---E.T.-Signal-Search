@@ -73,7 +73,7 @@ def train(data_loader, model, optimizer, device):
 
         if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
             et = time.time()
-            print('Batch_number: '+str(batch_number)+' of '+str(len_data_loader)+', loss: '+str(loss)+'. Time elapsed: '+str((et-st)//60)+' minutes')
+            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
             progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
@@ -86,6 +86,12 @@ def evaluate(data_loader, model, device):
 
     losses = AverageMeter()
 
+
+    len_data_loader = len(data_loader)
+    progressDisp_stepsize = 0.05
+    progressDisp_step = 1
+
+
     #putting model to eval mode
     model.eval()
 
@@ -95,7 +101,8 @@ def evaluate(data_loader, model, device):
     #we use no_grad context:
     with torch.no_grad():
 
-        for data in tqdm(data_loader):
+        st = time.time()
+        for batch_number, data in enumerate(data_loader):
             inputs = data['images']
             targets = data['targets']
             inputs = inputs.to(device, dtype = torch.float)
@@ -112,6 +119,11 @@ def evaluate(data_loader, model, device):
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)
+
+            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
+                et = time.time()
+                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
+                progressDisp_step = progressDisp_step*2
 
     return final_outputs, final_targets, losses.avg
 
