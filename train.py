@@ -49,7 +49,7 @@ if __name__ == '__main__':
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
 
     for fold, foldData in enumerate(skFoldData):
-        if fold == args.fold:
+        if fold == args.fold or args.fold is None:
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']
     
@@ -112,7 +112,7 @@ if __name__ == '__main__':
                     torch.save({'model': model.state_dict(), 
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'config.OUTPUT_PATH{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth')
+                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth')
 
 
 
