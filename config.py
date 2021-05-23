@@ -16,4 +16,4 @@ EPS = 1e-8
 SEED = 42
 
 OUTPUT_PATH = '/content/drive/MyDrive/SETI/output/'
-LOG_DIR = '/content/SETI/'
+LOG_DIR = '/content/SETI/output/'
