@@ -1,9 +1,12 @@
 import config
 import os
 from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
+import random
+import numpy as np
+import torch
 
 def init_logger(log_name = 'train'):
-    log_file = f'{config.LOG_DIR}{log_name}.log'
+    log_file = f'{config.OUTPUT_PATH}{log_name}.log'
     logger = getLogger(__name__)
     logger.setLevel(INFO)
     handler1 = StreamHandler()

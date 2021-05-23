@@ -63,7 +63,7 @@ def train(data_loader, model, optimizer, device):
         #backward step
         loss.backward()
         
-        auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), outputs.detach().cpu().numpy().tolist())
+        # auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), outputs.detach().cpu().numpy().tolist())
         # auc = metrics.roc_auc_score(targets, outputs)
 
         #update average loss, auc
@@ -73,7 +73,7 @@ def train(data_loader, model, optimizer, device):
 
         if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
             et = time.time()
-            print('Batch_number: '+str(batch_number)+' of '+str(len_data_loader)+', loss: '+str(loss)+', auc: '+str(auc)+'. Time elapsed: '+str((et-st)//60)+' minutes')
+            print('Batch_number: '+str(batch_number)+' of '+str(len_data_loader)+', loss: '+str(loss)+'. Time elapsed: '+str((et-st)//60)+' minutes')
             progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
