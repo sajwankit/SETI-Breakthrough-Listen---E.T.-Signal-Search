@@ -11,3 +11,6 @@ LEARNING_RATE = 5e-4
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-8
+
+LOG_DIR = '/content/SETI/'
+SEED = 42
