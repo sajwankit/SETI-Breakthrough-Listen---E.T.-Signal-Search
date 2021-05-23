@@ -24,24 +24,11 @@ if __name__ == '__main__':
     device = config.DEVICE
     bs = config.BATCH_SIZE
     target_size = config.TARGET_SIZE
-
-    inference_images = list(glob.glob(data_path+'test/*/*'))
-
-    model = models.Model(pretrained = True, target_size = target_size)
-    model.to(device)
-
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
-    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
+    MODEL_DIR = config.OUTPUT_PATH
 
     model = models.Model(pretrained = False, target_size = target_size)
     model.to(device)
-    MODEL_DIR = config.OUTPUT_PATH
     states = [torch.load(MODEL_DIR+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth') for fold in range(4)]
-    test_dataset = dataset.SetiDataset(image_paths = inference_images)
-    test_loader = torch.utils.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
-                                         shuffle=False, 
-                                        num_workers=4, pin_memory=True)
-
 
     def get_oof_df(state):
         df = pd.DataFrame({'predictions': None, 'targets': None})
@@ -60,10 +47,28 @@ if __name__ == '__main__':
     logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
 
+    def get_test_file_path(id):
+            return data_path+'train/'+str(inference_df.loc[int(id),'id'])[0]+'/'+str(inference_df.loc[int(id),'id'])+'.npy'
+    inference_df = pd.read_csv(data_path+'sample_submission.csv')
+    inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
+
+    
+    test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist())
+    test_loader = torch.utils.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
+                                         shuffle=False, 
+                                        num_workers=4, pin_memory=True)
+
+    
     predictions_all_folds = []
+    mean_predictions = np.array([0]*len(inference_df))
     for fold in range(4):
         model.load_state_dict(states[fold]['model'])                                    
         predictions = engine.predict(model, test_loader, device)
-        predictions_all_folds.append(predictions)
+        mean_predictions = mean_predictions + np.array(predictions)
+        # predictions_all_folds.append(predictions)
+    mean_predictions = mean_predictions/4
 
+    inference_df['target'] = mean_predictions
+    inference_df[['id', 'target']].to_csv(config.OUTPUT_PATH+'submission.csv', index=False)
+    print(inference_df[['id', 'target']].head())
     
