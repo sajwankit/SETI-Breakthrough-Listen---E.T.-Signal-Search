@@ -25,7 +25,7 @@ if __name__ == '__main__':
     bs = config.BATCH_SIZE
     target_size = config.TARGET_SIZE
 
-    inference_images = list(glob.glob(data_path+'test/*'))
+    inference_images = list(glob.glob(data_path+'test/*/*'))
 
     model = models.Model(pretrained = True, target_size = target_size)
     model.to(device)
@@ -41,6 +41,25 @@ if __name__ == '__main__':
     test_loader = torch.utils.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
                                          shuffle=False, 
                                         num_workers=4, pin_memory=True)
+
+
+    def get_oof_df(state):
+        df = pd.DataFrame({'predictions': None, 'targets': None})
+        df['predictions'] = state['predictions'].values
+        df['targets'] = state['valid_targets'].values
+        return df
+
+    oof_df = None
+    for fold in range(4):
+        _oof_df = get_oof_df(states[fold])
+        oof_df = pd.concat([oof_df, _oof_df])
+
+    oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
+
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
+    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
+
+
     predictions_all_folds = []
     for fold in range(4):
         model.load_state_dict(states[fold]['model'])                                    

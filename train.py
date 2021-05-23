@@ -34,7 +34,7 @@ if __name__ == '__main__':
     target_size = config.TARGET_SIZE
 
     df = pd.read_csv(data_path+'train_labels.csv')
-    images = list(glob.glob(data_path+'train/*'))
+    # images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
     model = models.Model(pretrained = True, target_size = target_size)
@@ -111,9 +111,9 @@ if __name__ == '__main__':
             if valid_loss <= best_valid_loss:
                 best_valid_loss = valid_loss
                 torch.save({'model': model.state_dict(), 
-                            'predictions': predictions},
+                            'predictions': predictions,
+                            'valid_targets': valid_targets},
                             config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth')
-
 
 
 
