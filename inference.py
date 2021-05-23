@@ -23,28 +23,28 @@ if __name__ == '__main__':
     model.to(device)
     states = [torch.load(config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth') for fold in range(4)]
 
-    print(states[0]['predictions'])
-    def get_oof_df(state):
-        df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
-        df['predictions'] = np.array(state['predictions']).reshape(-1)
-        df['targets'] = np.array(state['valid_targets']).reshape(-1)
-        return df
-
-    oof_df = None
-    for fold in range(4):
-        _oof_df = get_oof_df(states[fold])
-        oof_df = pd.concat([oof_df, _oof_df])
-
-    oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
-
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
-    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
+#    def get_oof_df(state):
+#        df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
+#        df['predictions'] = np.array(state['predictions']).reshape(-1)
+#        df['targets'] = np.array(state['valid_targets']).reshape(-1)
+#        return df
+#
+#    oof_df = None
+#    for fold in range(4):
+#        _oof_df = get_oof_df(states[fold])
+#        oof_df = pd.concat([oof_df, _oof_df])
+#
+#    oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}.csv', index = False)
+#    oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
+#    
+#    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
+#    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
 
     def get_test_file_path(image_id):
             return f"{data_path}test/{image_id[0]}/{image_id}.npy"
 
-    inference_df = pd.read_csv(data_path+'sample_submission.csv')[:10]
+    inference_df = pd.read_csv(data_path+'sample_submission.csv')
     inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
 
     
