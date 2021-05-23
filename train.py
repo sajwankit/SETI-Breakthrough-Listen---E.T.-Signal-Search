@@ -16,6 +16,8 @@ import validation_strategy as vs
 import seedandlog
 
 if __name__ == '__main__':
+    seed_torch(seed=config.SEED)
+
     parser = argparse.ArgumentParser()
     parser.add_argument( '--nfolds', type = int)
     parser.add_argument('--fold', type = int)
@@ -86,36 +88,24 @@ if __name__ == '__main__':
 
         scheduler = config.SCHEDULER['ReduceLROnPlateau']
 
-        logger = seedandlog.init_logger(filename = 'train')
-        logger.info(f'device: {config.DEVICE}, batch_size: {config.BATCH_SIZE}, model_name: {config.MODEL_NAME}, lr: {config.LEARNING_RATE}, 
-        DATA_PATH = '/content/drive/MyDrive/SETI/input/'
-DEVICE = 'cuda'
-EPOCHS = 3
-BATCH_SIZE = 32
-TARGET_SIZE = 1
+        logger = seedandlog.init_logger(filename = f'{config.MODEL_NAME}_f{fold}_bs_{bs}.pth')
+        logger.info(f'***************************************************************************************************************************')
+        logger.info(f'device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {seed}')
+        logger.info(f'***************************************************************************************************************************')
 
-MODEL_NAME = 'nfnet_l0'
-CHANNELS = 6
-
-
-LEARNING_RATE = 5e-4
-FACTOR = 0.1
-PATIENCE = 2
-EPS = 1e-8
-
-LOG_DIR = '/content/SETI/'
-SEED = 42
-
-        
-        
-        ')
+        best_valid_loss = 999
         for epoch in range(epochs):
             train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device)
             predictions, valid_targets, valid_loss = engine.evaluate(valid_loader, model, device)
             scheduler.step(valid_loss)
             train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
             valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
-            print(f"Epoch = {epoch}, Valid Loss = {valid_loss}, Valid ROC AUC = {valid_roc_auc}, Train ROC AUC = {train_roc_auc}")
+            logger.info(f"Epoch = {epoch}, Valid Loss = {valid_loss.item()}, Valid ROC AUC = {valid_roc_auc}, Train ROC AUC = {train_roc_auc}")
+            if valid_loss < = best_valid_loss:
+                best_valid_loss = valid_loss
+                torch.save({'model': model.state_dict(), 
+                            'preds': predictions},
+                            config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth')
 
 
 
