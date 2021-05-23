@@ -13,7 +13,7 @@ import dataset
 import engine
 import models
 import validation_strategy as vs
-
+import seedandlog
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -84,10 +84,31 @@ if __name__ == '__main__':
         
         optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                                factor=config.FACTOR, patience=config.PATIENCE,
-                                                                 verbose=True, eps=config.EPS)
+        scheduler = config.SCHEDULER['ReduceLROnPlateau']
 
+        logger = seedandlog.init_logger(filename = 'train')
+        logger.info(f'device: {config.DEVICE}, batch_size: {config.BATCH_SIZE}, model_name: {config.MODEL_NAME}, lr: {config.LEARNING_RATE}, 
+        DATA_PATH = '/content/drive/MyDrive/SETI/input/'
+DEVICE = 'cuda'
+EPOCHS = 3
+BATCH_SIZE = 32
+TARGET_SIZE = 1
+
+MODEL_NAME = 'nfnet_l0'
+CHANNELS = 6
+
+
+LEARNING_RATE = 5e-4
+FACTOR = 0.1
+PATIENCE = 2
+EPS = 1e-8
+
+LOG_DIR = '/content/SETI/'
+SEED = 42
+
+        
+        
+        ')
         for epoch in range(epochs):
             train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device)
             predictions, valid_targets, valid_loss = engine.evaluate(valid_loader, model, device)
