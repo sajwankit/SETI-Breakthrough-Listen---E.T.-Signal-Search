@@ -1,4 +1,4 @@
-i = 0
+i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 DEVICE = 'cuda'

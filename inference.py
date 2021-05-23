@@ -1,12 +1,6 @@
 import pandas as pd
 import numpy as np
-import glob
-import argparse
-import time
-
-import albumentations
 import torch
-
 from sklearn import metrics
 
 import config
@@ -24,16 +18,16 @@ if __name__ == '__main__':
     device = config.DEVICE
     bs = config.BATCH_SIZE
     target_size = config.TARGET_SIZE
-    MODEL_DIR = config.OUTPUT_PATH
 
     model = models.Model(pretrained = False, target_size = target_size)
     model.to(device)
-    states = [torch.load(MODEL_DIR+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth') for fold in range(4)]
+    states = [torch.load(config.OUTPUT_PATH+f'{config.MODEL_NAME}_fold{fold}_best_loss.pth') for fold in range(4)]
 
+    print(states[0]['predictions'])
     def get_oof_df(state):
-        df = pd.DataFrame({'predictions': None, 'targets': None})
-        df['predictions'] = state['predictions'].values
-        df['targets'] = state['valid_targets'].values
+        df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
+        df['predictions'] = np.array(state['predictions']).reshape(-1)
+        df['targets'] = np.array(state['valid_targets']).reshape(-1)
         return df
 
     oof_df = None
@@ -47,14 +41,15 @@ if __name__ == '__main__':
     logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
 
-    def get_test_file_path(id):
-            return data_path+'train/'+str(inference_df.loc[int(id),'id'])[0]+'/'+str(inference_df.loc[int(id),'id'])+'.npy'
+    def get_test_file_path(image_id):
+            return f"{data_path}test/{image_id[0]}/{image_id}.npy"
+
     inference_df = pd.read_csv(data_path+'sample_submission.csv')
     inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
 
     
     test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist())
-    test_loader = torch.utils.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
                                          shuffle=False, 
                                         num_workers=4, pin_memory=True)
 
@@ -63,7 +58,7 @@ if __name__ == '__main__':
     mean_predictions = np.array([0]*len(inference_df))
     for fold in range(4):
         model.load_state_dict(states[fold]['model'])                                    
-        predictions = engine.predict(model, test_loader, device)
+        predictions = engine.predict(test_loader, model, device)
         mean_predictions = mean_predictions + np.array(predictions)
         # predictions_all_folds.append(predictions)
     mean_predictions = mean_predictions/4

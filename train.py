@@ -34,6 +34,7 @@ if __name__ == '__main__':
     target_size = config.TARGET_SIZE
 
     df = pd.read_csv(data_path+'train_labels.csv')
+    df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//100), df.query('target == 0').sample(len(df.query('target == 0'))//1000)]).sample(frac=1).reset_index(drop=True)
     # images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
