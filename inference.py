@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     model = models.Model(pretrained = False, target_size = target_size)
     model.to(device)
-    states = [torch.load(f'config.OUTPUT_PATH{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
+    states = [torch.load(f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
 
     def get_oof_df(state):
         df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
@@ -32,14 +32,13 @@ if __name__ == '__main__':
     oof_df = None
     for fold in range(config.FOLDS):
         _oof_df = get_oof_df(states[fold])
-        oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.csv', index = False)
+        _oof_df.to_csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_bs{bs}_fold{fold}_dt{config.DATETIME}.csv', index = False)
         oof_df = pd.concat([oof_df, _oof_df])
 
-    oof_df.csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_dt{config.DATETIME}.csv', index = False)
+    oof_df.to_csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_bs{bs}_dt{config.DATETIME}.csv', index = False)
     oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
     
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs_{bs}.pth')
-    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
+    print(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
 
     def get_test_file_path(image_id):
@@ -65,6 +64,6 @@ if __name__ == '__main__':
     mean_predictions = mean_predictions/config.FOLDS
 
     inference_df['target'] = mean_predictions
-    inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_dt{config.DATETIME}_{config.MODEL_NAME}.csv', index=False)
+    inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_{config.MODEL_NAME}_bs{bs}_cv{oof_auc}_dt{config.DATETIME}.csv', index=False)
     print(inference_df[['id', 'target']].head())
     

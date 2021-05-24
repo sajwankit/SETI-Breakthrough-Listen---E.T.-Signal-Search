@@ -18,7 +18,7 @@ import seedandlog
 
 if __name__ == '__main__':
     seedandlog.seed_torch(seed=config.SEED)
-
+    date_time = config.DATETIME
     parser = argparse.ArgumentParser()
     parser.add_argument('--fold', type = int)
     args = parser.parse_args()
@@ -35,8 +35,7 @@ if __name__ == '__main__':
     # images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
-    model = models.Model(pretrained = True, target_size = target_size)
-    model.to(device)
+
 
     
     skFoldData = vs.get_SKFold(ids = df.index.values,
@@ -45,11 +44,16 @@ if __name__ == '__main__':
                                 seed = config.SEED,
                                 shuffle = True)
 
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_fold{args.fold}_bs{bs}_dt{config.DATETIME}')
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_fold{args.fold}_bs{bs}_dt{date_time}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
 
     for fold, foldData in enumerate(skFoldData):
         if fold == args.fold or args.fold is None:
+        
+            #for every fold model should start from zero training
+            model = models.Model(pretrained = True, target_size = target_size)
+            model.to(device)
+    
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']
     
@@ -112,7 +116,7 @@ if __name__ == '__main__':
                     torch.save({'model': model.state_dict(), 
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{config.DATETIME}.pth')
+                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{date_time}.pth')
 
 
 
