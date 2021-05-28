@@ -14,7 +14,7 @@ class DesignImage():
 
     def concat_channels_to_spatial(self, image_array):
 
-        image_array_spatial = np.zeros((image_array[1]*3, image_array[2]*2))
+        image_array_spatial = np.zeros((image_array.shape[1]*2, image_array.shape[2]*3))
 
         #pos_idx is positions index in the spatial image to be formed. 
         # 0 1
@@ -22,9 +22,21 @@ class DesignImage():
         # 4 5
         for pos_idx in range(0, image_array.shape[0]):
             if pos_idx % 2 == 0:
-                image_array_spatial[: image_array.shape[1], pos_idx*0.5: (pos_idx*0.5+1) * image_array.shape[2]] = image_array[self.chl_pos_in_spatial.index(pos_idx)]
+                channel = self.chl_pos_in_spatial.index(pos_idx)
+                channel_image = image_array[channel,:,:]
+                x_start = 0
+                x_end = image_array.shape[1]
+                y_start = int(pos_idx*0.5) * image_array.shape[2]
+                y_end = int((pos_idx*0.5)+1) * image_array.shape[2]
+                image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
             else:
-                image_array_spatial[image_array.shape[1]: 2 * image_array.shape[1], (pos_idx-1)*0.5*image_array.shape[2]: ((pos_idx-1)*0.5+1)*image_array.shape[2]] = image_array[self.chl_pos_in_spatial.index(pos_idx)]
+                channel = self.chl_pos_in_spatial.index(pos_idx)
+                channel_image = image_array[channel,:,:]
+                x_start = image_array.shape[1]
+                x_end = 2 * image_array.shape[1]
+                y_start = int((pos_idx-1)*0.5)*image_array.shape[2]
+                y_end = int((pos_idx-1)*0.5+1)*image_array.shape[2]
+                image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
 
         image_spatial =  cv2.resize(image_array_spatial, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
 
@@ -37,5 +49,8 @@ class DesignImage():
 
 
 designImage = DesignImage(images_set = 'train', out_image_size= (224, 224))
-with Pool(1) as p:
-    p.map(designImage.concat_channels_to_spatial, designImage.yield_image_array())
+# with Pool(1) as p:
+#     p.map(designImage.concat_channels_to_spatial, designImage.yield_image_array())
+
+for i in designImage.yield_image_array():
+    designImage.concat_channels_to_spatial(i)
