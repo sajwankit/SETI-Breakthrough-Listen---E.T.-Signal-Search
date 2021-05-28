@@ -7,6 +7,12 @@ DATETIME = datetime_NY.strftime('%m%d')
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
+
+resize_image_path = ['/home/asajw/resized_images_seti/', '/content/drive/MyDrive/SETI/resized_images/']
+RESIZED_IMAGE_PATH = resize_image_path[i]
+
+
+
 DEVICE = 'cuda'
 EPOCHS = 7
 BATCH_SIZE = 128
