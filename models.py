@@ -1,7 +1,6 @@
 import torch.nn as nn
 import pretrainedmodels
 import timm
-
 import config
 
 class Model(nn.Module):
@@ -13,10 +12,18 @@ class Model(nn.Module):
                                             pretrained=pretrained, in_chans=config.CHANNELS)
         self.in_features = self.basemodel.head.fc.in_features
         self.model = self.basemodel
+        self.dropouts = nn.ModuleList([ nn.Droupout(0.5) for _ in range(5)])
         self.model.head.fc = nn.Linear(self.in_features, config.TARGET_SIZE)
+        
 
     def forward(self, x):
         output = self.model(x)
+        for i, dropout in enumerate(self.dropouts):
+            if i == 0:
+                h = self.linear(dropout(output))
+            else:
+                h += self.linear(dropout(output))
+             
         return output
 
 # def get_model(pretrained):
