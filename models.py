@@ -1,7 +1,5 @@
 import torch.nn as nn
-import pretrainedmodels
 import timm
-
 import config
 
 class Model(nn.Module):
@@ -15,7 +13,6 @@ class Model(nn.Module):
         self.model.head.fc = nn.Linear(self.in_features, 1024)
         self.fc = nn.Linear(1024, config.TARGET_SIZE)
         self.p_dropout = 0.5
-
 
     def forward(self, x):
         output = self.model(x)
