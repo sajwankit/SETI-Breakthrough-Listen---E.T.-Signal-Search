@@ -4,6 +4,9 @@ from multiprocessing import Pool
 import glob
 import cv2
 from tqdm import tqdm
+import time
+
+s = time.time()
 
 class DesignImage():
     def __init__(self, images_set, out_image_size = (224, 224), chl_pos_in_spatial = [0,1,2,3,4,5]):
@@ -13,7 +16,9 @@ class DesignImage():
         self.chl_pos_in_spatial = chl_pos_in_spatial
         self.out_image_size = out_image_size
 
-    def concat_channels_to_spatial(self,  image_array):
+    def concat_channels_to_spatial(self, image_path):
+        image_array_name = image_path.split('/')[-1]
+        image_array = np.load(image_path)
         # cv2.imwrite(f'{config.RESIZED_IMAGE_PATH}tesdt.png', image_array)
         image_array_spatial = np.zeros((image_array.shape[1]*2, image_array.shape[2]*3))
 
@@ -48,19 +53,32 @@ class DesignImage():
                 image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
 
         image_spatial =  cv2.resize(image_array_spatial, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
-        return image_spatial
+        np.save(f'{config.RESIZED_IMAGE_PATH}{self.images_set}/{image_array_name}', image_spatial)
+        
+        
+        ##see progress of p.map
+        global s
+        if time.time()- s > 10:
+          no_files_in_path = len(list(glob.glob(f'{config.RESIZED_IMAGE_PATH}{self.images_set}/*.npy')))
+          print(f'{no_files_in_path} images done of {len(self.image_paths)}')
+          s = time.time()
+        
+       # return image_spatial
 
     def yield_image_array(self):
         for image_path in self.image_paths:
             yield image_path.split('/')[-1], np.load(image_path)
 
 
-
-designImage = DesignImage(images_set = 'train', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
-# with Pool(1) as p:
-#     p.map(designImage.concat_channels_to_spatial, designImage.yield_image_array())
-
-for image_array_name, image_array in tqdm(designImage.yield_image_array()):
-    image_spatial = designImage.concat_channels_to_spatial(image_array)
-    np.save(f'{config.RESIZED_IMAGE_PATH}{designImage.images_set}/{image_array_name}', image_spatial)
+if __name__ == "__main__":
+    designImage = DesignImage(images_set = 'test', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
+    
+    
+    with Pool(16) as p:
+        p.map(designImage.concat_channels_to_spatial, designImage.image_paths)
+    print('Done')
+    
+    #for image_array_name, image_array in tqdm(designImage.yield_image_array()):
+    #    image_spatial = designImage.concat_channels_to_spatial(image_array)
+    #    np.save(f'{config.RESIZED_IMAGE_PATH}{designImage.images_set}/{image_array_name}', image_spatial)
     

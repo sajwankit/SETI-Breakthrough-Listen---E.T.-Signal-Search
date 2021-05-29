@@ -4,7 +4,7 @@ tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
 
-i = 1
+i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
