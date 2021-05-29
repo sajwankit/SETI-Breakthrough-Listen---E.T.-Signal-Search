@@ -8,7 +8,10 @@ i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
-resize_image_path = ['/home/asajw/resized_images_seti/', '/content/drive/MyDrive/SETI/resized_images/']
+RESIZE_SET = 'train'
+IMAGE_SIZE = (128,128)
+resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/{RESIZE_SET}/',
+                     f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/{RESIZE_SET}/']
 RESIZED_IMAGE_PATH = resize_image_path[i]
 
 
