@@ -5,7 +5,7 @@ import glob
 import cv2
 
 class DesignImage():
-    def __init__(self, images_set, out_image_size = (224, 224), chl_pos_in_spatial):
+    def __init__(self, images_set, out_image_size = (224, 224), chl_pos_in_spatial = [0,1,2,3,4,5]):
         self.images_set = images_set
         self.image_paths = list(glob.glob(f'{config.DATA_PATH}{self.images_set}/*/*.npy'))
         # p{channel} means position of channel in the final spatial image,  p{channel}: -1 means a channel is excluded
