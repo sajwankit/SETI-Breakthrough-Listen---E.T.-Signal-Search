@@ -104,10 +104,12 @@ if __name__ == '__main__':
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
             
             optimizer = torch.optim.Adam(model.parameters(), lr = lr)
-    
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                                factor=config.FACTOR, patience=config.PATIENCE,
-                                                                verbose=True, eps=config.EPS)
+#    
+#            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
+#                                                                factor=config.FACTOR, patience=config.PATIENCE,
+#                                                                verbose=True, eps=config.EPS)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-6, last_epoch = -1)
+
     
             # logger.info(f'***************************************************************************************************************************')
             # logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
