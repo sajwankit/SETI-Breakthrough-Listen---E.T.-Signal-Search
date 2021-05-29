@@ -60,7 +60,13 @@ if __name__ == '__main__':
             train_images_path = []
             train_targets = []
             for id in trIDs:
-                train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+                # #for original images
+                # train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+                # train_targets.append(int(df.loc[int(id), 'target']))
+
+                #for resized images
+                filename = df.loc[int(id),'id']
+                train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
                 train_targets.append(int(df.loc[int(id), 'target']))
     
             train_dataset = dataset.SetiDataset(image_paths = train_images_path,
@@ -77,7 +83,13 @@ if __name__ == '__main__':
             valid_images_path = []
             valid_targets = []
             for id in vIDs:
-                valid_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+                # #for original images
+                # valid_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+                # valid_targets.append(int(df.loc[int(id), 'target']))
+
+                #for resized images
+                filename = df.loc[int(id),'id']
+                valid_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
                 valid_targets.append(int(df.loc[int(id), 'target']))
     
             valid_dataset = dataset.SetiDataset(image_paths = valid_images_path,

@@ -56,11 +56,11 @@ class DesignImage():
 
 
 
-designImage = DesignImage(images_set = config.RESIZE_SET, out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
+designImage = DesignImage(images_set = 'train', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
 # with Pool(1) as p:
 #     p.map(designImage.concat_channels_to_spatial, designImage.yield_image_array())
 
 for image_array_name, image_array in tqdm(designImage.yield_image_array()):
     image_spatial = designImage.concat_channels_to_spatial(image_array)
-    np.save(f'{config.RESIZED_IMAGE_PATH}{image_array_name}', image_spatial)
+    np.save(f'{config.RESIZED_IMAGE_PATH}{designImage.images_set}/{image_array_name}', image_spatial)
     
