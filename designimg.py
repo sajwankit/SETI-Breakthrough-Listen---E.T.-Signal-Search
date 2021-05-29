@@ -13,13 +13,14 @@ class DesignImage():
         self.out_image_size = out_image_size
 
     def concat_channels_to_spatial(self, image_array):
-
+        # cv2.imwrite(f'{config.RESIZED_IMAGE_PATH}tesdt.png', image_array)
         image_array_spatial = np.zeros((image_array.shape[1]*2, image_array.shape[2]*3))
 
         #pos_idx is positions index in the spatial image to be formed. 
-        # 0 1
-        # 2 3
-        # 4 5
+        # ---- -273*2 .
+        # 0 1         .
+        # 2 3         .
+        # 4 5       256*3
         for pos_idx in range(0, image_array.shape[0]):
             if pos_idx % 2 == 0:
                 channel = self.chl_pos_in_spatial.index(pos_idx)
@@ -39,7 +40,9 @@ class DesignImage():
                 image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
 
         image_spatial =  cv2.resize(image_array_spatial, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
-
+        np.save(f'{config.RESIZED_IMAGE_PATH}test.npy', image_spatial)
+        cv2.imwrite(f'{config.RESIZED_IMAGE_PATH}test.png', image_spatial)
+        cv2.imwrite(f'{config.RESIZED_IMAGE_PATH}tesdt.png', image_array)
         return image_spatial
 
     def yield_image_array(self):
@@ -53,4 +56,5 @@ designImage = DesignImage(images_set = 'train', out_image_size= (224, 224))
 #     p.map(designImage.concat_channels_to_spatial, designImage.yield_image_array())
 
 for i in designImage.yield_image_array():
-    designImage.concat_channels_to_spatial(i)
+    image_spatial = designImage.concat_channels_to_spatial(i)
+    
