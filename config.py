@@ -13,7 +13,7 @@ IMAGE_SIZE = (256,256)
 resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                      f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 RESIZED_IMAGE_PATH = resize_image_path[i]
-
+SAVE_IMAGE = True
 
 
 DEBUG = True

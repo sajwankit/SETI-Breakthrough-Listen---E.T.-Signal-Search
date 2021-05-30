@@ -23,10 +23,10 @@ class DesignImage():
         image_array_spatial = np.zeros((image_array.shape[1]*2, image_array.shape[2]*3))
 
         #pos_idx is positions index in the spatial image to be formed. 
-        # ---- -273*2 .
+        # ---- -256*3 .
         # 0 1         .
         # 2 3         .
-        # 4 5       256*3
+        # 4 5       273*2
         # looping over pos_idx values to get corresponding channel 
         for ch_pos_idx in range(0, len(self.chl_pos_in_spatial)):
             if ch_pos_idx % 2 == 0:
@@ -35,25 +35,29 @@ class DesignImage():
                     channel_image = image_array[channel,:,:]
                 except:
                     channel_image = 0
-                x_start = 0
-                x_end = image_array.shape[1]
-                y_start = int(ch_pos_idx*0.5) * image_array.shape[2]
-                y_end = int((ch_pos_idx*0.5)+1) * image_array.shape[2]
-                image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
+                y_start = 0
+                y_end = image_array.shape[1]
+                x_start = int(ch_pos_idx*0.5) * image_array.shape[2]
+                x_end = int((ch_pos_idx*0.5)+1) * image_array.shape[2]
+                image_array_spatial[y_start: y_end, x_start: x_end] = channel_image
             else:
                 try:
                     channel = self.chl_pos_in_spatial.index(ch_pos_idx)
                     channel_image = image_array[channel,:,:]
                 except:
                     channel_image = 0
-                x_start = image_array.shape[1]
-                x_end = 2 * image_array.shape[1]
-                y_start = int((ch_pos_idx-1)*0.5)*image_array.shape[2]
-                y_end = int((ch_pos_idx-1)*0.5+1)*image_array.shape[2]
-                image_array_spatial[x_start: x_end, y_start: y_end] = channel_image
+                y_start = image_array.shape[1]
+                y_end = 2 * image_array.shape[1]
+                x_start = int((ch_pos_idx-1)*0.5)*image_array.shape[2]
+                x_end = int((ch_pos_idx-1)*0.5+1)*image_array.shape[2]
+                image_array_spatial[y_start: y_end, x_start: x_end] = channel_image
 
         image_spatial =  cv2.resize(image_array_spatial, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
-        np.save(f'{config.RESIZED_IMAGE_PATH}{self.images_set}/{image_array_name}', image_spatial)
+
+        if config.SAVE_IMAGE:
+            np.save(f'{config.RESIZED_IMAGE_PATH}{self.images_set}/{image_array_name}', image_spatial)
+        else:
+            return image_spatial
         
         
         ##see progress of p.map
@@ -72,9 +76,9 @@ class DesignImage():
 
 if __name__ == "__main__":
     designImage = DesignImage(images_set = 'train', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
+    designImage.concat_channels_to_spatial(designImage.image_paths[0])
     
-    
-    with Pool(16) as p:
+    with Pool() as p:
         p.map(designImage.concat_channels_to_spatial, designImage.image_paths)
     print('Done')
     
