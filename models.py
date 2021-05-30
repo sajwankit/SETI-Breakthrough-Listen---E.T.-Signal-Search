@@ -10,19 +10,19 @@ class Model(nn.Module):
         self.model = timm.create_model(config.MODEL_NAME,
                                             pretrained=pretrained, in_chans=config.CHANNELS)
         self.in_features = self.model.head.fc.in_features
-        self.model.head.fc = nn.Linear(self.in_features, 1024)
-        self.fc = nn.Linear(1024, config.TARGET_SIZE)
+        self.model.head.fc = nn.Linear(self.in_features, config.TARGET_SIZE)
+        self.fc = nn.Linear(2048, config.TARGET_SIZE)
         self.p_dropout = 0.5
 
     def forward(self, x):
         output = self.model(x)
-        for i in range(5):
-            if i == 0:
-                h = self.fc(nn.functional.dropout(output, p=self.p_dropout, training=self.training))
-            else:
-                h += self.fc(nn.functional.dropout(output, p=self.p_dropout, training=self.training))
-        h = h / len(self.dropouts)
-        return h
+#        for i in range(10):
+#            if i == 0:
+#                h = self.fc(nn.functional.dropout(output, p=self.p_dropout, training=self.training))
+#            else:
+#                h += self.fc(nn.functional.dropout(output, p=self.p_dropout, training=self.training))
+#        h = h / 10
+        return output
 
     # def __init__(self, pretrained = True, target_size = 1 ):
     #     super().__init__()
