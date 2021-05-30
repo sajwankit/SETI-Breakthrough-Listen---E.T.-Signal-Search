@@ -16,7 +16,11 @@ class SetiDataset:
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
         image = np.load(self.image_paths[item])
-        image = image.reshape(1,image.shape[0],image.shape[1])
+
+        # #use when using resized images
+        # image = image.reshape(1,image.shape[0],image.shape[1])
+
+
         if self.targets is not None:
             targets = self.targets[item]
 

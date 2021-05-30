@@ -6,6 +6,7 @@ import config
 from tqdm import tqdm
 import time
 from sklearn import metrics
+from torch.cuda import amp
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -24,7 +25,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-def train(data_loader, model, optimizer, device):
+def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
 
     losses = AverageMeter()
@@ -53,23 +54,30 @@ def train(data_loader, model, optimizer, device):
 
         #zero grad the optimizer
         optimizer.zero_grad()
-
-        #Forward Step
-        outputs = model(inputs)
-
-        #calculate loss
-        loss = nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
-
-        #backward step
-        loss.backward()
+        
+        if config.MIXED_PRECISION:
+            #mixed precision
+            with amp.autocast():
+                #Forward Step
+                outputs = model(inputs)
+                #calculate loss
+                loss = nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+            #backward step
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            outputs = model(inputs)
+            loss = nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+            loss.backward()
+            optimizer.step()
         
         # auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), outputs.detach().cpu().numpy().tolist())
         # auc = metrics.roc_auc_score(targets, outputs)
 
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
-        
-        optimizer.step()
+                
 #
 #        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #            et = time.time()

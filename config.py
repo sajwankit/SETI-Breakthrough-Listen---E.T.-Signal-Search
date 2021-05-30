@@ -4,7 +4,7 @@ tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
 
-i = 0
+i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -16,6 +16,9 @@ RESIZED_IMAGE_PATH = resize_image_path[i]
 
 
 
+DEBUG = True
+MIXED_PRECISION = False
+
 DEVICE = 'cuda'
 EPOCHS = 7
 BATCH_SIZE = 32
@@ -23,7 +26,7 @@ TARGET_SIZE = 1
 FOLDS = 4
 
 MODEL_NAME = 'efficientnet_b0'
-CHANNELS = 1
+CHANNELS = 6
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1

@@ -16,6 +16,8 @@ import models
 import validation_strategy as vs
 import seedandlog
 
+from torch.cuda import amp
+
 if __name__ == '__main__':
     seedandlog.seed_torch(seed=config.SEED)
     date_time = config.DATETIME
@@ -31,8 +33,10 @@ if __name__ == '__main__':
     target_size = config.TARGET_SIZE
 
     df = pd.read_csv(data_path+'train_labels.csv')
-#    df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//100), df.query('target == 0').sample(len(df.query('target == 0'))//1000)]).sample(frac=1).reset_index(drop=True)
-    # images = list(glob.glob(data_path+'train/*'))
+    if config.DEBUG:
+        df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//1000), df.query('target == 0').sample(len(df.query('target == 0'))//10000)]).sample(frac=1).reset_index(drop=True)
+    
+    images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
 
@@ -80,14 +84,14 @@ if __name__ == '__main__':
             train_images_path = []
             train_targets = []
             for id in trIDs:
-                # #for original images
-                # train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
-                # train_targets.append(int(df.loc[int(id), 'target']))
-
-                #for resized images
-                filename = df.loc[int(id),'id']
-                train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+                #for original images
+                train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
                 train_targets.append(int(df.loc[int(id), 'target']))
+
+                # #for resized images
+                # filename = df.loc[int(id),'id']
+                # train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+                # train_targets.append(int(df.loc[int(id), 'target']))
     
             train_dataset = dataset.SetiDataset(image_paths = train_images_path,
                                                     targets = train_targets,
@@ -103,14 +107,14 @@ if __name__ == '__main__':
             valid_images_path = []
             valid_targets = []
             for id in vIDs:
-                # #for original images
-                # valid_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
-                # valid_targets.append(int(df.loc[int(id), 'target']))
-
-                #for resized images
-                filename = df.loc[int(id),'id']
-                valid_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+                #for original images
+                valid_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
                 valid_targets.append(int(df.loc[int(id), 'target']))
+
+                # #for resized images
+                # filename = df.loc[int(id),'id']
+                # valid_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+                # valid_targets.append(int(df.loc[int(id), 'target']))
     
             valid_dataset = dataset.SetiDataset(image_paths = valid_images_path,
                                                 targets = valid_targets,
@@ -134,11 +138,17 @@ if __name__ == '__main__':
             # logger.info(f'***************************************************************************************************************************')
             # logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
             # logger.info(f'***************************************************************************************************************************')
-    
+
+            if config.MIXED_PRECISION:
+                #mixed precision training
+                scaler = amp.GradScaler()
+            else:
+                scaler = None
+
             best_valid_loss = 999
             for epoch in range(epochs):
                 st = time.time()
-                train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device)
+                train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_loss = engine.evaluate(valid_loader, model, device)
                 scheduler.step(valid_loss)
                 train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
