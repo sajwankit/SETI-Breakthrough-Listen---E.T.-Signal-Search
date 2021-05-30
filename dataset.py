@@ -87,7 +87,7 @@ class ImageTransformer():
 
             if chnls['neg_chnls'][1] == 5:
                 out_image_array[y:2*y, 2*x:3*x] = image_patches[chnls['neg_chnls'][0]]
-        np.save(f'/content/drive/MyDrive/SETI/swap.npy', out_image_array)
+        # np.save(f'/content/drive/MyDrive/SETI/swap.npy', out_image_array)
         return out_image_array
 
     def drop_channels(self, p = 0.3,):
@@ -117,7 +117,7 @@ class ImageTransformer():
                 out_image_array[y:2*y, x:2*x] = 0
             if c == 5:
                 out_image_array[y:2*y, 2*x:3*x] = 0
-        np.save(f'/content/drive/MyDrive/SETI/drop.npy', out_image_array)
+        # np.save(f'/content/drive/MyDrive/SETI/drop.npy', out_image_array)
         return out_image_array
 
 class SetiDataset:
@@ -145,8 +145,12 @@ class SetiDataset:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
         
         image = np.array(image)
-        ImageTransformer(image).swap_channels()
-        ImageTransformer(image).drop_channels()
+
+        if np.random.uniform(0, 1)>0.5:
+            image = ImageTransformer(image).swap_channels()
+        
+        if np.random.uniform(0, 1)>0.5:
+            image = ImageTransformer(image).drop_channels()
 
         if self.augmentations is not None:
             augmented = self.augmentations(image = image)
@@ -161,4 +165,4 @@ class SetiDataset:
         else:
             return{'images': torch.tensor(image, dtype = torch.float)}
 
-SetiDataset(['/content/drive/MyDrive/SETI/resized_images/128128/train/ecb6df8c6f71.npy'], targets = None, resize=None, augmentations = None)[0]
+# SetiDataset(['/content/drive/MyDrive/SETI/resized_images/128128/train/ecb6df8c6f71.npy'], targets = None, resize=None, augmentations = None)[0]

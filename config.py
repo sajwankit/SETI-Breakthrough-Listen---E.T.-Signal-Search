@@ -17,7 +17,7 @@ SAVE_IMAGE = True
 
 
 DEBUG = True
-MIXED_PRECISION = False
+MIXED_PRECISION = True
 
 DEVICE = 'cuda'
 EPOCHS = 7
