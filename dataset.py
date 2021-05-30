@@ -47,6 +47,7 @@ class ImageTransformer():
             pos_to_swap_copy = pos_to_swap 
             if c in pos_to_swap:
                 pos_to_swap.remove(c)
+                
         if c == 0:
             self.image_array[:x, :y] = 
 
