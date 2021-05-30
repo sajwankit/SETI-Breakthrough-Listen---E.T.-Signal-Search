@@ -1,10 +1,10 @@
 CNN training:
+5. pytorch amp - mixed precision
 1. arranging channels
 3. dropping off channels from image
 2. mixup
 3. cutmix --?
 4. other augmentations
-5. pytorch amp - mixed precision
 
 RCNN TRAINING
 
