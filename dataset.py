@@ -99,7 +99,7 @@ class ImageTransformer():
         chnl_shape = (final_shape[0]//2, final_shape[1]//3) #will be approx to note.
 
         chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
-        chnls_to_remove = random.sample(chnls['neg_chnls'], random.choice([1,2], weights = [0.7, 0.3]))
+        chnls_to_remove = random.sample(chnls['neg_chnls'], random.choice([1,2]))
 
         x = chnl_shape[1]
         y = chnl_shape[0]
@@ -147,7 +147,7 @@ class SetiDataset:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
         
         image = np.array(image)
-        ImageTransformer(image).swap_channels()
+        ImageTransformer(image).drop_channels()
         if self.augmentations is not None:
             augmented = self.augmentations(image = image)
             image = augmented['image']
@@ -160,3 +160,5 @@ class SetiDataset:
                     'targets': torch.tensor(targets, dtype = torch.long)}
         else:
             return{'images': torch.tensor(image, dtype = torch.float)}
+
+SetiDataset(['/content/drive/MyDrive/SETI/resized_images/128128/train/ecb6df8c6f71.npy'], targets = None, resize=None, augmentations = None)[0]
