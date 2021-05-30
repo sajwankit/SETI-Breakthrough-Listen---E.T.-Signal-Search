@@ -92,7 +92,35 @@ class ImageTransformer():
                 out_image_array[2*x:3*x, y:2*y] = image_patches[chnls['pos_chnls'][0]]
         return out_image_array
 
+    def drop_channels(self, p = 0.3,):
+        #getting size of image_part of a channel in image_array
+        # init_shape = (273*2, 256*3)
+        final_shape = self.image_array.shape
+        chnl_shape = (final_shape[0]//2, final_shape[1]//3) #will be approx to note.
 
+        chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
+        chnls_to_remove = random.sample(chnls['neg_chnls'], random.choice([1,2], weights = [0.7, 0.3]))
+
+        x = chnl_shape[1]
+        y = chnl_shape[0]
+
+        # image_patches = [self.image_array[:x, :y], 0
+        #                 self.image_array[:x, y:2*y], 1
+        #                 self.image_array[x:2*x, :y], 2
+        #                 self.image_array[x:2*x, y:2*y], 3
+        #                 self.image_array[2*x:3*x, :y], 4
+        #                 self.image_array[2*x:3*x, y:2*y]] 5
+        
+        out_image_array = self.image_array
+        for c in chnls_to_remove:
+            if c == 1:
+                out_image_array[:x, y:2*y] = 0
+            if c == 3:
+                out_image_array[x:2*x, y:2*y] = 0
+            if c == 5:
+                out_image_array[2*x:3*x, y:2*y] = 0
+
+        return out_image_array
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, resize=None, augmentations = None):
