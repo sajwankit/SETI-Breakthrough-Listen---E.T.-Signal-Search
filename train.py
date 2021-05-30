@@ -55,12 +55,12 @@ if __name__ == '__main__':
         except:
             key = id_keys_map[key[0]]
         id_keys.append(key)
-    target = tr['target'].values.tolist()
+    target = df['target'].values.tolist()
     multi_targets = [ [id_keys[x], target[x]] for x in range(len(df))]
 
-    mskFoldData = vs.get_SKFold(ids = df.index.values,
-                                targets = np.array(multi_targets),
-                                n_folds = config.FOLDS,
+    mskFoldData = vs.get_MSKFold(ids = df.index.values,
+                                multi_targets = np.array(multi_targets),
+                                nfolds = config.FOLDS,
                                 seed = config.SEED)
     ########################################################################
 
