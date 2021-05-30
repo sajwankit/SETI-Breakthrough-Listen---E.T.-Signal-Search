@@ -1,5 +1,5 @@
 CNN training:
-5. pytorch amp - mixed precision
+5. pytorch amp - mixed precision -- DONE
 1. arranging channels
 3. dropping off channels from image
 2. mixup
