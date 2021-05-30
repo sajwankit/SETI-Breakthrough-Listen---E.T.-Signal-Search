@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
 
     
-    skFoldData = vs.get_SKFold(ids = df.index.values,
-                                targets = targets,
-                                n_folds = config.FOLDS,
-                                seed = config.SEED,
-                                shuffle = True)
+#    skFoldData = vs.get_SKFold(ids = df.index.values,
+#                                targets = targets,
+#                                n_folds = config.FOLDS,
+#                                seed = config.SEED,
+#                                shuffle = True)
 
 
     ######################################################################
@@ -67,11 +67,11 @@ if __name__ == '__main__':
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_fold{args.fold}_bs{bs}_dt{date_time}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
 
-    for fold, foldData in enumerate(skFoldData):
+    for fold, foldData in enumerate(mskFoldData):
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = models.Model(pretrained = True, target_size = target_size)
+            model = models.Model(pretrained = True, training = True)
             model.to(device)
     
             trIDs = foldData['trIDs']
@@ -125,10 +125,10 @@ if __name__ == '__main__':
             
             optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 #    
-#            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-#                                                                factor=config.FACTOR, patience=config.PATIENCE,
-#                                                                verbose=True, eps=config.EPS)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-6, last_epoch = -1)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
+                                                                factor=config.FACTOR, patience=config.PATIENCE,
+                                                                verbose=True, eps=config.EPS)
+#            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-7, last_epoch = -1)
 
     
             # logger.info(f'***************************************************************************************************************************')

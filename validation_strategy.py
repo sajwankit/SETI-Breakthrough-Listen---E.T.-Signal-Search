@@ -22,7 +22,7 @@ def get_SKFold(ids, targets, n_folds, seed = 2021, shuffle = True):
     return skFoldsData
 
 def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
-    mskf = IterativeStratification(n_splits=4, order=1, random_state=seed)
+    mskf = IterativeStratification(n_splits=nfolds, order=1)
     msKFoldsData = []
     for fold, (idxT, idxV) in enumerate(mskf.split(np.array(ids), np.array(multi_targets))):
         msKFoldsData.append({'trIDs':idxT, 'vIDs':idxV})

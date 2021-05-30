@@ -4,12 +4,12 @@ tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
 
-i = 1
+i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
 
-IMAGE_SIZE = (128,128)
+IMAGE_SIZE = (256,256)
 resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                      f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 RESIZED_IMAGE_PATH = resize_image_path[i]
@@ -22,10 +22,10 @@ BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
 
-MODEL_NAME = 'nfnet_l0'
+MODEL_NAME = 'efficientnet_b0'
 CHANNELS = 1
 
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 5e-5
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-8

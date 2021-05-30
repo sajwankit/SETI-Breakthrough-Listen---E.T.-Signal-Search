@@ -71,7 +71,7 @@ class DesignImage():
 
 
 if __name__ == "__main__":
-    designImage = DesignImage(images_set = 'test', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
+    designImage = DesignImage(images_set = 'train', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
     
     
     with Pool(16) as p:
