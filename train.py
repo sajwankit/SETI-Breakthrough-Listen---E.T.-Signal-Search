@@ -44,6 +44,26 @@ if __name__ == '__main__':
                                 seed = config.SEED,
                                 shuffle = True)
 
+
+    ######################################################################
+    # stratify based on target and image group
+    id_keys_map = {'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 'f':15}
+    id_keys = []
+    for key in df['id'].values.tolist():
+        try:
+            key = int(key[0])
+        except:
+            key = id_keys_map[key[0]]
+        id_keys.append(key)
+    target = tr['target'].values.tolist()
+    multi_targets = [ [id_keys[x], target[x]] for x in range(len(df))]
+
+    mskFoldData = vs.get_SKFold(ids = df.index.values,
+                                targets = np.array(multi_targets),
+                                n_folds = config.FOLDS,
+                                seed = config.SEED)
+    ########################################################################
+
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_fold{args.fold}_bs{bs}_dt{date_time}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
 
