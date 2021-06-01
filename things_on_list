@@ -4,7 +4,7 @@ CNN training:
 3. dropping off channels from image --DONE
 2. mixup
 3. cutmix --?
-4. other augmentations
+4. inseting needles
 
 RCNN TRAINING
 
