@@ -1,10 +1,21 @@
 CNN training:
+observe positive classes
+mechanism to identify lines in image
+attention
+contrast augment
+identifying rsi
+spectrogram ift?
+
+
+
+
 5. pytorch amp - mixed precision -- DONE
 1. arranging channels -- DONE
 3. dropping off channels from image --DONE
 2. mixup
 3. cutmix --?
-4. inseting needles
+4. inserting needles
+
 
 RCNN TRAINING
 
