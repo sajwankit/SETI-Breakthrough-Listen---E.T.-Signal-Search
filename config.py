@@ -1,5 +1,8 @@
 import datetime
 import pytz
+import os
+
+
 tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
@@ -37,9 +40,14 @@ EPS = 1e-8
 SEED = 42
 
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
-OUTPUT_PATH = out_path[i]
+MODEL_OUTPUT_PATH = out_path[i]
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
-LOG_DIR = log_path[i]
+foldername = f'{MODEL_NAME}_dt{DATETIME}'
+LOG_DIR = f'{os.path.join(log_path[i], foldername)}/'
+try:
+    os.mkdir(LOG_DIR[:-1])
+except:
+    print('folder exists, make sure this call is from inference.py')
 
 INFER = False

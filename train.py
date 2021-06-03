@@ -66,7 +66,7 @@ if __name__ == '__main__':
                                 seed = config.SEED)
     ########################################################################
 
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_fold{args.fold}_bs{bs}_dt{date_time}')
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{date_time}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
 
     for fold, foldData in enumerate(mskFoldData):
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_size{config.IMAGE_SIZE[0]}_dt{date_time}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
 
 
 
