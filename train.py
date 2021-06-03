@@ -161,7 +161,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{date_time}.pth')
+                                f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_size{config.IMAGE_SIZE[0]}_dt{date_time}.pth')
 
 
 
