@@ -22,6 +22,6 @@ RCNN TRAINING
 VIT
 
 
-########################INPUT IMAGE
---------HAS RSI-------------------------------NO RSI
---------
+1. SHOW FALSE POSITIVE, TRUE POSITIVE, WHICH IMAGE CLASSIFIED AS FP
+2. USE IMAGE SHAPED AS BY KAGGLERS
+3. 
