@@ -16,6 +16,8 @@ IMAGE_SIZE = (256,256)
 resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                      f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 
+
+ORIG_IMAGE = False
 RESIZED_IMAGE_PATH = resize_image_path[i]
 try:
     os.makedirs(RESIZED_IMAGE_PATH[:-1])
@@ -28,7 +30,7 @@ DEBUG = False
 MIXED_PRECISION = True
 
 DEVICE = 'cuda'
-EPOCHS = 7
+EPOCHS = 2
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
@@ -55,4 +57,4 @@ try:
 except:
     print('folder exists, make sure this call is from inference.py')
 
-INFER = False
+INFER = True

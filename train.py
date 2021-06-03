@@ -17,7 +17,7 @@ import validation_strategy as vs
 import seedandlog
 
 from torch.cuda import amp
-
+torch.multiprocessing.set_sharing_strategy('file_system')
 if __name__ == '__main__':
     seedandlog.seed_torch(seed=config.SEED)
     date_time = config.DATETIME

@@ -148,11 +148,11 @@ class SetiDataset:
         
         image = np.array(image)
 
-        if np.random.uniform(0, 1)>0.5:
-            image = ImageTransformer(image).swap_channels()
-        
-        if np.random.uniform(0, 1)>0.5:
-            image = ImageTransformer(image).drop_channels()
+#        if np.random.uniform(0, 1)>0.5:
+#            image = ImageTransformer(image).swap_channels()
+#        
+#        if np.random.uniform(0, 1)>0.5:
+#            image = ImageTransformer(image).drop_channels()
 
         if self.augmentations is not None:
             augmented = self.augmentations(image = image)

@@ -39,6 +39,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
     final_targets = []
     final_outputs = []
+    final_ids = []
 
 #    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
@@ -87,7 +88,8 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
         final_outputs.extend(torch.sigmoid(outputs).detach().cpu().numpy().tolist())
-    return final_outputs, final_targets, ids, losses.avg
+        final_ids.extend(ids)
+    return final_outputs, final_targets, final_ids, losses.avg
 
 
 def evaluate(data_loader, model, device):
@@ -106,6 +108,7 @@ def evaluate(data_loader, model, device):
 
     final_targets = []
     final_outputs = []
+    final_ids = []
 
     #we use no_grad context:
     with torch.no_grad():
@@ -130,13 +133,14 @@ def evaluate(data_loader, model, device):
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)
+            final_ids.extend(ids)
 #
 #            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #                et = time.time()
 #                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
 
-    return final_outputs, final_targets, ids, losses.avg
+    return final_outputs, final_targets, final_ids, losses.avg
 
 
 def predict(data_loader, model, device):
@@ -158,8 +162,7 @@ def predict(data_loader, model, device):
         for batch_number, data in enumerate(data_loader):
             inputs = data['images']
             inputs = inputs.to(device, dtype = torch.float)
-            
-            ids = data['ids']
+
             
             #do forward step to generate prediction
             outputs = model(inputs)
@@ -172,7 +175,7 @@ def predict(data_loader, model, device):
 #                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
 
-    return final_outputs, ids
+    return final_outputs
 
     
 

@@ -46,13 +46,16 @@ if __name__ == '__main__':
 
     if config.INFER == True:
         def get_test_file_path(image_id):
+            if config.ORIG_IMAGE == True:
                 return f"{data_path}test/{image_id[0]}/{image_id}.npy"
+            else:
+                return f"{config.RESIZED_IMAGE_PATH}test/{image_id}.npy"
 
         inference_df = pd.read_csv(data_path+'sample_submission.csv')
         inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
 
 
-        test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist())
+        test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist(), ids = inference_df.index.values.tolist())
         test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
                                              shuffle=False, 
                                             num_workers=4)
@@ -68,6 +71,6 @@ if __name__ == '__main__':
         mean_predictions = mean_predictions/config.FOLDS
 
         inference_df['target'] = mean_predictions
-        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_{config.MODEL_NAME}_bs{bs}_cv{oof_auc}_dt{config.DATETIME}.csv', index=False)
+        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_cv{oof_auc}_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index=False)
         print(inference_df[['id', 'target']].head())
     
