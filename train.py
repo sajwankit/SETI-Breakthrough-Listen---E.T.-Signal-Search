@@ -39,8 +39,6 @@ if __name__ == '__main__':
     images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
-
-
     
 #    skFoldData = vs.get_SKFold(ids = df.index.values,
 #                                targets = targets,
@@ -95,6 +93,7 @@ if __name__ == '__main__':
     
             train_dataset = dataset.SetiDataset(image_paths = train_images_path,
                                                     targets = train_targets,
+                                                    ids = trIDs,
                                                     resize = None,
                                                     augmentations = None)
     
@@ -118,6 +117,7 @@ if __name__ == '__main__':
     
             valid_dataset = dataset.SetiDataset(image_paths = valid_images_path,
                                                 targets = valid_targets,
+                                                ids = vIDs,
                                                 resize = None,
                                                 augmentations = None)
                                                     
@@ -148,8 +148,8 @@ if __name__ == '__main__':
             best_valid_loss = 999
             for epoch in range(epochs):
                 st = time.time()
-                train_predictions, train_targets, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
-                predictions, valid_targets, valid_loss = engine.evaluate(valid_loader, model, device)
+                train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
+                predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
                 scheduler.step(valid_loss)
                 train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
                 valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
@@ -157,7 +157,8 @@ if __name__ == '__main__':
                 logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{(et-st)/60}')
                 if valid_loss <= best_valid_loss:
                     best_valid_loss = valid_loss
-                    torch.save({'model': model.state_dict(), 
+                    torch.save({'model': model.state_dict(),
+                                'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
                                 f'{config.OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_dt{date_time}.pth')
