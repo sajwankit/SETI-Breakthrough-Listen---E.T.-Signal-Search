@@ -3,7 +3,8 @@ import numpy as np
 import glob
 import pandas as pd
 import config
-from skmultilearn.model_selection import IterativeStratification
+# from skmultilearn.model_selection import IterativeStratification
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
 # create kfolds, return: list of tuples: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number)
 # if fold_number specified, return: list with single tuple: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number) 
@@ -22,18 +23,35 @@ def get_SKFold(ids, targets, n_folds, seed = 2021, shuffle = True):
     return skFoldsData
 
 def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
-    mskf = IterativeStratification(n_splits=nfolds, order=1)
+    # mskf = IterativeStratification(n_splits=nfolds, order=1)
+    mskf = MultilabelStratifiedKFold(n_splits=nfolds, shuffle=True, random_state=seed)
     msKFoldsData = []
     for fold, (idxT, idxV) in enumerate(mskf.split(np.array(ids), np.array(multi_targets))):
         msKFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
     return msKFoldsData
 
-# msKFoldsData = get_customSKFold(ids=[], multi_targets=[], nfolds=6, seed = 2021, shuffle = True)
-
+############TRYING THE VALIDATION STRATEGY######################################
 # trl = pd.read_csv(f'{config.DATA_PATH}train_labels.csv')
+# id_keys_map = {'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 'f':15}
+# id_keys = []
+# for key in trl['id'].values.tolist():
+#     try:
+#         key = int(key[0])
+#     except:
+#         key = id_keys_map[key[0]]
+#     id_keys.append(key)
+# target = trl['target'].values.tolist()
+# multi_targets = [ [id_keys[x], target[x]] for x in range(len(trl))]
+
+
+# mskFoldData = get_MSKFold(ids = trl.index.values,
+#                                 multi_targets = np.array(multi_targets),
+#                                 nfolds = config.FOLDS,
+#                                 seed = config.SEED)
+
 # for i in range(4):
-#     tri = msKFoldsData[i]['trIDs']
-#     vi = msKFoldsData[i]['vIDs']
+#     tri = mskFoldData[i]['trIDs']
+#     vi = mskFoldData[i]['vIDs']
 #     tr = trl.loc[trl.index.isin(tri)]
 #     v = trl.loc[trl.index.isin(vi)]
 #     # train['fold'] = train['fold'].astype(int)
