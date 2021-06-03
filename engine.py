@@ -47,6 +47,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
     for batch_number, data in enumerate(data_loader):
         inputs = data['images']
         targets = data['targets']
+        ids = data['ids']
 
         #moving inputs and targets to device: cpu or cuda
         inputs = inputs.to(device, dtype = torch.float)
@@ -86,7 +87,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
         final_outputs.extend(torch.sigmoid(outputs).detach().cpu().numpy().tolist())
-    return final_outputs, final_targets, losses.avg
+    return final_outputs, final_targets, ids, losses.avg
 
 
 def evaluate(data_loader, model, device):
@@ -113,6 +114,8 @@ def evaluate(data_loader, model, device):
         for batch_number, data in enumerate(data_loader):
             inputs = data['images']
             targets = data['targets']
+            ids = data['ids']
+            
             inputs = inputs.to(device, dtype = torch.float)
             targets = targets.to(device, dtype = torch.float)
 
@@ -133,7 +136,7 @@ def evaluate(data_loader, model, device):
 #                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
 
-    return final_outputs, final_targets, losses.avg
+    return final_outputs, final_targets, ids, losses.avg
 
 
 def predict(data_loader, model, device):
@@ -155,8 +158,10 @@ def predict(data_loader, model, device):
         for batch_number, data in enumerate(data_loader):
             inputs = data['images']
             inputs = inputs.to(device, dtype = torch.float)
-
-            #do forward step to generat prediction
+            
+            ids = data['ids']
+            
+            #do forward step to generate prediction
             outputs = model(inputs)
             outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
 
@@ -167,7 +172,7 @@ def predict(data_loader, model, device):
 #                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
 
-    return final_outputs
+    return final_outputs, ids
 
     
 
