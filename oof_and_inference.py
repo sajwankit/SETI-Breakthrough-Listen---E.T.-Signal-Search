@@ -9,6 +9,8 @@ import engine
 import models
 import validation_strategy as vs
 import seedandlog
+import os
+  
 
 
 if __name__ == '__main__':
@@ -27,7 +29,7 @@ if __name__ == '__main__':
         df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
         df['predictions'] = np.array(state['predictions']).reshape(-1)
         df['targets'] = np.array(state['valid_targets']).reshape(-1)
-        df['train_labels_ids'] = np.array(state['valid_ids']).reshape(-1)
+        df['target_ids'] = np.array(state['valid_ids']).reshape(-1)
         return df
 
     oof_df = None
