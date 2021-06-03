@@ -121,7 +121,7 @@ class ImageTransformer():
         return out_image_array
 
 class SetiDataset:
-    def __init__(self, image_paths, targets = None, ids = None resize=None, augmentations = None):
+    def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
         self.image_paths = image_paths
         self.targets = targets
         self.ids = ids
