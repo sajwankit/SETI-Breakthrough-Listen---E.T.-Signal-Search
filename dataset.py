@@ -121,9 +121,10 @@ class ImageTransformer():
         return out_image_array
 
 class SetiDataset:
-    def __init__(self, image_paths, targets = None, resize=None, augmentations = None):
+    def __init__(self, image_paths, targets = None, ids = None resize=None, augmentations = None):
         self.image_paths = image_paths
         self.targets = targets
+        self.ids = ids
         self.resize = resize
         self.augmentations = augmentations
 
@@ -133,13 +134,13 @@ class SetiDataset:
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
         image = np.load(self.image_paths[item])
-
+        id = self.ids[item]
         # #use when using resized images
         # image = image.reshape(1,image.shape[0],image.shape[1])
 
 
         if self.targets is not None:
-            targets = self.targets[item]
+            target = self.targets[item]
 
         if self.resize is not None:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
@@ -161,8 +162,10 @@ class SetiDataset:
 
         if self.targets is not None:
             return{'images': torch.tensor(image, dtype = torch.float), 
-                    'targets': torch.tensor(targets, dtype = torch.long)}
+                    'targets': torch.tensor(target, dtype = torch.long),
+                  'ids': torch.tensor(id, dtype = torch.int32)}
         else:
-            return{'images': torch.tensor(image, dtype = torch.float)}
+            return{'images': torch.tensor(image, dtype = torch.float),
+                  'ids': torch.tensor(id, dtype = torch.int32)}
 
 # SetiDataset(['/content/drive/MyDrive/SETI/resized_images/128128/train/ecb6df8c6f71.npy'], targets = None, resize=None, augmentations = None)[0]
