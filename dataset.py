@@ -135,8 +135,9 @@ class SetiDataset:
         # image = Image.open(self.image_paths[item])
         image = np.load(self.image_paths[item])
         id = self.ids[item]
+        
         # #use when using resized images
-        # image = image.reshape(1,image.shape[0],image.shape[1])
+        image = image.reshape(1,image.shape[0],image.shape[1])
 
 
         if self.targets is not None:

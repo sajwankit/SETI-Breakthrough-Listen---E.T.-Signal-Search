@@ -24,7 +24,7 @@ except:
 SAVE_IMAGE = True
 
 
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 
 DEVICE = 'cuda'
