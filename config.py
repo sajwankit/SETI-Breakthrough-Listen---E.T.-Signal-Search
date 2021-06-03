@@ -41,3 +41,5 @@ OUTPUT_PATH = out_path[i]
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 LOG_DIR = log_path[i]
+
+config.INFER = False
