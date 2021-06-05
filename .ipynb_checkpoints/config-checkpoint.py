@@ -11,19 +11,21 @@ i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
+ORIG_IMAGE = True
+IMAGE_SIZE = (273,256)
+if not ORIG_IMAGE:
+    IMAGE_SIZE = (256,256)
+    resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
+                         f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 
-IMAGE_SIZE = (256,256)
-resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
-                     f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 
 
-ORIG_IMAGE = False
-RESIZED_IMAGE_PATH = resize_image_path[i]
-try:
-    os.makedirs(RESIZED_IMAGE_PATH[:-1])
-except:
-    print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
-SAVE_IMAGE = True
+    RESIZED_IMAGE_PATH = resize_image_path[i]
+    try:
+        os.makedirs(RESIZED_IMAGE_PATH[:-1])
+    except:
+        print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
+    SAVE_IMAGE = True
 
 
 DEBUG = False

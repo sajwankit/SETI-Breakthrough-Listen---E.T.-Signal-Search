@@ -1,3 +1,11 @@
+* compressing image results in loss of positive needles..
+need to a way to either preserve the positive needles in the compressed image, or:
+read orig image chunkwise, run model on the chunks
+
+
+
+
+
 CNN training:
 observe positive classes
 mechanism to identify lines in image

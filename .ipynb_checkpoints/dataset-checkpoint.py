@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from PIL import ImagePath
 import random
-
+import config
 
 class ImageTransformer():
     def __init__(self, image_array):
@@ -134,10 +134,20 @@ class SetiDataset:
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
         image = np.load(self.image_paths[item])
+                    
         id = self.ids[item]
         
-        # #use when using resized images
-        image = image.reshape(1,image.shape[0],image.shape[1])
+        if not config.ORIG_IMAGE:
+            # #use when using resized images
+            image = image.reshape(1,image.shape[0],image.shape[1])
+        else:
+            #converting 6 channels to 1 for original image, inverting off channels
+            max_pix = np.amax(image)
+            image[1] = max_pix - image[1]
+            image[3] = max_pix - image[3]
+            image[5] = max_pix - image[5]
+            image = np.vstack(image).transpose((1, 0))
+            image = image.reshape(1,image.shape[0],image.shape[1])
 
 
         if self.targets is not None:

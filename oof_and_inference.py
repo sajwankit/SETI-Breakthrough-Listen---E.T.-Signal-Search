@@ -10,6 +10,8 @@ import models
 import validation_strategy as vs
 import seedandlog
 import os
+
+from tqdm import tqdm
   
 
 
@@ -46,12 +48,16 @@ if __name__ == '__main__':
 
     if config.INFER == True:
         def get_test_file_path(image_id):
-            if config.ORIG_IMAGE == True:
+            if config.ORIG_IMAGE:
                 return f"{data_path}test/{image_id[0]}/{image_id}.npy"
             else:
                 return f"{config.RESIZED_IMAGE_PATH}test/{image_id}.npy"
-
-        inference_df = pd.read_csv(data_path+'sample_submission.csv')
+            
+        if config.DEBUG:
+            inference_df = pd.read_csv(data_path+'sample_submission.csv')[:10]
+        else:
+            inference_df = pd.read_csv(data_path+'sample_submission.csv')
+            
         inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
 
 
@@ -63,7 +69,8 @@ if __name__ == '__main__':
 
         predictions_all_folds = []
         mean_predictions = np.array([0]*len(inference_df))
-        for fold in range(config.FOLDS):
+        print('Inference ON ! \n')
+        for fold in tqdm(range(config.FOLDS)):
             model.load_state_dict(states[fold]['model'])                                    
             predictions = engine.predict(test_loader, model, device)
             mean_predictions = mean_predictions + np.array(predictions)
