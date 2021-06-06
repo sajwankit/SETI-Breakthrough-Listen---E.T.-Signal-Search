@@ -136,10 +136,6 @@ if __name__ == '__main__':
                                                                 verbose=True, eps=config.EPS)
 #            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-7, last_epoch = -1)
 
-    
-            # logger.info(f'***************************************************************************************************************************')
-            # logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
-            # logger.info(f'***************************************************************************************************************************')
 
             if config.MIXED_PRECISION:
                 #mixed precision training
@@ -148,22 +144,34 @@ if __name__ == '__main__':
                 scaler = None
 
             best_valid_loss = 999
+            best_valid_roc_auc = -999
             for epoch in range(epochs):
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
                 scheduler.step(valid_loss)
-                train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
+                train_roc_auc = metrics.roc_auc_score(round(train_targets), train_predictions)
                 valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()
-                logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{(et-st)/60}')
+
+                # train auc doesnot make sense when using mixup
+                logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{train_loss}, {(et-st)/60}')
+                
                 if valid_loss <= best_valid_loss:
                     best_valid_loss = valid_loss
                     torch.save({'model': model.state_dict(),
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
+                                f'loss_{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
+
+                if valid_roc_auc >= best_valid_roc_auc:
+                    best_valid_roc_auc = valid_roc_auc
+                    torch.save({'model': model.state_dict(),
+                                'valid_ids': valid_ids,
+                                'predictions': predictions,
+                                'valid_targets': valid_targets},
+                                f'auc_{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
 
 
 

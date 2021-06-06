@@ -27,16 +27,16 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
                 
-    def mixup(inputs, targets):
-        lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
-        batch_size = inputs.size()[0]
-        index = torch.randperm(batch_size)
-        mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
-        targets1, targets2 = targets, targets[index]
-        return mixed_inputs, targets1, targets2, lam
+def mixup(inputs, targets):
+    lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
+    batch_size = inputs.size()[0]
+    index = torch.randperm(batch_size)
+    mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
+    targets1, targets2 = targets, targets[index]
+    return mixed_inputs, targets1, targets2, lam
 
-    def loss_criterion(outputs, targets):
-        return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+def loss_criterion(outputs, targets):
+    return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -46,9 +46,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
     #putting model to train mode
     model.train()   
 
-
     st = time.time()
-
 
     final_targets = []
     final_outputs = []
