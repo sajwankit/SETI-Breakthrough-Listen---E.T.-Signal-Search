@@ -2,7 +2,6 @@ import datetime
 import pytz
 import os
 
-
 tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
@@ -29,7 +28,7 @@ if not ORIG_IMAGE:
 
 
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 0.4

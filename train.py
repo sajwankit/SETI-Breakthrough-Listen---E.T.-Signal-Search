@@ -67,7 +67,7 @@ if __name__ == '__main__':
     ########################################################################
 
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{date_time}')
-    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
+    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
     for fold, foldData in enumerate(mskFoldData):
         if fold == args.fold or args.fold is None:
@@ -150,7 +150,7 @@ if __name__ == '__main__':
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
                 scheduler.step(valid_loss)
-                train_roc_auc = metrics.roc_auc_score(round(train_targets), train_predictions)
+                train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
                 valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'loss_{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
 
                 if valid_roc_auc >= best_valid_roc_auc:
                     best_valid_roc_auc = valid_roc_auc
@@ -171,7 +171,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'auc_{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
 
 
 

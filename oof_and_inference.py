@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     model = models.Model(pretrained = False)
     model.to(device)
-    states = [torch.load(f'{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
+    states = [torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
 
     def get_oof_df(state):
         df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
