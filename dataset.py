@@ -6,13 +6,14 @@ import random
 import config
 import albumentations as A
 
-class ImageTransformer():
+class ImageTransform():
     def __init__(self, image_array):
         self.image_array = image_array
 
-    def __init__(self, image_array):
-        self.image_array = image_array
-
+    def normalize(self):
+        # normalise image with 0 mean, 1 std
+        return (self.image_array - np.mean(self.image_array)) / (np.std(self.image_array)).astype(np.float32)
+    
     def random_brightness_contrast(self, bl = [0, 0], cl = [0.5, 0.5], p =1):
         transform = A.RandomBrightnessContrast(brightness_limit = bl, contrast_limit = cl, p = p)
         trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
@@ -22,68 +23,80 @@ class ImageTransformer():
         transform = A.Sharpen(alpha = alpha, lightness = lightness, p=p)
         trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
         return trans_image_array
-
-    def swap_channels(self, p = 0.3, ):
-        
-        # init_shape = (273*2, 256*3) (f, t)
-        final_shape = self.image_array.shape
-        chnl_shape = (final_shape[0]//1, final_shape[1]//6) #will be approx to note.
-
-
-        chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
-        chnls['pos_chnls'].remove(random.choice(chnls['pos_chnls']))
-        chnls['neg_chnls'].remove(random.choice(chnls['neg_chnls']))
-        swap_op = random.choice(['pos_chnls', 'neg_chnls', 'both_swap'])
-
-        f = chnl_shape[1]
-        t = chnl_shape[0]
-
-        # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-
-        trans_image_array = np.copy(self.image_array)
-        if swap_op == 'pos_chnls' or swap_op == 'both_swap':
-            c1 = chnls['pos_chnls'][0]
-            c2 = chnls['pos_chnls'][1]
-            trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
-            trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f]
-
-        if swap_op == 'neg_chnls' or swap_op == 'both_swap':
-            c1 = chnls['neg_chnls'][0]
-            c2 = chnls['neg_chnls'][1]
-            trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
-            trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f] 
-
+    
+    def vertical_flip(self, p = 0.5):
+        transform = A.VerticalFlip(p=p)
+        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
         return trans_image_array
 
+    def shift_scale_rotate(self, shift_limit=0.2, scale_limit=0.2, rotate_limit=20,
+                            interpolation=1, border_mode=0, value=None,
+                            mask_value=None, shift_limit_x=None, shift_limit_y=None,
+                            always_apply=False, p=0.5):
+
+        transform = A.ShiftScaleRotate(shift_limit=shift_limit, scale_limit=scale_limit, rotate_limit=rotate_limit,
+                                         interpolation=interpolation, border_mode=border_mode, value=value,
+                                         mask_value=mask_value, shift_limit_x=shift_limit_x, shift_limit_y=shift_limit_y,
+                                         always_apply=always_apply, p=p) 
+
+        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
+        return trans_image_array
+
+    def swap_channels(self, p = 0.3, ):
+        if np.random.uniform(0, 1) <= p:
+            # init_shape = (273*2, 256*3) (f, t)
+            final_shape = self.image_array.shape
+            chnl_shape = (final_shape[0]//1, final_shape[1]//6) #will be approx to note.
+
+
+            chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
+            chnls['pos_chnls'].remove(random.choice(chnls['pos_chnls']))
+            chnls['neg_chnls'].remove(random.choice(chnls['neg_chnls']))
+            swap_op = random.choice(['pos_chnls', 'neg_chnls', 'both_swap'])
+
+            f = chnl_shape[1]
+            t = chnl_shape[0]
+
+            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+
+            trans_image_array = np.copy(self.image_array)
+            if swap_op == 'pos_chnls' or swap_op == 'both_swap':
+                c1 = chnls['pos_chnls'][0]
+                c2 = chnls['pos_chnls'][1]
+                trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
+                trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f]
+
+            if swap_op == 'neg_chnls' or swap_op == 'both_swap':
+                c1 = chnls['neg_chnls'][0]
+                c2 = chnls['neg_chnls'][1]
+                trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
+                trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f] 
+
+            return trans_image_array.astype(np.float32)
+        else:
+            return self.image_array.astype(np.float32)
+
     def drop_channels(self, p = 0.3,):
-        #getting size of image_part of a channel in image_array
-        # init_shape = (273*2, 256*3)
-        final_shape = self.image_array.shape
-        chnl_shape = (final_shape[0]//2, final_shape[1]//3) #will be approx to note.
+        if np.random.uniform(0, 1) <= p:
+            # init_shape = (273*2, 256*3) (f, t)
+            final_shape = self.image_array.shape
+            chnl_shape = (final_shape[0]//1, final_shape[1]//6) #will be approx to note.
 
-        chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
-        chnls_to_remove = random.sample(chnls['neg_chnls'], random.choice([1,2]))
+            chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
+            chnls_to_remove = random.sample(chnls['neg_chnls'], random.choice([1,2]))
 
-        x = chnl_shape[1]
-        y = chnl_shape[0]
+            f = chnl_shape[1]
+            t = chnl_shape[0]
 
-        # image_patches = [self.image_array[ :y, :x], 0
-        #                 self.image_array[ y:2*y, :x], 1
-        #                 self.image_array[:y, x:2*x], 2
-        #                 self.image_array[y:2*y, x:2*x], 3
-        #                 self.image_array[:y, 2*x:3*x], 4
-        #                 self.image_array[y:2*y, 2*x:3*x]] 5
-        
-        out_image_array = self.image_array
-        for c in chnls_to_remove:
-            if c == 1:
-                out_image_array[ y:2*y, :x] = 0
-            if c == 3:
-                out_image_array[y:2*y, x:2*x] = 0
-            if c == 5:
-                out_image_array[y:2*y, 2*x:3*x] = 0
-        # np.save(f'/content/drive/MyDrive/SETI/drop.npy', out_image_array)
-        return out_image_array
+            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+            trans_image_array = np.copy(self.image_array)
+            for c in chnls_to_remove:
+                trans_image_array[c:(c+1)*t, : f] = 0
+
+            return trans_image_array.astype(np.float32)
+        else:
+            return self.image_array.astype(np.float32)
+    
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
