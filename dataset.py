@@ -1,3 +1,4 @@
+from albumentations.core.composition import OneOf
 import torch
 import numpy as np
 from PIL import Image
@@ -14,31 +15,19 @@ class ImageTransform():
         # normalise image with 0 mean, 1 std
         return (self.image_array - np.mean(self.image_array)) / (np.std(self.image_array)).astype(np.float32)
     
-    def random_brightness_contrast(self, bl = [0, 0], cl = [0.5, 0.5], p =1):
-        transform = A.RandomBrightnessContrast(brightness_limit = bl, contrast_limit = cl, p = p)
-        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
-        return trans_image_array
-    
-    def sharpen(self, alpha = [0, 0], lightness = [0.5, 0.5], p =1):
-        transform = A.Sharpen(alpha = alpha, lightness = lightness, p=p)
-        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
-        return trans_image_array
-    
-    def vertical_flip(self, p = 0.5):
-        transform = A.VerticalFlip(p=p)
-        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
-        return trans_image_array
-
-    def shift_scale_rotate(self, shift_limit=0.2, scale_limit=0.2, rotate_limit=20,
-                            interpolation=1, border_mode=0, value=None,
-                            mask_value=None, shift_limit_x=None, shift_limit_y=None,
-                            always_apply=False, p=0.5):
-
-        transform = A.ShiftScaleRotate(shift_limit=shift_limit, scale_limit=scale_limit, rotate_limit=rotate_limit,
-                                         interpolation=interpolation, border_mode=border_mode, value=value,
-                                         mask_value=mask_value, shift_limit_x=shift_limit_x, shift_limit_y=shift_limit_y,
-                                         always_apply=always_apply, p=p) 
-
+    def album(self):
+        transform = A.Compose([
+            A.OneOf(
+                    A.RandomBrightness(limit=0.2, p=0.75),
+                    A.RandomContrast(limit=0.2, p=0.75),
+                    A.Sharpen(alpha = [0, 0], lightness = [0.5, 0.5], p =1)
+                    ),
+            A.VerticalFlip(p=0.5),
+            A.ShiftScaleRotate(self, shift_limit=0.2, scale_limit=0.2, rotate_limit=20,
+                                interpolation=1, border_mode=0, value=None,
+                                mask_value=None, shift_limit_x=None, shift_limit_y=None,
+                                always_apply=False, p=0.5)
+                            ])
         trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
         return trans_image_array
 
@@ -95,7 +84,6 @@ class ImageTransform():
             return trans_image_array.astype(np.float32)
         else:
             return self.image_array.astype(np.float32)
-    
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
@@ -133,17 +121,12 @@ class SetiDataset:
         if self.resize is not None:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
         
-        image = np.array(image)
-
-#        if np.random.uniform(0, 1)>0.5:
-#            image = ImageTransformer(image).swap_channels()
-#        
-#        if np.random.uniform(0, 1)>0.5:
-#            image = ImageTransformer(image).drop_channels()
-
         if self.augmentations is not None:
-            augmented = self.augmentations(image = image)
-            image = augmented['image']
+            imt = ImageTransform(image)
+            image = imt.album()
+            image = imt.swap_channels(p = 0.5)
+            image = imt.drop_channels(p = 1)
+
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
@@ -156,4 +139,5 @@ class SetiDataset:
             return{'images': torch.tensor(image, dtype = torch.float),
                   'ids': torch.tensor(id, dtype = torch.int32)}
 
-# SetiDataset(['/content/drive/MyDrive/SETI/resized_images/128128/train/ecb6df8c6f71.npy'], targets = None, resize=None, augmentations = None)[0]
+# i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
+# print(i)
