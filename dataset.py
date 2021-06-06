@@ -4,16 +4,30 @@ from PIL import Image
 from PIL import ImagePath
 import random
 import config
+import albumentations as A
 
 class ImageTransformer():
     def __init__(self, image_array):
         self.image_array = image_array
 
+    def __init__(self, image_array):
+        self.image_array = image_array
+
+    def random_brightness_contrast(self, bl = [0, 0], cl = [0.5, 0.5], p =1):
+        transform = A.RandomBrightnessContrast(brightness_limit = bl, contrast_limit = cl, p = p)
+        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
+        return trans_image_array
+    
+    def sharpen(self, alpha = [0, 0], lightness = [0.5, 0.5], p =1):
+        transform = A.Sharpen(alpha = alpha, lightness = lightness, p=p)
+        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
+        return trans_image_array
+
     def swap_channels(self, p = 0.3, ):
-        #getting size of image_part of a channel in image_array
-        # init_shape = (273*2, 256*3)
+        
+        # init_shape = (273*2, 256*3) (f, t)
         final_shape = self.image_array.shape
-        chnl_shape = (final_shape[0]//2, final_shape[1]//3) #will be approx to note.
+        chnl_shape = (final_shape[0]//1, final_shape[1]//6) #will be approx to note.
 
 
         chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
@@ -21,74 +35,25 @@ class ImageTransformer():
         chnls['neg_chnls'].remove(random.choice(chnls['neg_chnls']))
         swap_op = random.choice(['pos_chnls', 'neg_chnls', 'both_swap'])
 
-        x = chnl_shape[1]
-        y = chnl_shape[0]
+        f = chnl_shape[1]
+        t = chnl_shape[0]
 
-        # image_patches = [self.image_array[ :y, :x], 0
-        #                 self.image_array[ y:2*y, :x], 1
-        #                 self.image_array[:y, x:2*x], 2
-        #                 self.image_array[y:2*y, x:2*x], 3
-        #                 self.image_array[:y, 2*x:3*x], 4
-        #                 self.image_array[y:2*y, 2*x:3*x]] 5
-        
-        image_patches = {}
-        for c in chnls['pos_chnls']:
-            if c == 0:
-                image_patches[0] =  np.copy(self.image_array[ :y, :x])
-            if c == 2:
-                image_patches[2] =  np.copy(self.image_array[:y, x:2*x])
-            if c == 4:
-                image_patches[4] = np.copy(self.image_array[:y, 2*x:3*x])
+        # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
 
-
-        for c in chnls['neg_chnls']:
-            if c == 1:
-                image_patches[1] =  np.copy(self.image_array[ y:2*y, :x])
-            if c == 3:
-                image_patches[3] =  np.copy(self.image_array[y:2*y, x:2*x])
-            if c == 5:
-                image_patches[5] = np.copy(self.image_array[y:2*y, 2*x:3*x])
-
-        out_image_array = np.copy(self.image_array)
+        trans_image_array = np.copy(self.image_array)
         if swap_op == 'pos_chnls' or swap_op == 'both_swap':
-            if chnls['pos_chnls'][0] == 0:
-                out_image_array[ :y, :x] = image_patches[chnls['pos_chnls'][1]]
-
-            if chnls['pos_chnls'][0] == 2:
-                out_image_array[:y, x:2*x] = image_patches[chnls['pos_chnls'][1]]
-
-            if chnls['pos_chnls'][0] == 4:
-                out_image_array[:y, 2*x:3*x] = image_patches[chnls['pos_chnls'][1]]
-            
-            if chnls['pos_chnls'][1] == 0:
-                out_image_array[ :y, :x] = image_patches[chnls['pos_chnls'][0]]
-
-            if chnls['pos_chnls'][1] == 2:
-                out_image_array[:y, x:2*x] = image_patches[chnls['pos_chnls'][0]]
-
-            if chnls['pos_chnls'][1] == 4:
-                out_image_array[:y, 2*x:3*x] = image_patches[chnls['pos_chnls'][0]]
+            c1 = chnls['pos_chnls'][0]
+            c2 = chnls['pos_chnls'][1]
+            trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
+            trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f]
 
         if swap_op == 'neg_chnls' or swap_op == 'both_swap':
-            if chnls['neg_chnls'][0] == 1:
-                out_image_array[ y:2*y, :x] = image_patches[chnls['neg_chnls'][1]]
+            c1 = chnls['neg_chnls'][0]
+            c2 = chnls['neg_chnls'][1]
+            trans_image_array[c1:(c1+1)*t, : f] = self.image_array[c2:(c2+1)*t, : f]
+            trans_image_array[c2:(c2+1)*t, : f] = self.image_array[c1:(c1+1)*t, : f] 
 
-            if chnls['neg_chnls'][0] == 3:
-                out_image_array[y:2*y, x:2*x] = image_patches[chnls['neg_chnls'][1]]
-
-            if chnls['neg_chnls'][0] == 5:
-                out_image_array[y:2*y, 2*x:3*x]= image_patches[chnls['neg_chnls'][1]]
-        
-            if chnls['neg_chnls'][1] == 1:
-                out_image_array[ y:2*y, :x] = image_patches[chnls['neg_chnls'][0]]
-
-            if chnls['neg_chnls'][1] == 3:
-                out_image_array[y:2*y, x:2*x] = image_patches[chnls['neg_chnls'][0]]
-
-            if chnls['neg_chnls'][1] == 5:
-                out_image_array[y:2*y, 2*x:3*x] = image_patches[chnls['neg_chnls'][0]]
-        # np.save(f'/content/drive/MyDrive/SETI/swap.npy', out_image_array)
-        return out_image_array
+        return trans_image_array
 
     def drop_channels(self, p = 0.3,):
         #getting size of image_part of a channel in image_array
