@@ -26,68 +26,17 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-def mixup(x, y, alpha=0.4):
-    # A lot of people seem to use an alpha of 1 and then clip to e.g. 0.3 and 0.7.
-    # This is closer to what FastAI does and has more gentle mixing up
-    indices = torch.randperm(len(x))
-
-    x_shuffled = x[indices]
-    y_shuffled = y[indices]
-
-    lam = np.random.beta(alpha, alpha)
-    x = lam * x + (1 - lam) * x_shuffled
-    y = lam * y + (1 - lam) * y_shuffled
-
-    return x, y
-
-def mixup_data(use_mixup, x, t, alpha=1.0, use_cuda=True):
-    '''Returns mixed inputs, pairs of targets, and lambda'''
-    if not use_mixup:
-        return x, t, None, None
-    
-    if alpha > 0:
-        lam = np.random.beta(alpha, alpha)
-    else:
-        lam = 1
-
-    batch_size = x.size()[0]
-    if use_cuda:
-        index = torch.randperm(batch_size).cuda()
-    else:
+                
+    def mixup(inputs, targets):
+        lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
+        batch_size = inputs.size()[0]
         index = torch.randperm(batch_size)
+        mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
+        targets1, targets2 = targets, targets[index]
+        return mixed_inputs, targets1, targets2, lam
 
-    mixed_x = lam * x + (1 - lam) * x[index, :]
-    t_a, t_b = t, t[index]
-    return mixed_x, t_a, t_b, lam
-
-
-def get_criterion(use_mixup, loss_func):
-
-    def mixup_criterion(pred, t_a, t_b, lam):
-        return lam * loss_func(pred, t_a) + (1 - lam) * loss_func(pred, t_b)
-
-    def single_criterion(pred, t_a, t_b, lam):
-        return loss_func(pred, t_a)
-    
-    if use_mixup:
-        return mixup_criterion
-    else:
-        return single_criterion
-
-def mixup(inputs, targets):
-    lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
-    batch_size = inputs.size()[0]
-    index = torch.randperm(batch_size)
-    mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
-    targets1, targets2 = targets, targets[index]
-    return mixed_inputs, targets1, targets2, lam
-
-def loss_criterion(outputs, targets):
-    if not config.MIXUP:
+    def loss_criterion(outputs, targets):
         return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
-    else:
-        mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-        return lam * loss_func(pred, t_a) + (1 - lam) * loss_func(pred, targets2)
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -123,20 +72,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
         
         if config.MIXED_PRECISION:
             #mixed precision
-            with amp.autocast():
-                
-
-                def mixup(inputs, targets):
-                    lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
-                    batch_size = inputs.size()[0]
-                    index = torch.randperm(batch_size)
-                    mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
-                    targets1, targets2 = targets, targets[index]
-                    return mixed_inputs, targets1, targets2, lam
-
-                def loss_criterion(outputs, targets):
-                    return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
-        
+            with amp.autocast():       
                 if config.MIXUP:
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
@@ -153,7 +89,6 @@ def train(data_loader, model, optimizer, device, scaler = None):
             scaler.step(optimizer)
             scaler.update()
         else:
-            outputs = model(inputs)
             if config.MIXUP:
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
