@@ -2,7 +2,6 @@ import datetime
 import pytz
 import os
 
-
 tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 DATETIME = datetime_NY.strftime('%m%d')
@@ -28,25 +27,25 @@ if not ORIG_IMAGE:
     SAVE_IMAGE = True
 
 
-DEBUG = False
+SEED = 42
+DEBUG = True
 MIXED_PRECISION = True
+MIXUP = True
+MIXUP_APLHA = 0.4
 
 DEVICE = 'cuda'
 EPOCHS = 3
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
-
 MODEL_NAME = 'efficientnet_b0'
 CHANNELS = 1
+MODEL_LOAD_FOR_INFER = 'loss'
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-8
-
-
-SEED = 42
 
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
@@ -60,3 +59,6 @@ except:
     print('folder exists, make sure this call is from inference.py')
 
 INFER = True
+
+
+

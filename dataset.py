@@ -11,24 +11,35 @@ class ImageTransform():
     def __init__(self, image_array):
         self.image_array = image_array
 
-    def normalize(self):
+    def normalize(self, image):
         # normalise image with 0 mean, 1 std
-        return (self.image_array - np.mean(self.image_array)) / (np.std(self.image_array)).astype(np.float32)
+        return (image - np.mean(image)) / (np.std(image)).astype(np.float32)
+    
+    def minmax_norm(self):
+        # min-max to bring image in range 0,1. albumentations requires it.
+        image = np.copy(self.image_array)
+        return ((image - np.min(image))/(np.max(image) - np.min(image)))
     
     def album(self):
-        transform = A.Compose([
-            A.OneOf(
-                    A.RandomBrightness(limit=0.2, p=0.75),
-                    A.RandomContrast(limit=0.2, p=0.75),
-                    A.Sharpen(alpha = [0, 0], lightness = [0.5, 0.5], p =1)
-                    ),
-            A.VerticalFlip(p=0.5),
-            A.ShiftScaleRotate(self, shift_limit=0.2, scale_limit=0.2, rotate_limit=20,
-                                interpolation=1, border_mode=0, value=None,
-                                mask_value=None, shift_limit_x=None, shift_limit_y=None,
-                                always_apply=False, p=0.5)
-                            ])
-        trans_image_array = transform(image = self.image_array.astype(np.float32))['image']
+        img = self.minmax_norm()
+#         transform = A.Compose([
+#             A.OneOf([
+#                     A.RandomBrightnessContrast(brightness_limit = 0.2, contrast_limit = 0.2, p =1),
+#                     A.Sharpen(alpha = [0.2,0.5], lightness = [0.5, 1], p=0)
+#             ]),
+#             A.VerticalFlip(p=0),
+#             A.ShiftScaleRotate(shift_limit_y=0.03, scale_limit=0.1, rotate_limit=20,
+#                                 p=0)
+#                             ])
+        print('img to transform', np.min(img), np.max(img))
+        
+#         trans_image_array = transform(image = img)['image']
+        trans_image_array = img
+        
+#         if np.random.uniform(0, 1) <= 1:
+        trans_image_array = np.array(list(reversed(trans_image_array)))
+            
+        print('1ds', np.min(trans_image_array), np.max(trans_image_array))
         return trans_image_array
 
     def swap_channels(self, p = 0.3, ):
@@ -99,7 +110,7 @@ class SetiDataset:
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
         image = np.load(self.image_paths[item])
-                    
+        
         id = self.ids[item]
         
         if not config.ORIG_IMAGE:
@@ -107,11 +118,13 @@ class SetiDataset:
             image = image.reshape(1,image.shape[0],image.shape[1])
         else:
             #converting 6 channels to 1 for original image, inverting off channels
-            max_pix = np.amax(image)
-            image[1] = max_pix - image[1]
-            image[3] = max_pix - image[3]
-            image[5] = max_pix - image[5]
-            image = np.vstack(image).transpose((1, 0))
+#             max_pix = np.amax(image)
+#             image[1] = max_pix - image[1]
+#             image[3] = max_pix - image[3]
+#             image[5] = max_pix - image[5]
+#             image = np.vstack(image).transpose((1, 0))
+
+            image = image[0].astype(np.float32)
             image = image.reshape(1,image.shape[0],image.shape[1])
 
 
@@ -124,15 +137,15 @@ class SetiDataset:
         if self.augmentations is not None:
             imt = ImageTransform(image)
             image = imt.album()
-            image = imt.swap_channels(p = 0.5)
-            image = imt.drop_channels(p = 1)
+#             image = imt.swap_channels(p = 0.5)
+#             image = imt.drop_channels(p = 1)
 
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
         if self.targets is not None:
-            return{'images': torch.tensor(image, dtype = torch.float), 
+            return{'images': torch.tensor(image.copy(), dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
                   'ids': torch.tensor(id, dtype = torch.int32)}
         else:
