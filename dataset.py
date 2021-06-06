@@ -58,7 +58,6 @@ class ImageTransform():
             t = chnl_shape[0]
 
             # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-
             trans_image_array = np.copy(self.image_array)
             if swap_op == 'pos_chnls' or swap_op == 'both_swap':
                 c1 = chnls['pos_chnls'][0]
