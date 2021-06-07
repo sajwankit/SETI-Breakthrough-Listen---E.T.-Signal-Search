@@ -75,6 +75,12 @@ if __name__ == '__main__':
             #for every fold model should start from zero training
             model = models.Model(pretrained = True, training = True)
             model.to(device)
+            
+            if config.LOAD_SAVED_MODEL:
+                model_creation_date = '0607'
+                states = torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{model_creation_date}.pth')
+                model.load_state_dict(states['model'])
+                print('Saved Model LOADED!')
     
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']

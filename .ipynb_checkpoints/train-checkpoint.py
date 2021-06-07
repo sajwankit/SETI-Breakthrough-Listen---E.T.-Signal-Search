@@ -67,7 +67,7 @@ if __name__ == '__main__':
     ########################################################################
 
     logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{date_time}')
-    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, time')
+    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
     for fold, foldData in enumerate(mskFoldData):
         if fold == args.fold or args.fold is None:
@@ -75,6 +75,12 @@ if __name__ == '__main__':
             #for every fold model should start from zero training
             model = models.Model(pretrained = True, training = True)
             model.to(device)
+            
+            if config.LOAD_SAVED_MODEL:
+                model_creation_date = '0607'
+                states = torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{model_creation_date}.pth')
+                model.load_state_dict(states['model'])
+                print('Saved Model LOADED!')
     
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']
@@ -136,10 +142,6 @@ if __name__ == '__main__':
                                                                 verbose=True, eps=config.EPS)
 #            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-7, last_epoch = -1)
 
-    
-            # logger.info(f'***************************************************************************************************************************')
-            # logger.info(f'fold: {fold}, device: {device}, batch_size: {bs}, model_name: {config.MODEL_NAME}, scheduler: ReduceLROnPlateau, lr: {lr}, seed: {config.SEED}')
-            # logger.info(f'***************************************************************************************************************************')
 
             if config.MIXED_PRECISION:
                 #mixed precision training
@@ -148,6 +150,7 @@ if __name__ == '__main__':
                 scaler = None
 
             best_valid_loss = 999
+            best_valid_roc_auc = -999
             for epoch in range(epochs):
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
@@ -156,14 +159,25 @@ if __name__ == '__main__':
                 train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
                 valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()
-                logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{(et-st)/60}')
+
+                # train auc doesnot make sense when using mixup
+                logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{train_loss}, {(et-st)/60}')
+                
                 if valid_loss <= best_valid_loss:
                     best_valid_loss = valid_loss
                     torch.save({'model': model.state_dict(),
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
+
+                if valid_roc_auc >= best_valid_roc_auc:
+                    best_valid_roc_auc = valid_roc_auc
+                    torch.save({'model': model.state_dict(),
+                                'valid_ids': valid_ids,
+                                'predictions': predictions,
+                                'valid_targets': valid_targets},
+                                f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth')
 
 
 

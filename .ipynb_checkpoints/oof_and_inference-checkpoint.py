@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     model = models.Model(pretrained = False)
     model.to(device)
-    states = [torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
+    states = [torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{config.DATETIME}.pth') for fold in range(config.FOLDS)]
 
     def get_oof_df(state):
         df = pd.DataFrame({'predictions': np.array([]), 'targets': np.array([])})
@@ -37,14 +37,14 @@ if __name__ == '__main__':
     oof_df = None
     for fold in range(config.FOLDS):
         _oof_df = get_oof_df(states[fold])
-        _oof_df.to_csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index = False)
+        _oof_df.to_csv(f'{config.LOG_DIR}{config.MODEL_LOAD_FOR_INFER}_oof_df_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index = False)
         oof_df = pd.concat([oof_df, _oof_df])
 
-    oof_df.to_csv(f'{config.LOG_DIR}oof_df_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index = False)
+    oof_df.to_csv(f'{config.LOG_DIR}{config.MODEL_LOAD_FOR_INFER}_oof_df_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index = False)
     oof_auc = metrics.roc_auc_score(oof_df['targets'].values, oof_df['predictions'].values)
     
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}')
-    logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
+    # logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}')
+    # logger.info(f'Final OOF ROC AUC SCORE: {oof_auc}')
 
     if config.INFER == True:
         def get_test_file_path(image_id):
@@ -78,6 +78,6 @@ if __name__ == '__main__':
         mean_predictions = mean_predictions/config.FOLDS
 
         inference_df['target'] = mean_predictions
-        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_cv{oof_auc}_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index=False)
+        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_cv{oof_auc}_{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.csv', index=False)
         print(inference_df[['id', 'target']].head())
     
