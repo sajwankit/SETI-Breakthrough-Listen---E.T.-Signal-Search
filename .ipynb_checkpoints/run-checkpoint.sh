@@ -1,2 +1,2 @@
-python train.py --fold 0
+python train.py
 # python oof_and_inference.py

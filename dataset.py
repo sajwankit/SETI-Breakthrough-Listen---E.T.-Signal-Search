@@ -23,12 +23,12 @@ class ImageTransform():
     def album(self):
         transform = A.Compose([
             A.OneOf([
-                    A.RandomBrightnessContrast(brightness_limit = [-0.3,0.2], contrast_limit = [-0.3,0.2], p =0.6),
-                    A.Sharpen(alpha = [0.2,0.5], lightness = [0.6, 1], p=0.6),
+                    A.RandomBrightnessContrast(brightness_limit = [-0.3,0.2], contrast_limit = [-0.3,0.2], p =0.75),
+                    A.Sharpen(alpha = [0.1,0.4], lightness = [0.6, 1], p=0.75),
             ]),
-            A.HorizontalFlip(p=0.5),
+            A.HorizontalFlip(p=0.6),
             A.ShiftScaleRotate(shift_limit_x=(-0.08, 0.08), scale_limit=0, rotate_limit=0,
-                                p=0.7)
+                                p=1)
                     ])
        
         trans_image_array = transform(image = self.minmax_norm(np.copy(self.image_array)))['image']
@@ -125,10 +125,10 @@ class SetiDataset:
         imt = ImageTransform(image)
         if self.augmentations is not None:
             image = imt.album()
-#             image = imt.swap_channels(p = 0.7)
-#             image = imt.drop_channels(p = 0.3)
+            image = imt.swap_channels(p = 0.7)
+            image = imt.drop_channels(p = 0.3)
 #         print('1ds', np.mean(image), np.std(image))
-        image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
+#         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
         image = image.reshape(1,image.shape[0],image.shape[1])
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel

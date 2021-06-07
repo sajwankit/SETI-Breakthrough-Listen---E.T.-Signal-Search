@@ -10,7 +10,7 @@ i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
-ORIG_IMAGE = True
+ORIG_IMAGE = False
 IMAGE_SIZE = (273,256)
 if not ORIG_IMAGE:
     IMAGE_SIZE = (256,256)
@@ -30,17 +30,17 @@ if not ORIG_IMAGE:
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
-MIXUP_APLHA = 0.4
+MIXUP = True
+MIXUP_APLHA = 1
 
 DEVICE = 'cuda'
-EPOCHS = 5
+EPOCHS = 10
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
 MODEL_NAME = 'efficientnet_b0'
 CHANNELS = 1
-MODEL_LOAD_FOR_INFER = 'loss'
+MODEL_LOAD_FOR_INFER = 'auc'
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1

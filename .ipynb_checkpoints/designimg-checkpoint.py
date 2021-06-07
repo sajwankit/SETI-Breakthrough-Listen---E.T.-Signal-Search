@@ -28,7 +28,7 @@ class DesignImage():
         image_array[3] = max_pix - image_array[3]
         image_array[5] = max_pix - image_array[5]
         
-        image_array = np.vstack(image_array).transpose((1, 0))
+        image_array = np.vstack(image_array)
         image_spatial =  cv2.resize(image_array, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
         
         if config.SAVE_IMAGE:
@@ -106,7 +106,7 @@ class DesignImage():
 
 
 if __name__ == "__main__":
-    designImage = DesignImage(images_set = 'test', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
+    designImage = DesignImage(images_set = 'train', out_image_size= config.IMAGE_SIZE,  chl_pos_in_spatial = [0,1,2,3,4,5])
     # designImage.simple_concat(designImage.image_paths[0])
     
     with Pool() as p:
