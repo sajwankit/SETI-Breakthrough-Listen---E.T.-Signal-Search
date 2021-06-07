@@ -4,7 +4,7 @@ import os
 
 tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
-DATETIME = datetime_NY.strftime('%m%d')
+DATETIME = datetime_NY.strftime('%m%d%H')
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
@@ -33,9 +33,9 @@ MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 1
 
-LOAD_SAVED_MODEL = True
+LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 15
+EPOCHS = 20
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
