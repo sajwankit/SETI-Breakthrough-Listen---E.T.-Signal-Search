@@ -112,7 +112,13 @@ class ImageTransform():
 
     def apply_ext_needle(self):
         ftarget_type = random.choice([0, 1])
-        needle_type = random.choice(['nb/', 'nbd/', 'spnb/', 'squ/', 'sspnb/'])
+        needle_type = random.choice([
+            # 'nb/',
+            # 'nbd/',
+            # 'spnb/',
+            # 'squ/',
+            'sspnb/'
+            ])
         needle_path = list(glob.glob(f'{config.NEEDLE_PATH}{needle_type}*.png'))[0]
         needle_img = self.normalize(cv2.imread(needle_path, cv2.IMREAD_GRAYSCALE))
 
