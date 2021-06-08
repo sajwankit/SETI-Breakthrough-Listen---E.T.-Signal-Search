@@ -89,6 +89,36 @@ class ImageTransform():
             return self.normalize(trans_image_array)
         else:
             return self.image_array.astype(np.float32)
+#     img - (6, 273, 256)
+
+# function on one channel- add_needle(chl_img, needle_img): combime(chl_img, aug(needle_img))
+
+# a sample - (256,256) define channels - 6
+#  sample_type = random.choice(pos_sample or neg_sample)
+#   if sample_type == pos_sample: add_needle to 0,2 or 4 channel
+#    else: add_needle to 1,3 or 5 channel or add_needle to 0,1,2,3,4,5 channels
+    
+    def add_needle(self, chls_to_add_needle, needle_img):
+        fimg = np.copy(self.image_array)
+        for chl in chls_to_add_needle:
+            #code to add needle to channel
+            # [chl*t:(chl+1)*t, : f]
+        return fimg
+
+    def apply_ext_needle(self):
+        ftarget_type = random.choice([0, 1])
+        needle_type = random.choice(['nb', 'nbd', 'spnb', 'squ', 'sspnb'])
+        needle_path = f'{config.NEEDLE_PATH}{needle_type}'
+        needle_img = cv2.imread(needle_type, cv2.IMREAD_GRAYSCALE)
+        trans_image_array = np.copy(self.image_array)
+
+        if ftarget_type == 1:
+            chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))
+            trans_image_array = add_needle(chls_to_add_needle, needle_img)
+        else:
+            chls_to_add_needle = random.sample([1, 3, 5], random.choice([1, 2, 3]))
+            trans_image_array = add_needle(chls_to_add_needle, needle_img)
+        return trans_image_array
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
