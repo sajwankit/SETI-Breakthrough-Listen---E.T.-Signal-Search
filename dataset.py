@@ -7,6 +7,7 @@ import random
 import config
 import albumentations as A
 import cv2
+import glob
 
 class ImageTransform():
     def __init__(self, image_array):
@@ -103,16 +104,17 @@ class ImageTransform():
         final_shape = fimg.shape
         chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
         f = chnl_shape[1]
-        t = chnl_shape[0]   
+        t = chnl_shape[0]
+        needle_img = cv2.resize(needle_img, dsize = (t, f), interpolation=cv2.INTER_AREA)
         for chl in chls_to_add_needle:
             fimg[chl*t:(chl+1)*t, : f] = (1 - blend_prop)*fimg[chl*t:(chl+1)*t, : f] + blend_prop*needle_img
-        return self.normalize(fimg).astype(float32)
+        return self.normalize(fimg).astype(np.float32)
 
     def apply_ext_needle(self):
         ftarget_type = random.choice([0, 1])
         needle_type = random.choice(['nb/', 'nbd/', 'spnb/', 'squ/', 'sspnb/'])
-        needle_path = f'{config.NEEDLE_PATH}{needle_type}'
-        needle_img = self.normalize(cv2.imread(needle_type, cv2.IMREAD_GRAYSCALE))
+        needle_path = list(glob.glob(f'{config.NEEDLE_PATH}{needle_type}*.png'))[0]
+        needle_img = self.normalize(cv2.imread(needle_path, cv2.IMREAD_GRAYSCALE))
 
         if ftarget_type == 1:
             chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))

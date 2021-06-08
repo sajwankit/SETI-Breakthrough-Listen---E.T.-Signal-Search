@@ -33,6 +33,7 @@ MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 1
 
+NEEDLE_PATH = '/content/drive/MyDrive/SETI/ext_needle/'
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
 EPOCHS = 20
