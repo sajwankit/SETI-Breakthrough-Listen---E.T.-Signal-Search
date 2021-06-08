@@ -105,7 +105,7 @@ class ImageTransform():
         chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
         f = chnl_shape[1]
         t = chnl_shape[0]
-        needle_img = cv2.resize(needle_img, dsize = (t, f), interpolation=cv2.INTER_AREA)
+        needle_img = cv2.resize(needle_img, dsize = (f, t), interpolation=cv2.INTER_AREA)
         for chl in chls_to_add_needle:
             fimg[chl*t:(chl+1)*t, : f] = (1 - blend_prop)*fimg[chl*t:(chl+1)*t, : f] + blend_prop*needle_img
         return self.normalize(fimg).astype(np.float32)
@@ -118,11 +118,11 @@ class ImageTransform():
 
         if ftarget_type == 1:
             chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))
-            trans_image_array = add_needle(chls_to_add_needle, needle_img)
+            trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
         else:
             needle_img = np.amax(needle_img) - needle_img
             chls_to_add_needle = random.sample([1, 3, 5], random.choice([1, 2, 3]))
-            trans_image_array = add_needle(chls_to_add_needle, needle_img)
+            trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
         return trans_image_array
 
 class SetiDataset:
@@ -158,6 +158,7 @@ class SetiDataset:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
 
         imt = ImageTransform(image)
+        image = imt.apply_ext_needle()
         if self.augmentations is not None:
             image = imt.album()
             image = imt.swap_channels(p = 0.7)
@@ -178,4 +179,6 @@ class SetiDataset:
                   'ids': torch.tensor(id, dtype = torch.int32)}
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
-# print(i)
+
+i = SetiDataset([f'/content/drive/MyDrive/SETI/resized_images/256256/train/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
+print(i)
