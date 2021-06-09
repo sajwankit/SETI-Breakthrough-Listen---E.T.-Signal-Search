@@ -9,17 +9,17 @@ datetime_NY = datetime.datetime.now(tz_NY)
 # DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-DATETIME = '060913'
+DATETIME = '061002'
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
 ORIG_IMAGE = False
-IMAGE_SIZE = (273,256)
+IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse with np.array shape
 if not ORIG_IMAGE:
-    IMAGE_SIZE = (256,256)
-    resize_image_path = [f'/home/asajw/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
+    IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
+    resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/']
 
 
@@ -31,24 +31,25 @@ if not ORIG_IMAGE:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
 
+INVERT_OFF_CHANNELS = True
 
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = True
+MIXUP = False
 MIXUP_APLHA = 1
 
 needle_path = ['/home/asajw/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 20
+EPOCHS = 5
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
 MODEL_NAME = 'efficientnet_b0'
 CHANNELS = 1
-MODEL_LOAD_FOR_INFER = 'loss'
+MODEL_LOAD_FOR_INFER = 'auc'
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
@@ -58,7 +59,7 @@ EPS = 1e-8
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
 
-AUG = 'SwapDropAlbum'
+AUG = 'SwapDropFlip'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 foldername = f'{MODEL_NAME}_dt{DATETIME}'

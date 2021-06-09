@@ -127,7 +127,7 @@ if __name__ == '__main__':
                                                 targets = valid_targets,
                                                 ids = vIDs,
                                                 resize = None,
-                                                augmentations = None)
+                                                augmentations = False)
                                                     
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,

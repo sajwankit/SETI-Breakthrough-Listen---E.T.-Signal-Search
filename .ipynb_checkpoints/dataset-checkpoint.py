@@ -1,4 +1,3 @@
-from albumentations.core.composition import OneOf
 import torch
 import numpy as np
 from PIL import Image
@@ -15,30 +14,35 @@ class ImageTransform():
 
     def normalize(self, image):
         # normalise image with 0 mean, 1 std
+        
         return (image - np.mean(image)) / (np.std(image)).astype(np.float32)
     
     def minmax_norm(self, image):
         # min-max to bring image in range 0,1. albumentations requires it.
         return ((image - np.min(image))/(np.max(image) - np.min(image)))
     
-    def album(self):
-        transform = A.Compose([
-            A.OneOf([
-                    A.RandomBrightnessContrast(brightness_limit = [-0.3,0.2], contrast_limit = [-0.3,0.2], p =0.75),
-                    A.Sharpen(alpha = [0.1,0.4], lightness = [0.6, 1], p=0.75),
-            ]),
-            A.HorizontalFlip(p=0.6),
-            A.ShiftScaleRotate(shift_limit_x=(-0.08, 0.08), scale_limit=0, rotate_limit=0,
-                                p=1)
-                    ])
+    def flip(self,image, p=0.5):
+#         transform = A.Compose([
+# #             A.OneOf([
+# #                     A.RandomBrightnessContrast(brightness_limit = [-0.3,0.2], contrast_limit = [-0.3,0.2], p =0.75),
+# #                     A.Sharpen(alpha = [0.1,0.4], lightness = [0.6, 1], p=0.75),
+# #             ]),
+#             A.HorizontalFlip(p=1),
+# #             A.ShiftScaleRotate(shift_limit_x=(-0.08, 0.08), scale_limit=0, rotate_limit=0,
+# #                                 p=1)
+#                     ])
        
-        trans_image_array = transform(image = self.minmax_norm(np.copy(self.image_array)))['image']
-        return self.normalize(trans_image_array)
+#         trans_image_array = transform(image = self.minmax_norm(np.copy(self.image_array)))['image']
+        if np.random.uniform(0, 1) <= p: 
+            trans_image_array = np.fliplr(image)
+            return trans_image_array
+        else:
+            return image
 
-    def swap_channels(self, p = 0.3, ):
+    def swap_channels(self, image, p = 0.3):
         if np.random.uniform(0, 1) <= p:
             # init_shape = (t, f)
-            final_shape = self.image_array.shape
+            final_shape = image.shape
             chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
 
 
@@ -51,29 +55,29 @@ class ImageTransform():
             t = chnl_shape[0]
 
             # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-            trans_image_array = np.copy(self.image_array)
+            trans_image_array = np.copy(image)
             if swap_op == 'pos_chnls' or swap_op == 'both_swap':
                 c1 = chnls['pos_chnls'][0]
                 c2 = chnls['pos_chnls'][1]
 #                 print(f'swapping{c1}{c2}')
-                trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
-                trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f]
+                trans_image_array[c1*t:(c1+1)*t, : f] = image[c2*t:(c2+1)*t, : f]
+                trans_image_array[c2*t:(c2+1)*t, : f] = image[c1*t:(c1+1)*t, : f]
 
             if swap_op == 'neg_chnls' or swap_op == 'both_swap':
                 c1 = chnls['neg_chnls'][0]
                 c2 = chnls['neg_chnls'][1]
 #                 print(f'swapping{c1}{c2}')
-                trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
-                trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f] 
+                trans_image_array[c1*t:(c1+1)*t, : f] = image[c2*t:(c2+1)*t, : f]
+                trans_image_array[c2*t:(c2+1)*t, : f] = image[c1*t:(c1+1)*t, : f] 
 
-            return self.normalize(trans_image_array)
+            return trans_image_array
         else:
-            return self.image_array.astype(np.float32)
+            return image.astype(np.float32)
 
-    def drop_channels(self, p = 0.3,):
+    def drop_channels(self, image, p = 0.3,):
         if np.random.uniform(0, 1) <= p:
             # init_shape = (t, f)
-            final_shape = self.image_array.shape
+            final_shape = image.shape
             chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
 
             chnls = {'pos_chnls': [0,2,4], 'neg_chnls': [1,3,5]}
@@ -83,21 +87,13 @@ class ImageTransform():
             t = chnl_shape[0]
 
             # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-            trans_image_array = np.copy(self.image_array)
+            trans_image_array = np.copy(image)
             for c in chnls_to_remove:
-                trans_image_array[c*t:(c+1)*t, : f] = np.min(trans_image_array)
+                trans_image_array[c*t:(c+1)*t, : f] = 0.25*image[c*t:(c+1)*t, : f]
 
-            return self.normalize(trans_image_array)
+            return trans_image_array
         else:
-            return self.image_array.astype(np.float32)
-#     img - (6, 273, 256)
-
-# function on one channel- add_needle(chl_img, needle_img): combime(chl_img, aug(needle_img))
-
-# a sample - (256,256) define channels - 6
-#  sample_type = random.choice(pos_sample or neg_sample)
-#   if sample_type == pos_sample: add_needle to 0,2 or 4 channel
-#    else: add_needle to 1,3 or 5 channel or add_needle to 0,1,2,3,4,5 channels
+            return image.astype(np.float32)
     
     def add_needle(self, chls_to_add_needle, needle_img, blend_prop = 0.5):
         fimg = np.copy(self.image_array)
@@ -147,13 +143,9 @@ class SetiDataset:
         image = np.load(self.image_paths[item])
         
         id = self.ids[item]
-        
+                
         if config.ORIG_IMAGE:
 #           converting 6 channels to 1 for original image, inverting off channels
-            max_pix = np.amax(image)
-            image[1] = max_pix - image[1]
-            image[3] = max_pix - image[3]
-            image[5] = max_pix - image[5]
             image = np.vstack(image)
             image = image.astype(np.float32)
             
@@ -165,12 +157,25 @@ class SetiDataset:
 
         imt = ImageTransform(image)
 #         image = imt.apply_ext_needle()
-        if self.augmentations is not None:
-            image = imt.album()
-            image = imt.swap_channels(p = 0.7)
-            image = imt.drop_channels(p = 0.3)
+        if self.augmentations:
+            image = imt.flip(image = image, p = 0.5)
+            image = imt.swap_channels(image = image, p = 0.65)
+            image = imt.drop_channels(image = image, p = 0.25)
 #         print('1ds', np.mean(image), np.std(image))
 #         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
+
+        if config.INVERT_OFF_CHANNELS:
+            #inverting off channels
+            chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
+            f = chnl_shape[1]
+            t = chnl_shape[0]
+            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+            chnls_to_invert = [1, 3, 5]
+            max_pix = np.amax(image)
+            for c in chnls_to_invert:
+                image[c*t:(c+1)*t, : f] = max_pix - image[c*t:(c+1)*t, : f]
+        image = imt.normalize(image)
+            
         image = image.reshape(1,image.shape[0],image.shape[1])
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
