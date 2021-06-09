@@ -164,7 +164,7 @@ class SetiDataset:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
 
         imt = ImageTransform(image)
-        image = imt.apply_ext_needle()
+#         image = imt.apply_ext_needle()
         if self.augmentations is not None:
             image = imt.album()
             image = imt.swap_channels(p = 0.7)
