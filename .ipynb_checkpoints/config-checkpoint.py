@@ -4,7 +4,12 @@ import os
 
 tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
-DATETIME = datetime_NY.strftime('%m%d%H')
+
+
+# DATETIME = datetime_NY.strftime('%m%d%H')
+
+#for inference
+DATETIME = '060913'
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
@@ -33,6 +38,8 @@ MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 1
 
+needle_path = ['/home/asajw/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']
+NEEDLE_PATH = needle_path[i]
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
 EPOCHS = 20
@@ -50,6 +57,8 @@ EPS = 1e-8
 
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
+
+AUG = 'SwapDropAlbum'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 foldername = f'{MODEL_NAME}_dt{DATETIME}'

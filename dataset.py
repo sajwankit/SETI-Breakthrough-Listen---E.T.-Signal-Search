@@ -55,14 +55,14 @@ class ImageTransform():
             if swap_op == 'pos_chnls' or swap_op == 'both_swap':
                 c1 = chnls['pos_chnls'][0]
                 c2 = chnls['pos_chnls'][1]
-                print(f'swapping{c1}{c2}')
+#                 print(f'swapping{c1}{c2}')
                 trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
                 trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f]
 
             if swap_op == 'neg_chnls' or swap_op == 'both_swap':
                 c1 = chnls['neg_chnls'][0]
                 c2 = chnls['neg_chnls'][1]
-                print(f'swapping{c1}{c2}')
+#                 print(f'swapping{c1}{c2}')
                 trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
                 trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f] 
 
@@ -113,13 +113,13 @@ class ImageTransform():
     def apply_ext_needle(self):
         ftarget_type = random.choice([0, 1])
         needle_type = random.choice([
-            # 'nb/',
-            # 'nbd/',
-            # 'spnb/',
-            # 'squ/',
-            'sspnb/'
+#             'nb/',
+#             'nbd/',
+#             'spnb/',
+#             'squ/',
+            'squigglesquarepulsednarrowband'
             ])
-        needle_path = list(glob.glob(f'{config.NEEDLE_PATH}{needle_type}*.png'))[0]
+        needle_path = random.choice(glob.glob(f'{config.NEEDLE_PATH}*/{needle_type}/*.png'))
         needle_img = self.normalize(cv2.imread(needle_path, cv2.IMREAD_GRAYSCALE))
 
         if ftarget_type == 1:
@@ -186,5 +186,5 @@ class SetiDataset:
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
 
-i = SetiDataset([f'/content/drive/MyDrive/SETI/resized_images/256256/train/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
-print(i)
+# i = SetiDataset([f'/content/drive/MyDrive/SETI/resized_images/256256/train/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
+# print(i)

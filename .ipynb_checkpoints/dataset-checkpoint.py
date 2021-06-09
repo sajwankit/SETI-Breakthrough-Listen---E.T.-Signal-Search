@@ -7,6 +7,7 @@ import random
 import config
 import albumentations as A
 import cv2
+import glob
 
 class ImageTransform():
     def __init__(self, image_array):
@@ -54,14 +55,14 @@ class ImageTransform():
             if swap_op == 'pos_chnls' or swap_op == 'both_swap':
                 c1 = chnls['pos_chnls'][0]
                 c2 = chnls['pos_chnls'][1]
-                print(f'swapping{c1}{c2}')
+#                 print(f'swapping{c1}{c2}')
                 trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
                 trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f]
 
             if swap_op == 'neg_chnls' or swap_op == 'both_swap':
                 c1 = chnls['neg_chnls'][0]
                 c2 = chnls['neg_chnls'][1]
-                print(f'swapping{c1}{c2}')
+#                 print(f'swapping{c1}{c2}')
                 trans_image_array[c1*t:(c1+1)*t, : f] = self.image_array[c2*t:(c2+1)*t, : f]
                 trans_image_array[c2*t:(c2+1)*t, : f] = self.image_array[c1*t:(c1+1)*t, : f] 
 
@@ -89,6 +90,46 @@ class ImageTransform():
             return self.normalize(trans_image_array)
         else:
             return self.image_array.astype(np.float32)
+#     img - (6, 273, 256)
+
+# function on one channel- add_needle(chl_img, needle_img): combime(chl_img, aug(needle_img))
+
+# a sample - (256,256) define channels - 6
+#  sample_type = random.choice(pos_sample or neg_sample)
+#   if sample_type == pos_sample: add_needle to 0,2 or 4 channel
+#    else: add_needle to 1,3 or 5 channel or add_needle to 0,1,2,3,4,5 channels
+    
+    def add_needle(self, chls_to_add_needle, needle_img, blend_prop = 0.5):
+        fimg = np.copy(self.image_array)
+        final_shape = fimg.shape
+        chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
+        f = chnl_shape[1]
+        t = chnl_shape[0]
+        needle_img = cv2.resize(needle_img, dsize = (f, t), interpolation=cv2.INTER_AREA)
+        for chl in chls_to_add_needle:
+            fimg[chl*t:(chl+1)*t, : f] = (1 - blend_prop)*fimg[chl*t:(chl+1)*t, : f] + blend_prop*needle_img
+        return self.normalize(fimg).astype(np.float32)
+
+    def apply_ext_needle(self):
+        ftarget_type = random.choice([0, 1])
+        needle_type = random.choice([
+#             'nb/',
+#             'nbd/',
+#             'spnb/',
+#             'squ/',
+            'squigglesquarepulsednarrowband'
+            ])
+        needle_path = random.choice(glob.glob(f'{config.NEEDLE_PATH}*/{needle_type}/*.png'))
+        needle_img = self.normalize(cv2.imread(needle_path, cv2.IMREAD_GRAYSCALE))
+
+        if ftarget_type == 1:
+            chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))
+            trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
+        else:
+            needle_img = np.amax(needle_img) - needle_img
+            chls_to_add_needle = random.sample([1, 3, 5], random.choice([1, 2, 3]))
+            trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
+        return trans_image_array
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
@@ -123,6 +164,7 @@ class SetiDataset:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
 
         imt = ImageTransform(image)
+        image = imt.apply_ext_needle()
         if self.augmentations is not None:
             image = imt.album()
             image = imt.swap_channels(p = 0.7)
@@ -143,4 +185,6 @@ class SetiDataset:
                   'ids': torch.tensor(id, dtype = torch.int32)}
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
+
+# i = SetiDataset([f'/content/drive/MyDrive/SETI/resized_images/256256/train/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
 # print(i)
