@@ -9,7 +9,7 @@ datetime_NY = datetime.datetime.now(tz_NY)
 # DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-DATETIME = '061002'
+DATETIME = '061003'
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
@@ -36,14 +36,14 @@ INVERT_OFF_CHANNELS = True
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
+MIXUP = True
 MIXUP_APLHA = 1
 
 needle_path = ['/home/asajw/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 5
+EPOCHS = 25
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
