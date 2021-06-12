@@ -19,9 +19,10 @@ from torch.cuda import amp
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 def multi_class_accuacy(predictions, targets):
-    winners = predictions.argmax(dim=1)
-    corrects = (winners == targets)
-    accuracy = corrects.sum().float() / float( targets.size(0) )
+    pred_winners = np.argmax(np.array(predictions), axis = 1)
+    true_winners = np.argmax(np.array(targets), axis = 1)
+    corrects = (true_winners == pred_winners)
+    accuracy = float(corrects.sum()) / float( len(targets) )
     return accuracy
 
 if __name__ == '__main__':
@@ -103,7 +104,7 @@ if __name__ == '__main__':
         scaler = None
 
     best_valid_loss = 999
-    best_valid_roc_auc = -999
+    best_valid_acc = -999
     for epoch in range(epochs):
         st = time.time()
         train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
@@ -114,7 +115,7 @@ if __name__ == '__main__':
         et = time.time()
 
         # train auc doesnot make sense when using mixup
-        logger.info(f'{fold},{epoch},{valid_loss},{valid_acc},{train_acc},{train_loss}, {(et-st)/60}')
+        logger.info(f'{epoch},{valid_loss},{valid_acc},{train_acc},{train_loss}, {(et-st)/60}')
         
         if valid_loss <= best_valid_loss:
             best_valid_loss = valid_loss
@@ -122,7 +123,7 @@ if __name__ == '__main__':
                         'valid_ids': valid_ids,
                         'predictions': predictions,
                         'valid_targets': valid_targets},
-                        f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{config.DATETIME}.pth')
+                        f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
 
         if valid_acc >= best_valid_acc:
             best_valid_acc = valid_acc
@@ -130,7 +131,7 @@ if __name__ == '__main__':
                         'valid_ids': valid_ids,
                         'predictions': predictions,
                         'valid_targets': valid_targets},
-                        f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{config.DATETIME}.pth')
+                        f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
 
 
 

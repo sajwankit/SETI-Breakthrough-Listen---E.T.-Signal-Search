@@ -36,7 +36,7 @@ def mixup(inputs, targets):
     return mixed_inputs, targets1, targets2, lam
 
 def loss_criterion(outputs, targets):
-    return nn.CrossEntropyLoss()(outputs, targets)
+    return nn.BCEWithLogitsLoss()(outputs, targets)
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -63,7 +63,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         #moving inputs and targets to device: cpu or cuda
         inputs = inputs.to(device, dtype = torch.float)
-        targets = targets.to(device, dtype = torch.long)
+        targets = targets.to(device, dtype = torch.float)
 
         #zero grad the optimizer
         optimizer.zero_grad()
@@ -114,7 +114,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 #            progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_outputs.extend(torch.log_softmax(outputs).detach().cpu().numpy().tolist())
+        final_outputs.extend(torch.sigmoid(outputs).detach().cpu().numpy().tolist())
         final_ids.extend(ids)
     return final_outputs, final_targets, final_ids, losses.avg
 
@@ -152,11 +152,11 @@ def evaluate(data_loader, model, device):
             #do forward step to generat prediction
             outputs = model(inputs)
 
-            loss = nn.CrossEntropyLoss()(outputs, targets.view(-1,1))
+            loss = nn.BCEWithLogitsLoss()(outputs, targets)
             losses.update(loss.item(), config.BATCH_SIZE)
 
             targets = targets.detach().cpu().numpy().tolist()
-            outputs = torch.log_softmax(outputs).detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)
@@ -193,7 +193,7 @@ def predict(data_loader, model, device):
             
             #do forward step to generate prediction
             outputs = model(inputs)
-            outputs = torch.log_softmax(outputs).detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
 
             final_outputs.extend(outputs)
 

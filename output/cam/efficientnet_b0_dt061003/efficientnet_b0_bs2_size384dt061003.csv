@@ -12,3 +12,25 @@ fold,epoch,val_loss,val_acc,train_acc, train_loss, time
 fold,epoch,val_loss,val_acc,train_acc, train_loss, time
 fold,epoch,val_loss,val_acc,train_acc, train_loss, time
 fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+0,0.6068468023748959,0.14705882352941177,0.20588235294117646,0.6055620978860294, 0.17758546670277914
+fold,epoch,val_loss,val_acc,train_acc, train_loss, time
+0,0.6068468023748959,0.14705882352941177,0.20588235294117646,0.6055620978860294, 0.172536301612854
+1,0.6341122108347276,0.14705882352941177,0.5,0.41534483257461996, 0.1571435809135437
+2,0.535107705522986,0.17647058823529413,0.8529411764705882,0.32591971229104433, 0.15995354255040486
+3,0.22944566081551945,1.0,0.9117647058823529,0.28611452351598177, 0.1620506207148234
+4,0.1479942956391503,1.0,1.0,0.24022849868325627, 0.17458796898523968
+5,0.1144670835312675,1.0,1.0,0.21043592165498173, 0.14623743693033855
