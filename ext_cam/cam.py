@@ -13,7 +13,7 @@ seedandlog.seed_torch(seed=config.SEED)
 
 def returnCAM(feature_conv, weight, class_idx):
     # generate the class activation maps upsample
-    size_upsample = (384, 512)
+    size_upsample = (512, 384)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
     for idx in class_idx:
@@ -107,13 +107,15 @@ def generate_heatmaps(images):
     return heatmaps, class_predictions
 
 def plot_heatmaps(heatmaps, images, class_predictions=None):
-    print(class_predictions)
+    
     for i, hm in enumerate(heatmaps):
-        hm = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
-        result = hm * 0.3 + images[i] * 0.5
-        plt.imshow(result)
+        # hm = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
+        # result = hm * 0.3 + images[i] * 0.5
+        print(class_predictions[i])
+        plt.imshow(images[i][0].reshape(-1,512))
+        plt.imshow(hm, alpha=0.4, cmap='jet')
         plt.show()
-    print('\n\n')
+        print('\n\n')
 
 test_images_paths = [
     '/content/primary_small/train/squigglesquarepulsednarrowband/3_squigglesquarepulsednarrowband.png',
@@ -128,9 +130,9 @@ for p in test_images_paths:
     image = imt.normalize(cv2.imread(p, cv2.IMREAD_GRAYSCALE))
     image = image.reshape(1,image.shape[0],image.shape[1])
     image = np.repeat(image, 3, axis = 0)
-    test_images.append(test_images)
-test_images = np.array(test_images)
+    test_images.append(image)
+test_images = torch.tensor(test_images, dtype = torch.float)
 
-heatmaps = generate_heatmaps(test_images)
-plot_heatmaps(heatmaps, test_images)
+heatmaps, class_predictions = generate_heatmaps(test_images)
+plot_heatmaps(heatmaps, test_images, class_predictions)
 
