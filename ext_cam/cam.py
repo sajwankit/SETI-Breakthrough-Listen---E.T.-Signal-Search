@@ -62,7 +62,9 @@ if __name__ == '__main__':
     # get the softmax weight
     params = list(model.parameters())
     weight_softmax = np.squeeze(params[-2].cpu().data.numpy())
-
+    fc_params = list(model.model._modules.get('last_linear').parameters())
+    weight = np.squeeze(fc_params[0].cpu().data.numpy())
+    print(fc_params, '\n', weight)
     def returnCAM(feature_conv, weight_softmax, class_idx):
         # generate the class activation maps upsample to 256x256
         size_upsample = (384, 512)
