@@ -54,14 +54,14 @@ if __name__ == '__main__':
 
     print(model)
     model.eval()
-    finalconv_name = 'layer4'
-    # hook the feature extractor
-    features_blobs = []
-    def hook_feature(module, input, output):
-        features_blobs.append(output.data.cpu().numpy())
+    # finalconv_name = 'layer4'
+    # # hook the feature extractor
+    # features_blobs = []
+    # def hook_feature(module, input, output):
+    #     features_blobs.append(output.data.cpu().numpy())
 
-    feature_conv = model.model.layer4[1]._modules.get('conv2')
-    print(feature_conv)
+    conv_layer = model.model.layer4[1]._modules.get('conv2')
+    print(conv_layer)
     # get the softmax weight
     params = list(model.parameters())
     fc_params = list(model.model._modules.get('last_linear').parameters())
@@ -81,21 +81,28 @@ if __name__ == '__main__':
             output_cam.append(cv2.resize(cam_img, size_upsample))
         return output_cam
 
-    predictions = engine.predict(test_loader, model, device)
+    # predictions = engine.predict(test_loader, model, device)
 
 
     # generate class activation mapping for the top1 prediction
-    CAMs = returnCAM(features_blobs[0], weight, [0])
+    # CAMs = returnCAM(features_blobs[0], weight, [0])
 
     class SaveFeatures():
-        """ Extract pretrained activations"""
-        features = None
         def __init__(self, m):
+            """ Extract pretrained activations"""
             self.hook = m.register_forward_hook(self.hook_fn)
+            self.features = None
         def hook_fn(self, module, input, output):
-            self.features = ((output.cpu()).data).numpy()
+            self.features = output.data.cpu().numpy()
         def remove(self):
             self.hook.remove()
+
+        # # hook the feature extractor
+    # features_blobs = []
+    # def hook_feature(module, input, output):
+    #     features_blobs.append(output.data.cpu().numpy())
+
+    # net._modules.get(finalconv_name).register_forward_hook(hook_feature)
 
     for i, data in enumerate(test_loader):
         images = data['images']
@@ -103,18 +110,28 @@ if __name__ == '__main__':
         ids = data['ids']
 
         images = images.to(device, dtype = torch.float)
+        activated_features = SaveFeatures(conv_layer)
+
         outputs = model(images)
         outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
 
-        features_blobs = []
-        def hook_feature(module, input, output):
-            features_blobs.append(output.data.cpu().numpy())
+        # features_blobs = []
+        # def hook_feature(module, input, output):
+        #     features_blobs.append(output.data.cpu().numpy())
 
         
-        activated_features = SaveFeatures(feature_conv)
+            # # hook the feature extractor
+        # features_blobs = []
+        # def hook_feature(module, input, output):
+        #     features_blobs.append(output.data.cpu().numpy())
+        # feature_conv = model.model.layer4[1]._modules.get('conv2')
+        # print(feature_conv)
+        # model.model.layer4[1]._modules.get('conv2').register_forward_hook(hook_feature)
+
+        
         class_predictions = np.argmax(np.array(outputs), axis = 1)
         heatmaps = returnCAM(activated_features.features, weight, class_predictions)
-        
+
 
 
 
