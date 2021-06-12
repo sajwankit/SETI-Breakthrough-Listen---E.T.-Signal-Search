@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from timm.models.senet import _weight_init
 import torch
 from sklearn import metrics
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
                 'squigglesquarepulsednarrowband': [0, 0, 0, 0, 0, 0, 1]
                 }
 
-    test_image_paths = glob.glob(f'{config.DATA_PATH}test/*/*.png')
+    test_image_paths = glob.glob(f'{config.DATA_PATH}valid/*/*.png')
     test_targets = [needle_target_encoding[x.split('/')[-2]] for x in test_image_paths]
     test_ids = [int((x.split('/')[-1]).split('_')[0]) for x in test_image_paths]
 
@@ -59,25 +60,24 @@ if __name__ == '__main__':
     def hook_feature(module, input, output):
         features_blobs.append(output.data.cpu().numpy())
 
-    feature_conv = model.model.layer4[1]._modules.get('conv2').register_forward_hook(hook_feature)
-    print(model.model.layer4[1]._modules.get('conv2'))
+    feature_conv = model.model.layer4[1]._modules.get('conv2')
+    print(feature_conv)
     # get the softmax weight
     params = list(model.parameters())
-    weight_softmax = np.squeeze(params[-2].cpu().data.numpy())
     fc_params = list(model.model._modules.get('last_linear').parameters())
     weight = np.squeeze(fc_params[0].cpu().data.numpy())
     print(fc_params, '\n', weight)
+
     def returnCAM(feature_conv, weight, class_idx):
         # generate the class activation maps upsample to 256x256
         size_upsample = (384, 512)
         bz, nc, h, w = feature_conv.shape
         output_cam = []
         for idx in class_idx:
-            cam = weight[class_idx].dot(feature_conv[0,:, :, ].reshape((nc, h*w)))
+            cam = weight[idx].dot(feature_conv[0,:, :, ].reshape((nc, h*w)))
             cam = cam.reshape(h, w)
             cam = cam - np.min(cam)
             cam_img = cam / np.max(cam)
-            cam_img = np.uint8(255 * cam_img)
             output_cam.append(cv2.resize(cam_img, size_upsample))
         return output_cam
 
@@ -85,9 +85,36 @@ if __name__ == '__main__':
 
 
     # generate class activation mapping for the top1 prediction
-    CAMs = returnCAM(features_blobs[0], weight_softmax, 0)
+    CAMs = returnCAM(features_blobs[0], weight, [0])
 
+    class SaveFeatures():
+        """ Extract pretrained activations"""
+        features = None
+        def __init__(self, m):
+            self.hook = m.register_forward_hook(self.hook_fn)
+        def hook_fn(self, module, input, output):
+            self.features = ((output.cpu()).data).numpy()
+        def remove(self):
+            self.hook.remove()
 
+    for i, data in enumerate(test_loader):
+        images = data['images']
+        targets = data['targets']
+        ids = data['ids']
+
+        images = images.to(device, dtype = torch.float)
+        outputs = model(images)
+        outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
+
+        features_blobs = []
+        def hook_feature(module, input, output):
+            features_blobs.append(output.data.cpu().numpy())
+
+        
+        activated_features = SaveFeatures(feature_conv)
+        class_predictions = np.argmax(np.array(outputs), axis = 1)
+        heatmaps = returnCAM(activated_features.features, weight, class_predictions)
+        
 
 
 
@@ -186,7 +213,7 @@ if __name__ == '__main__':
 # # render the CAM and output
 # print('output CAM.jpg for the top1 prediction: %s'%classes[idx[0]])
 # img = cv2.imread('test.jpg')
-# height, width, _ = img.shape
+# height, width, _ = img.shapesoftmax
 # heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
 # result = heatmap * 0.3 + img * 0.5
 # cv2.imwrite('CAM.jpg', result)
