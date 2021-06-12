@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
     model.load_state_dict(state['model'])                                    
     
+    for param in model.parameters():
+        param.requires_grad = False
 
     print(model)
     model.eval()
@@ -57,7 +59,7 @@ if __name__ == '__main__':
     def hook_feature(module, input, output):
         features_blobs.append(output.data.cpu().numpy())
 
-    model.model.layer4[1]._modules.get('conv2').register_forward_hook(hook_feature)
+    feature_conv = model.model.layer4[1]._modules.get('conv2').register_forward_hook(hook_feature)
     print(model.model.layer4[1]._modules.get('conv2'))
     # get the softmax weight
     params = list(model.parameters())
@@ -65,13 +67,13 @@ if __name__ == '__main__':
     fc_params = list(model.model._modules.get('last_linear').parameters())
     weight = np.squeeze(fc_params[0].cpu().data.numpy())
     print(fc_params, '\n', weight)
-    def returnCAM(feature_conv, weight_softmax, class_idx):
+    def returnCAM(feature_conv, weight, class_idx):
         # generate the class activation maps upsample to 256x256
         size_upsample = (384, 512)
         bz, nc, h, w = feature_conv.shape
         output_cam = []
         for idx in class_idx:
-            cam = weight_softmax[idx].dot(feature_conv.reshape((nc, h*w)))
+            cam = weight[class_idx].dot(feature_conv[0,:, :, ].reshape((nc, h*w)))
             cam = cam.reshape(h, w)
             cam = cam - np.min(cam)
             cam_img = cam / np.max(cam)
@@ -83,7 +85,7 @@ if __name__ == '__main__':
 
 
     # generate class activation mapping for the top1 prediction
-    CAMs = returnCAM(features_blobs[0], weight_softmax, [idx[0]])
+    CAMs = returnCAM(features_blobs[0], weight_softmax, 0)
 
 
 

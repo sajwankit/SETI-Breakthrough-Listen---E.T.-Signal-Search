@@ -84,7 +84,7 @@ class SetiNeedleDataset:
 #         image = imt.normalize(image)
             
         image = image.reshape(1,image.shape[0],image.shape[1])
-        
+        image = np.repeat(image, 3, axis = 0)
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
     
