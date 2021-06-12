@@ -9,7 +9,7 @@ datetime_NY = datetime.datetime.now(tz_NY)
 # DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-DATETIME = '061003'
+DATETIME = '061216'
 
 i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/primary_small/']
@@ -44,10 +44,10 @@ NEEDLE_PATH = needle_path[i]
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
 EPOCHS = 25
-BATCH_SIZE = 2
+BATCH_SIZE = 8
 TARGET_SIZE = 7
 FOLDS = 4
-MODEL_NAME = 'efficientnet_b0'
+MODEL_NAME = 'resnet18'
 CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'auc'
 

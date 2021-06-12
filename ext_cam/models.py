@@ -1,6 +1,37 @@
 import torch.nn as nn
 import timm
 import config
+import pretrainedmodels
+
+
+class Model(nn.Module):
+    def __init__(self, training = True, pretrained = True ):
+        super().__init__()
+        self.training = training
+        if pretrained:
+            self.model = pretrainedmodels.__dict__['resnet18'](pretrained = 'imagenet')
+        else:
+            self.model = pretrainedmodels.__dict__['resnet18'](pretrained = None)
+        
+        self.n_features = self.model.last_linear.in_features
+        self.model.last_linear = nn.Linear(self.n_features, config.TARGET_SIZE)
+        print(f'\nUsing {config.MODEL_NAME}, model output layer: {self.model.last_linear }\n')
+
+    def forward(self, x):
+        return self.model(x)
+
+#         for i in range(5):
+#             if i == 0:
+#                 output_msd = self.output_layer(nn.functional.dropout(model_last_layer, p=self.p_dropout, training=self.training))
+#             else:
+#                 output_msd += self.output_layer(nn.functional.dropout(model_last_layer, p=self.p_dropout, training=self.training))
+#         output_msd = output_msd / 5
+        return output
+
+
+
+
+
 
 class Model(nn.Module):
     def __init__(self, training = True, pretrained = True ):
