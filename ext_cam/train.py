@@ -44,20 +44,20 @@ if __name__ == '__main__':
                 'narrowband': [0, 1, 0, 0, 0, 0, 0],
                 'narrowbanddrd': [0, 0, 1, 0, 0, 0, 0],
                 'noise': [0, 0, 0, 1, 0, 0, 0], 
-                'squarepulsednarrowand': [0, 0, 0, 0, 1, 0, 0],
+                'squarepulsednarrowband': [0, 0, 0, 0, 1, 0, 0],
                 'squiggle': [0, 0, 0, 0, 0, 1, 0],
                 'squigglesquarepulsednarrowband': [0, 0, 0, 0, 0, 0, 1]
                 }
 
-    train_image_paths = glob.glob(f'{config.DATA_PATH}*train/*.png')
-    train_targets, train_ids = [needle_target_encoding(x.split('/')[-2]) for x in train_image_paths]
-    train_ids = [(x.split('/')[-1]).split('_')[0] for x in train_image_paths]
+    train_image_paths = glob.glob(f'{config.DATA_PATH}train/*/*.png')
+    train_targets = [needle_target_encoding[x.split('/')[-2]] for x in train_image_paths]
+    train_ids = [int((x.split('/')[-1]).split('_')[0]) for x in train_image_paths]
 
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{date_time}')
-    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}dt{date_time}')
+    logger.info(f'fold,epoch,val_loss,val_acc,train_acc, train_loss, time')
 
     model = models.Model(pretrained = True, training = True)
-    model.to(device)
+    model.to(device) 
 
     train_dataset = dataset.SetiNeedleDataset(image_paths = train_image_paths,
                                                     targets = train_targets,
@@ -72,9 +72,9 @@ if __name__ == '__main__':
                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
 
 
-    valid_image_paths = glob.glob(f'{config.NEEDLE_PATH}*valid/*.png')
-    valid_targets = [needle_target_encoding(x.split('/')[-2]) for x in valid_image_paths]
-    valid_ids = [(x.split('/')[-1]).split('_')[0] for x in valid_image_paths]
+    valid_image_paths = glob.glob(f'{config.DATA_PATH}valid/*/*.png')
+    valid_targets = [needle_target_encoding[x.split('/')[-2]] for x in valid_image_paths]
+    valid_ids = [int((x.split('/')[-1]).split('_')[0]) for x in valid_image_paths]
 
     valid_dataset = dataset.SetiNeedleDataset(image_paths = valid_image_paths,
                                                     targets = valid_targets,

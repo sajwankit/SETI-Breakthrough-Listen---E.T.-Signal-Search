@@ -36,7 +36,7 @@ def mixup(inputs, targets):
     return mixed_inputs, targets1, targets2, lam
 
 def loss_criterion(outputs, targets):
-    return nn.CrossEntropyLoss()(outputs, targets.view(-1,1))
+    return nn.CrossEntropyLoss()(outputs, targets)
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -63,7 +63,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         #moving inputs and targets to device: cpu or cuda
         inputs = inputs.to(device, dtype = torch.float)
-        targets = targets.to(device, dtype = torch.float)
+        targets = targets.to(device, dtype = torch.long)
 
         #zero grad the optimizer
         optimizer.zero_grad()

@@ -16,7 +16,7 @@ input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/S
 DATA_PATH = input_path[i]
 
 ORIG_IMAGE = True
-IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse with np.array shape
+IMAGE_SIZE = (384,512) # (freq, time): aligning with cv2, not to confuse with np.array shape
 if not ORIG_IMAGE:
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
     resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -36,7 +36,7 @@ INVERT_OFF_CHANNELS = True
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = True
+MIXUP = False
 MIXUP_APLHA = 1
 
 needle_path = ['/home/asajw/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']

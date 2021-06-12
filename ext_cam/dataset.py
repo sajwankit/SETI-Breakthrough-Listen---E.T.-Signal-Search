@@ -8,6 +8,36 @@ import albumentations as A
 import cv2
 import glob
 
+class ImageTransform():
+    def __init__(self):
+        pass
+    def normalize(self, image):
+        # normalise image with 0 mean, 1 std
+        
+        return (image - np.mean(image)) / (np.std(image)).astype(np.float32)
+    
+    def minmax_norm(self, image):
+        # min-max to bring image in range 0,1. albumentations requires it.
+        return ((image - np.min(image))/(np.max(image) - np.min(image)))
+    
+    def flip(self,image, p=0.5):
+#         transform = A.Compose([
+# #             A.OneOf([
+# #                     A.RandomBrightnessContrast(brightness_limit = [-0.3,0.2], contrast_limit = [-0.3,0.2], p =0.75),
+# #                     A.Sharpen(alpha = [0.1,0.4], lightness = [0.6, 1], p=0.75),
+# #             ]),
+#             A.HorizontalFlip(p=1),
+# #             A.ShiftScaleRotate(shift_limit_x=(-0.08, 0.08), scale_limit=0, rotate_limit=0,
+# #                                 p=1)
+#                     ])
+       
+#         trans_image_array = transform(image = self.minmax_norm(np.copy(self.image_array)))['image']
+        if np.random.uniform(0, 1) <= p: 
+            trans_image_array = np.fliplr(image)
+            return trans_image_array
+        else:
+            return image
+
 class SetiNeedleDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
         self.image_paths = image_paths #glob.glob(f'{config.NEEDLE_PATH}*/{needle_type}/*.png')
@@ -21,7 +51,8 @@ class SetiNeedleDataset:
         
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
-        image = self.normalize(cv2.imread(self.image_paths[item], cv2.IMREAD_GRAYSCALE))
+        imt = ImageTransform()
+        image = imt.normalize(cv2.imread(self.image_paths[item], cv2.IMREAD_GRAYSCALE))
         
         id = self.ids[item]
             
