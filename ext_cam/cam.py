@@ -49,7 +49,7 @@ if __name__ == '__main__':
     model.load_state_dict(state['model'])                                    
     
 
-
+    print(model)
     model.eval()
     finalconv_name = 'layer4'
     # hook the feature extractor
