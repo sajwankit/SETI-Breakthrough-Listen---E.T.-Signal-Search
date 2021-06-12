@@ -57,8 +57,8 @@ if __name__ == '__main__':
     def hook_feature(module, input, output):
         features_blobs.append(output.data.cpu().numpy())
 
-    model._modules.get(finalconv_name(2)).register_forward_hook(hook_feature)
-
+    model.model.layer4[1]._modules.get('conv2').register_forward_hook(hook_feature)
+    print(model.model.layer4[1]._modules.get('conv2'))
     # get the softmax weight
     params = list(model.parameters())
     weight_softmax = np.squeeze(params[-2].cpu().data.numpy())
