@@ -102,16 +102,13 @@ class ImageTransform():
         t = chnl_shape[0]
         
         for chl in chls_to_add_needle:
-            fimg[chl*t:(chl+1)*t, : f][needle_mask] = self.normalize(needle_img[needle_mask] + fimg[chl*t:(chl+1)*t, : f][needle_mask])
+            chnl_needle_mask = needle_mask[chl*t:(chl+1)*t, : f]
+            fimg[chl*t:(chl+1)*t, : f][chnl_needle_mask] = (np.random.uniform(0.5, 0.7)*needle_img[chl*t:(chl+1)*t, : f][chnl_needle_mask] + fimg[chl*t:(chl+1)*t, : f][chnl_needle_mask])
         return self.normalize(fimg).astype(np.float32)
 
     def apply_ext_needle(self):
-        ftarget_type = random.choice([0, 1])
-        needle_type = random.choice([
-        1,
-        2,
-        5,
-        ])
+        ftarget_type = np.random.choice([0, 1], p = [0.35, 0.65])
+        needle_type = np.random.choice([1, 2, 5], p = [0.33, 0.33, 0.34])
         
         # needle_target_encoding = {
 #             0'brightpixel':[1, 0, 0, 0, 0, 0, 0],
@@ -122,12 +119,14 @@ class ImageTransform():
 #             5'squiggle': [0, 0, 0, 0, 0, 1, 0],
 #             6'squigglesquarepulsednarrowband': [0, 0, 0, 0, 0, 0, 1]
 #             }
-        needle_path = random.choice(glob.glob(f'{config.NEEDLE_PATH}*_{needle_type}.npy'))
-        needle_mask_path = f'{config.NEEDLE_PATH}mask_{needle_path.split('/')[-1]}'
-        print(needle_path, needle_mask_path)
+        
+        needle_mask_path = random.choice(glob.glob(f'{config.NEEDLE_PATH}mask_*_{needle_type}.npy'))
+        needle_path = needle_mask_path.replace('mask_', '')
+        
+#         print(needle_path, needle_mask_path)
         needle_img = np.load(needle_path)
         needle_mask = np.load(needle_mask_path)
-        print(needle_img.shape, needle_mask.shape)
+#         print(needle_img.shape, needle_mask.shape)
         if ftarget_type == 1:
             chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))
             trans_image_array = self.add_needle(chls_to_add_needle, needle_img, needle_mask)
@@ -135,7 +134,7 @@ class ImageTransform():
 #             needle_img = np.amax(needle_img) - needle_img
             chls_to_add_needle = random.sample([1, 3, 5], random.choice([1, 2, 3]))
             trans_image_array = self.add_needle(chls_to_add_needle, needle_img, needle_mask)
-        return trans_image_array
+        return trans_image_array, ftarget_type 
 
 class SetiDataset:
     def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
@@ -168,12 +167,16 @@ class SetiDataset:
             
             
         imt = ImageTransform(image)
+        
         if config.APPLY_NEEDLE:
-            image = imt.apply_ext_needle()
+            if target == 0 and np.random.uniform(0,1) <=0.55:
+                image, target = imt.apply_ext_needle()
+        
         if self.augmentations:
             image = imt.flip(image = image, p = 0.5)
             image = imt.swap_channels(image = image, p = 0.65)
             image = imt.drop_channels(image = image, p = 0.25)
+#         print(target)    
 #         print('1ds', np.mean(image), np.std(image))
 #         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
 

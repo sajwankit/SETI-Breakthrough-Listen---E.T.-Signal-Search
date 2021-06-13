@@ -31,8 +31,8 @@ if not ORIG_IMAGE:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
 
-OUT_IMAGE_SIZE = (256, 258//6)    
-SAVE_NEEDLES = True
+OUT_IMAGE_SIZE = (256, 258)    
+SAVE_NEEDLES = False
 
 INVERT_OFF_CHANNELS = True
 

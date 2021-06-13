@@ -66,7 +66,7 @@ if __name__ == '__main__':
                                 seed = config.SEED)
     ########################################################################
 
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{date_time}')
+    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{date_time}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
     for fold, foldData in enumerate(mskFoldData):
@@ -169,7 +169,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{config.DATETIME}.pth')
 
                 if valid_roc_auc >= best_valid_roc_auc:
                     best_valid_roc_auc = valid_roc_auc
@@ -177,7 +177,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{config.DATETIME}.pth')
 
 
 
