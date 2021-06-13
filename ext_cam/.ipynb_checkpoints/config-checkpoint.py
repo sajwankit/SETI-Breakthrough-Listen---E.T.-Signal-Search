@@ -16,7 +16,7 @@ input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/ext/ext_needles/primary_smal
 DATA_PATH = input_path[i]
 
 ORIG_IMAGE = True
-IMAGE_SIZE = (384,512) # (freq, time): aligning with cv2, not to confuse with np.array shape
+IMAGE_SIZE = (384,512) # (freq, time): aligning with cv2, not to confuse with np.array shape. note: to fix: this is wrong should be (512, 384), code works as this is redundant.check.dont use.
 if not ORIG_IMAGE:
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
     resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -31,6 +31,9 @@ if not ORIG_IMAGE:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
 
+OUT_IMAGE_SIZE = (256, 258//6)    
+SAVE_NEEDLES = True
+
 INVERT_OFF_CHANNELS = True
 
 SEED = 42
@@ -39,7 +42,7 @@ MIXED_PRECISION = True
 MIXUP = False
 MIXUP_APLHA = 1
 
-needle_path = ['/home/asajw/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']
+needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'

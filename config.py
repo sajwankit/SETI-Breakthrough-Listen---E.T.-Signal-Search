@@ -39,9 +39,9 @@ MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 1
 
-needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/ext/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/ext_needle/']
+needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
-APPLY_NEEDLE = False
+APPLY_NEEDLE = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
 EPOCHS = 25
