@@ -10,18 +10,16 @@ import glob
 import matplotlib.pyplot as plt
 
 seedandlog.seed_torch(seed=config.SEED)
-
+imt = dataset.ImageTransform()
 def returnCAM(feature_conv, weight, class_idx):
     # generate the class activation maps upsample
     size_upsample = (512, 384)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
-    for idx in class_idx:
-        cam = weight[idx].dot(feature_conv[0,:, :, ].reshape((nc, h*w)))
+    for i in range(bz):
+        cam = weight[class_idx[i]].dot(feature_conv[i, :, :, :].reshape((nc, h*w)))
         cam = cam.reshape(h, w)
-        cam = cam - np.min(cam)
-        cam_img = cam / np.max(cam)
-        output_cam.append(cv2.resize(cam_img, size_upsample))
+        output_cam.append(imt.normalize(cv2.resize(cam, size_upsample)))
     return output_cam
 
 class SaveFeatures():
@@ -108,25 +106,38 @@ def generate_heatmaps(images):
 
 def plot_heatmaps(heatmaps, images, class_predictions=None):
     
-    for i, hm in enumerate(heatmaps):
+    for i in range(len(heatmaps)):
         # hm = cv2.applyColorMap(hm, cv2.COLORMAP_JET)
         # result = hm * 0.3 + images[i] * 0.5
         print(class_predictions[i])
         plt.imshow(images[i][0].reshape(-1,512))
-        plt.imshow(hm, alpha=0.4, cmap='jet')
+        plt.imshow(heatmaps[i], alpha=0.4, cmap='jet')
         plt.show()
         print('\n\n')
 
 test_images_paths = [
-    '/content/primary_small/train/squigglesquarepulsednarrowband/3_squigglesquarepulsednarrowband.png',
-    '/content/primary_small/train/squiggle/88_squiggle.png',
-    '/content/primary_small/train/squarepulsednarrowband/125_squarepulsednarrowband.png',
-    '/content/primary_small/train/narrowbanddrd/118_narrowbanddrd.png',
-    '/content/primary_small/train/narrowband/92_narrowband.png'
+    f'{config.DATA_PATH}train/squigglesquarepulsednarrowband/3_squigglesquarepulsednarrowband.png',
+    f'{config.DATA_PATH}train/squiggle/88_squiggle.png',
+    f'{config.DATA_PATH}train/squarepulsednarrowband/125_squarepulsednarrowband.png',
+    f'{config.DATA_PATH}train/narrowbanddrd/118_narrowbanddrd.png',
+    f'{config.DATA_PATH}train/narrowband/92_narrowband.png'
 ]
+test_images_paths = glob.glob(f'{config.DATA_PATH}train/squiggle/*.png')[0:40]
+
+# needle_target_encoding = {
+#             'brightpixel':[1, 0, 0, 0, 0, 0, 0],
+#             'narrowband': [0, 1, 0, 0, 0, 0, 0],
+#             'narrowbanddrd': [0, 0, 1, 0, 0, 0, 0],
+#             'noise': [0, 0, 0, 1, 0, 0, 0], 
+#             'squarepulsednarrowband': [0, 0, 0, 0, 1, 0, 0],
+#             'squiggle': [0, 0, 0, 0, 0, 1, 0],
+#             'squigglesquarepulsednarrowband': [0, 0, 0, 0, 0, 0, 1]
+#             }
+
+
 test_images = []
 for p in test_images_paths:
-    imt = dataset.ImageTransform()
+    
     image = imt.normalize(cv2.imread(p, cv2.IMREAD_GRAYSCALE))
     image = image.reshape(1,image.shape[0],image.shape[1])
     image = np.repeat(image, 3, axis = 0)

@@ -33,7 +33,10 @@ class ImageTransform():
        
 #         trans_image_array = transform(image = self.minmax_norm(np.copy(self.image_array)))['image']
         if np.random.uniform(0, 1) <= p: 
-            trans_image_array = np.fliplr(image)
+            if np.random.uniform(0, 1) <= 0.5:
+                trans_image_array = np.fliplr(image)
+            else:
+                trans_image_array = np.flip(image)  
             return trans_image_array
         else:
             return image
@@ -62,10 +65,10 @@ class SetiNeedleDataset:
         if self.resize is not None:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
 
-#         imt = ImageTransform(image)
+        imt = ImageTransform()
 # #         image = imt.apply_ext_needle()
-#         if self.augmentations:
-#             image = imt.flip(image = image, p = 0.5)
+        if self.augmentations:
+            image = imt.flip(image = image, p = 0.5)
 #             image = imt.swap_channels(image = image, p = 0.65)
 #             image = imt.drop_channels(image = image, p = 0.25)
 # #         print('1ds', np.mean(image), np.std(image))

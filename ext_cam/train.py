@@ -131,7 +131,7 @@ if __name__ == '__main__':
                         'valid_ids': valid_ids,
                         'predictions': predictions,
                         'valid_targets': valid_targets},
-                        f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
+                        f'{config.MODEL_OUTPUT_PATH}acc_{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_dt{config.DATETIME}.pth')
 
 
 

@@ -14,7 +14,6 @@ class ImageTransform():
 
     def normalize(self, image):
         # normalise image with 0 mean, 1 std
-        
         return (image - np.mean(image)) / (np.std(image)).astype(np.float32)
     
     def minmax_norm(self, image):
@@ -95,7 +94,7 @@ class ImageTransform():
         else:
             return image.astype(np.float32)
     
-    def add_needle(self, chls_to_add_needle, needle_img, blend_prop = 0.5):
+    def add_needle(self, chls_to_add_needle, needle_img, blend_prop = 1):
         fimg = np.copy(self.image_array)
         final_shape = fimg.shape
         chnl_shape = (final_shape[0]//6, final_shape[1]//1) #will be approx to note.
@@ -122,7 +121,7 @@ class ImageTransform():
             chls_to_add_needle = random.sample([0, 2, 4], random.choice([1, 2, 3]))
             trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
         else:
-            needle_img = np.amax(needle_img) - needle_img
+#             needle_img = np.amax(needle_img) - needle_img
             chls_to_add_needle = random.sample([1, 3, 5], random.choice([1, 2, 3]))
             trans_image_array = self.add_needle(chls_to_add_needle, needle_img)
         return trans_image_array
@@ -155,8 +154,11 @@ class SetiDataset:
         if self.resize is not None:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
 
+            
+            
         imt = ImageTransform(image)
-#         image = imt.apply_ext_needle()
+        if config.APPLY_NEEDLE:
+            image = imt.apply_ext_needle()
         if self.augmentations:
             image = imt.flip(image = image, p = 0.5)
             image = imt.swap_channels(image = image, p = 0.65)
@@ -175,18 +177,20 @@ class SetiDataset:
             for c in chnls_to_invert:
                 image[c*t:(c+1)*t, : f] = max_pix - image[c*t:(c+1)*t, : f]
         image = imt.normalize(image)
-            
+        
+        
+        
         image = image.reshape(1,image.shape[0],image.shape[1])
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
     
         if self.targets is not None:
-            return{'images': torch.tensor(image.copy(), dtype = torch.float), 
+            return{'images': torch.tensor(image, dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
                   'ids': torch.tensor(id, dtype = torch.int32)}
         else:
-            return{'images': torch.tensor(image.copy(), dtype = torch.float),
+            return{'images': torch.tensor(image, dtype = torch.float),
                   'ids': torch.tensor(id, dtype = torch.int32)}
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]

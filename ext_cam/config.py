@@ -9,10 +9,10 @@ datetime_NY = datetime.datetime.now(tz_NY)
 # DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-DATETIME = '061216'
+DATETIME = '061303'
 
-i = 1
-input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/primary_small/']
+i = 0
+input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/ext/ext_needles/primary_small/', '/content/drive/MyDrive/SETI/primary_small/']
 DATA_PATH = input_path[i]
 
 ORIG_IMAGE = True
@@ -49,14 +49,14 @@ TARGET_SIZE = 7
 FOLDS = 4
 MODEL_NAME = 'resnet18'
 CHANNELS = 1
-MODEL_LOAD_FOR_INFER = 'auc'
+MODEL_LOAD_FOR_INFER = 'acc'
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-8
 
-out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
+out_path = ['/home/asajw/seti_models/cam/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
