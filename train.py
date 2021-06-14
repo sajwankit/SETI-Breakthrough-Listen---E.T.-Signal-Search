@@ -25,6 +25,8 @@ if __name__ == '__main__':
     parser.add_argument('--fold', type = int)
     args = parser.parse_args()
 
+    saved_model_name = config.SAVED_MODEL_NAME
+
     data_path = config.DATA_PATH
     device = config.DEVICE
     epochs = config.EPOCHS
@@ -169,7 +171,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}loss_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}loss_fold{fold}_{saved_model_name}.pth')
 
                 if valid_roc_auc >= best_valid_roc_auc:
                     best_valid_roc_auc = valid_roc_auc
@@ -177,7 +179,7 @@ if __name__ == '__main__':
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
-                                f'{config.MODEL_OUTPUT_PATH}auc_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{config.DATETIME}.pth')
+                                f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
 
 
 

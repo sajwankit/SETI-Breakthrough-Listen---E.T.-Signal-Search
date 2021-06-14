@@ -11,7 +11,7 @@ DATETIME = datetime_NY.strftime('%m%d%H')
 #for inference
 # DATETIME = '061307'
 
-i = 0
+i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -62,9 +62,11 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_dt{DATETIME}'
+
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
-foldername = f'{MODEL_NAME}_dt{DATETIME}'
-LOG_DIR = f'{os.path.join(log_path[i], foldername)}/'
+
+LOG_DIR = f'{os.path.join(log_path[i], SAVED_MODEL_NAME)}/'
 try:
     os.mkdir(LOG_DIR[:-1])
 except:
