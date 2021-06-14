@@ -161,7 +161,10 @@ if __name__ == '__main__':
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
-                scheduler.step(valid_loss)
+                if config.SCHEDULER == 'ReduceLROnPlateau':
+                    scheduler.step(valid_loss)
+                else:
+                    scheduler.step()
                 if config.DEBUG:
                     train_roc_auc = 0
                     valid_roc_auc = 0

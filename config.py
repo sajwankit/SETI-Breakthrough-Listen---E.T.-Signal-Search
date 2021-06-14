@@ -57,7 +57,7 @@ CURRENT_EPOCH = 0
 OHEM_LOSS = False
 OHEM_RATE = 0.7
 
-
+SCHEDULER = 'CosineAnnealingLR'
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
 PATIENCE = 2
@@ -68,7 +68,7 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
-SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_dt{DATETIME}'
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dt{DATETIME}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 
