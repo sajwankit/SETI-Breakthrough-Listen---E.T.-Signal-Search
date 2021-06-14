@@ -36,7 +36,19 @@ def mixup(inputs, targets):
     return mixed_inputs, targets1, targets2, lam
 
 def loss_criterion(outputs, targets):
-    return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+    if config.OHEM_LOSS:
+        batch_size = outputs.size(0) 
+        ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(outputs, targets.view(-1,1))
+
+        sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
+        keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
+        if keep_num < sorted_ohem_loss.size()[0]:
+            keep_idx_cuda = idx[:keep_num]
+            ohem_cls_loss = ohem_cls_loss[keep_idx_cuda]
+        cls_loss = ohem_cls_loss.sum() / keep_num
+        return cls_loss
+    else:
+        return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
