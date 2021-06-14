@@ -36,8 +36,10 @@ if __name__ == '__main__':
 
     df = pd.read_csv(data_path+'train_labels.csv')
     if config.DEBUG:
-        df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//1000), df.query('target == 0').sample(len(df.query('target == 0'))//10000)]).sample(frac=1).reset_index(drop=True)
-    
+        # df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//1000), df.query('target == 0').sample(len(df.query('target == 0'))//10000)]).sample(frac=1).reset_index(drop=True)
+        ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
+        df = df[df['id'].isin(ids)]
+        df.reset_index(inplace = True, drop = True)
     images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
@@ -68,7 +70,7 @@ if __name__ == '__main__':
                                 seed = config.SEED)
     ########################################################################
 
-    logger = seedandlog.init_logger(log_name = f'{config.MODEL_NAME}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_aug{config.AUG}_needle{config.APPLY_NEEDLE}_dt{date_time}')
+    logger = seedandlog.init_logger(log_name = f'{saved_model_name}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
     for fold, foldData in enumerate(mskFoldData):
@@ -154,12 +156,18 @@ if __name__ == '__main__':
             best_valid_loss = 999
             best_valid_roc_auc = -999
             for epoch in range(epochs):
+                config.OHEM_RATE = 1 + ((0.25-1)/(epochs-1 - 0))*epoch
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
                 scheduler.step(valid_loss)
-                train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
-                valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
+                if config.DEBUG:
+                    train_roc_auc = 0
+                    valid_roc_auc = 0
+                else:
+                    train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
+                    
+                    valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()
 
                 # train auc doesnot make sense when using mixup

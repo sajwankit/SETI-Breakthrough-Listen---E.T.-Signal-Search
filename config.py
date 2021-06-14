@@ -34,14 +34,14 @@ if not ORIG_IMAGE:
 INVERT_OFF_CHANNELS = True
 
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 MIXUP = False
 MIXUP_APLHA = 1
 
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
-APPLY_NEEDLE = True
+APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
 EPOCHS = 15
@@ -51,6 +51,12 @@ FOLDS = 4
 MODEL_NAME = 'resnet18d'
 CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'auc'
+
+
+CURRENT_EPOCH = 0
+OHEM_LOSS = True
+OHEM_RATE = 1
+
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
@@ -62,7 +68,7 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
-SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_dt{DATETIME}'
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_dt{DATETIME}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 
