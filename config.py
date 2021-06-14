@@ -11,7 +11,7 @@ DATETIME = datetime_NY.strftime('%m%d%H')
 #for inference
 # DATETIME = '061307'
 
-i = 1
+i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -34,9 +34,9 @@ if not ORIG_IMAGE:
 INVERT_OFF_CHANNELS = True
 
 SEED = 42
-DEBUG = True
+DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
+MIXUP = True
 MIXUP_APLHA = 1
 
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
@@ -44,7 +44,7 @@ NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 15
+EPOCHS = 40
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
@@ -54,8 +54,8 @@ MODEL_LOAD_FOR_INFER = 'auc'
 
 
 CURRENT_EPOCH = 0
-OHEM_LOSS = True
-OHEM_RATE = 1
+OHEM_LOSS = False
+OHEM_RATE = 0.7
 
 
 LEARNING_RATE = 5e-5

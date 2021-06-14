@@ -36,21 +36,27 @@ INVERT_OFF_CHANNELS = True
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
+MIXUP = True
 MIXUP_APLHA = 1
 
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
 NEEDLE_PATH = needle_path[i]
-APPLY_NEEDLE = True
+APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 15
+EPOCHS = 40
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
 MODEL_NAME = 'resnet18d'
 CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'auc'
+
+
+CURRENT_EPOCH = 0
+OHEM_LOSS = False
+OHEM_RATE = 0.7
+
 
 LEARNING_RATE = 5e-5
 FACTOR = 0.1
@@ -62,9 +68,11 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_dt{DATETIME}'
+
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
-foldername = f'{MODEL_NAME}_dt{DATETIME}'
-LOG_DIR = f'{os.path.join(log_path[i], foldername)}/'
+
+LOG_DIR = f'{os.path.join(log_path[i], SAVED_MODEL_NAME)}/'
 try:
     os.mkdir(LOG_DIR[:-1])
 except:

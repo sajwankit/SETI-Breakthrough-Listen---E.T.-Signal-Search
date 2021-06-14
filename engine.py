@@ -31,7 +31,7 @@ def mixup(inputs, targets):
     lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
     batch_size = inputs.size()[0]
     index = torch.randperm(batch_size)
-    mixed_inputs = lam * inputs + (1 - lam) * inputs[index, :]
+    mixed_inputs = np.sqrt(lam) * inputs + np.sqrt((1 - lam)) * inputs[index, :]
     targets1, targets2 = targets, targets[index]
     return mixed_inputs, targets1, targets2, lam
 
@@ -52,7 +52,7 @@ def loss_criterion(outputs, targets):
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
-
+#     print(f'ohem rate: {config.OHEM_RATE}')
     losses = AverageMeter()
 
     #putting model to train mode
@@ -72,7 +72,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
         inputs = data['images']
         targets = data['targets']
         ids = data['ids']
-
+        
         #moving inputs and targets to device: cpu or cuda
         inputs = inputs.to(device, dtype = torch.float)
         targets = targets.to(device, dtype = torch.float)
@@ -88,7 +88,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
                     outputs = model(mixed_inputs)
                     #calculate loss
-                    loss = lam * loss_criterion(outputs, targets1) + (1 - lam) * loss_criterion(outputs, targets2)
+                    loss = np.sqrt(lam)*loss_criterion(outputs, targets1)+np.sqrt(1 - lam)*loss_criterion(outputs, targets2)
                 else:
                     #Forward Step
                     outputs = model(inputs)
@@ -104,7 +104,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
                     outputs = model(mixed_inputs)
                     #calculate loss
-                    loss = lam * loss_criterion(outputs, targets1) + (1 - lam) * loss_criterion(outputs, targets2)
+                    loss = np.sqrt(lam)*loss_criterion(outputs, targets1)+np.sqrt(1 - lam)*loss_criterion(outputs, targets2)
             else:
                 #Forward Step
                 outputs = model(inputs)

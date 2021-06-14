@@ -141,10 +141,10 @@ if __name__ == '__main__':
             
             optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 #    
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                                factor=config.FACTOR, patience=config.PATIENCE,
-                                                                verbose=True, eps=config.EPS)
-#            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-7, last_epoch = -1)
+#             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
+#                                                                 factor=config.FACTOR, patience=config.PATIENCE,
+#                                                                 verbose=True, eps=config.EPS)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 7, eta_min = 1e-7, last_epoch = -1)
 
 
             if config.MIXED_PRECISION:
@@ -156,7 +156,8 @@ if __name__ == '__main__':
             best_valid_loss = 999
             best_valid_roc_auc = -999
             for epoch in range(epochs):
-                config.OHEM_RATE = 1 + ((0.25-1)/(epochs-1 - 0))*epoch
+#                 config.OHEM_RATE = 0.6 + ((0.2-0.6)/(epochs-1 - 0))*epoch
+                
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                 predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
