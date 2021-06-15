@@ -57,8 +57,8 @@ CURRENT_EPOCH = 0
 OHEM_LOSS = False
 OHEM_RATE = 0.7
 
-SCHEDULER = 'CosineAnnealingLR'
-LEARNING_RATE = 5e-5
+SCHEDULER = 'CosineAnnealingWarmRestarts'
+LEARNING_RATE = 1e-4
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-8
