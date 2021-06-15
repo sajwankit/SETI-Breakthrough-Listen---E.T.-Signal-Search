@@ -2,6 +2,7 @@ import torch as th
 import math
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
+import config
 
 class Sampler():
 
@@ -27,7 +28,7 @@ class StratifiedSampler(Sampler):
         if (counts[0] < 2 or counts[1] <2) or len(ids) <= self.batch_size:
             self.ids_batches.append(ids)
         else:
-            s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5)
+            s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5, random_state=config.SEED)
             left_batch_indices, right_batch_indices = [x for x in s.split(ids, targets)][0]
             self.make_batches(ids[left_batch_indices], targets[left_batch_indices])
             self.make_batches(ids[right_batch_indices], targets[right_batch_indices])
