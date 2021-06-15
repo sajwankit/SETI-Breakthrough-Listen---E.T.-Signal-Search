@@ -45,16 +45,21 @@ class StratifiedSampler(Sampler):
             self.batches_ids.append(ids)
         else:
             s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5)
-            left_batch_ids, right_batch_ids = [x for x in s.split(ids, targets)][0]
-            self.make_batches(left_batch_ids, targets[left_batch_ids])
-            self.make_batches(right_batch_ids, targets[right_batch_ids])
+            left_batch_idx, right_batch_idx = [x for x in s.split(ids, targets)][0]
+            self.make_batches(ids[left_batch_idx], targets[left_batch_idx])
+            self.make_batches(ids[right_batch_idx], targets[right_batch_idx])
 
     def gen_sample_array(self):
         self.batches_ids = [] #to make sure only one time batches are created
         self.make_batches(self.ids, self.targets)
+        for i, batch_ids in enumerate(self.batches_ids):
+            batch_ids_indexes = np.searchsorted(self.ids, batch_ids)
+            print(f'{i}, {np.unique(np.array(self.targets[batch_ids_indexes]), return_counts=True)}, {np.sum(self.ids[batch_ids_indexes])}')
+            pass
         check = 0
         for batch_ids in self.batches_ids:
-            yield list(batch_ids)
+            batch_ids_indexes = np.searchsorted(self.ids,batch_ids)
+            yield list(batch_ids_indexes)
 
     def __iter__(self):
         return iter(self.gen_sample_array())

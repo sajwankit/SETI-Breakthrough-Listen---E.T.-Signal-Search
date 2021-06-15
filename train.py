@@ -103,13 +103,16 @@ if __name__ == '__main__':
                     filename = df.loc[int(id),'id']
                     train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
                     train_targets.append(int(df.loc[int(id), 'target']))
-    
+
+
+            train_targets = (np.random.rand(240) > 0.9).astype(int)
+
             train_dataset = dataset.SetiDataset(image_paths = train_images_path,
                                                     targets = train_targets,
                                                     ids = trIDs,
                                                     resize = None,
                                                     augmentations = True)
-            train_targets = (np.random.rand(240) > 0.9).astype(int)
+            
             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
                                                         batch_sampler = sampler.StratifiedSampler( ids = trIDs,
                                                                                             targets = train_targets,
