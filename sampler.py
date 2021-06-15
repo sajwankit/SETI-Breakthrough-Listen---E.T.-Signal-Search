@@ -62,49 +62,64 @@ class StratifiedSampler(Sampler):
         return len(self.targets)
 
 i = -1
+mini_batches = []
+batch_size = 2
+def make_batches(ids, targets):
+    unique, counts = np.unique(targets, return_counts=True)
 
-def make_b
-def sample_generator(ids, targets):
-    while len(ids)
-    # if len(ids) <= 2:
-    #     yield np.array(ids)
-    # else:
-    #     s = StratifiedShuffleSplit(n_splits = 1, test_size=0.5)
-    #     left_batch_ids, right_batch_ids = [x for x in s.split(ids, targets)][0]
-    #     return np.array(left_batch_ids)
-    #     # self.gen_sample_array(ids[left_batch_ids], targets[left_batch_ids])
-    #     # self.gen_sample_array(ids[right_batch_ids], targets[right_batch_ids])
-    #     # yield 1
-    #     # if len(left_batch_ids) <= self.batch_size:
-    #     #     pass
-    #     #     # yield np.array(left_batch_ids)
-    #     # if len(right_batch_ids) <= self.batch_size:
-    #     #     pass
-    #     #     # yield np.array(right_batch_ids)
-    # for i in range(len(ids)):
-    i = 0
-    while i < len(ids):
+    if (counts[0] < 2 or counts[1] <2) or len(ids) <= batch_size:
+        mini_batches.append(ids)
+    else:
+        s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5)
+        left_batch_ids, right_batch_ids = [x for x in s.split(ids, targets)][0]
+        make_batches(left_batch_ids, targets[left_batch_ids])
+        make_batches(right_batch_ids, targets[right_batch_ids])
+ids = np.arange(32*7)
+targets = (np.random.rand(32*7) > 0.5).astype(int)
+make_batches(ids, targets)
+
+
+# def sample_generator(ids, targets):
+#     while len(ids)
+#     # if len(ids) <= 2:
+#     #     yield np.array(ids)
+#     # else:
+#     #     s = StratifiedShuffleSplit(n_splits = 1, test_size=0.5)
+#     #     left_batch_ids, right_batch_ids = [x for x in s.split(ids, targets)][0]
+#     #     return np.array(left_batch_ids)
+#     #     # self.gen_sample_array(ids[left_batch_ids], targets[left_batch_ids])
+#     #     # self.gen_sample_array(ids[right_batch_ids], targets[right_batch_ids])
+#     #     # yield 1
+#     #     # if len(left_batch_ids) <= self.batch_size:
+#     #     #     pass
+#     #     #     # yield np.array(left_batch_ids)
+#     #     # if len(right_batch_ids) <= self.batch_size:
+#     #     #     pass
+#     #     #     # yield np.array(right_batch_ids)
+#     # for i in range(len(ids)):
+#     i = 0
+#     while i < len(ids):
         
-        yield ids[i], targets[i]
-        i = i+1
+#         yield ids[i], targets[i]
+#         i = i+1
 
-ids = np.arange(6)
-targets = np.array([0,1,0,1,0,1])
+# ids = np.arange(6)
+# targets = np.array([0,1,0,1,0,1])
 
-sample_generator_object = sample_generator(ids, targets)
-print(next(sample_generator_object))
-print(next(sample_generator_object))
-print(next(sample_generator_object))
-print(next(sample_generator_object))
-# print((sample_generator_object))
-# print((sample_generator_object))
-# print((sample_generator_object))
-# for a, b in sample_generator_object:
-#     print(a, b)
+# sample_generator_object = sample_generator(ids, targets)
+# print(next(sample_generator_object))
+# print(next(sample_generator_object))
+# print(next(sample_generator_object))
+# print(next(sample_generator_object))
+# # print((sample_generator_object))
+# # print((sample_generator_object))
+# # print((sample_generator_object))
+# # for a, b in sample_generator_object:
+# #     print(a, b)
 
 
-# a = StratifiedSampler(ids, target, 2).gen_sample_array(ids, target)
-# print(len(a))
-# a = (StratifiedSampler(np.arange(6), np.array([0, 1, 1,1,0,0]), 2).gen_sample_array(np.arange(6), np.array([0, 1, 1,1,0,0]))
+# # a = StratifiedSampler(ids, target, 2).gen_sample_array(ids, target)
+# # print(len(a))
+# # a = (StratifiedSampler(np.arange(6), np.array([0, 1, 1,1,0,0]), 2).gen_sample_array(np.arange(6), np.array([0, 1, 1,1,0,0]))
 
-# iter -- return a fresh batch
+# # iter -- return a fresh batch
