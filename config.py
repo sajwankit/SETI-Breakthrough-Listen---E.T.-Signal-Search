@@ -11,7 +11,7 @@ datetime_NY = datetime.datetime.now(tz_NY)
 #for inference
 DATETIME = '061505'
 
-i = 0
+i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -34,7 +34,7 @@ if not ORIG_IMAGE:
 INVERT_OFF_CHANNELS = True
 
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 MIXUP = True
 MIXUP_APLHA = 1

@@ -16,6 +16,8 @@ import models
 import validation_strategy as vs
 import seedandlog
 
+import sampler
+
 from torch.cuda import amp
 torch.multiprocessing.set_sharing_strategy('file_system')
 if __name__ == '__main__':
@@ -107,12 +109,23 @@ if __name__ == '__main__':
                                                     ids = trIDs,
                                                     resize = None,
                                                     augmentations = True)
-    
-            train_loader = torch.utils.data.DataLoader(train_dataset,
-                                                batch_size = bs,
-                                                shuffle = True,
-                                                num_workers = 4,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+            train_targets = (np.random.rand(240) > 0.9).astype(int)
+            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+                                                        batch_sampler = sampler.StratifiedSampler( ids = trIDs,
+                                                                                            targets = train_targets,
+                                                                                            batch_size = config.BATCH_SIZE)                              
+                                                # batch_size = bs,
+                                                # shuffle = True,
+                                                # num_workers = 4,
+                                                # worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+                                                )
+
+
+            # train_loader = torch.utils.data.DataLoader(train_dataset,
+            #                                     batch_size = bs,
+            #                                     shuffle = True,
+            #                                     num_workers = 4,
+            #                                     worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
     
             valid_images_path = []
             valid_targets = []
