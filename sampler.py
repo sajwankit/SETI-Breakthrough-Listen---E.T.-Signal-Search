@@ -36,34 +36,33 @@ class StratifiedSampler(Sampler):
         self.targets = np.array(targets)
         self.ids = np.array(ids)
         self.batch_size = batch_size
+        self.batches_ids = []
 
-    def gen_sample_array(self, ids, targets):
-        if len(ids) <= self.batch_size:
-            # yield np.array(ids)
-            pass
+    def make_batches(self, ids, targets):
+        unique, counts = np.unique(targets, return_counts=True)
+
+        if (counts[0] < 2 or counts[1] <2) or len(ids) <= batch_size:
+            self.batches_ids.append(ids)
         else:
-            s = StratifiedShuffleSplit(n_splits = 1, test_size=0.5)
+            s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5)
             left_batch_ids, right_batch_ids = [x for x in s.split(ids, targets)][0]
-            return np.array(left_batch_ids)
-            # self.gen_sample_array(ids[left_batch_ids], targets[left_batch_ids])
-            # self.gen_sample_array(ids[right_batch_ids], targets[right_batch_ids])
-            # yield 1
-            # if len(left_batch_ids) <= self.batch_size:
-            #     pass
-            #     # yield np.array(left_batch_ids)
-            # if len(right_batch_ids) <= self.batch_size:
-            #     pass
-            #     # yield np.array(right_batch_ids)
+            make_batches(left_batch_ids, targets[left_batch_ids])
+            make_batches(right_batch_ids, targets[right_batch_ids])
+
+    def gen_sample_array(self):
+        make_batches(self.ids, self.targets)
+        check = 0
+        for batch_ids in self.batches_ids:
+            yield batch_ids
 
     def __iter__(self):
-        return self.gen_sample_array(self.ids, self.targets)
+        return next(self.gen_sample_array())
 
     def __len__(self):
         return len(self.targets)
 
 i = -1
 mini_batches = []
-batch_size = 2
 def make_batches(ids, targets):
     unique, counts = np.unique(targets, return_counts=True)
 
