@@ -4,11 +4,6 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 
 class Sampler():
-    """Base class for all Samplers.
-    Every Sampler subclass has to provide an __iter__ method, providing a way
-    to iterate over indices of dataset elements, and a __len__ method that
-    returns the length of the returned iterators.
-    """
 
     def __init__(self, data_source):
         pass
@@ -20,46 +15,38 @@ class Sampler():
         raise NotImplementedError
 
 class StratifiedSampler(Sampler):
-    """Stratified Sampling
-    Provides equal representation of target classes in each batch
-    """
+    #treat ids as X, targets as Y. dont confuse ids with indices
     def __init__(self, ids, targets, batch_size):
-        """
-        Arguments
-        ---------
-        targets : torch tensor
-            a vector of class labels
-        batch_size : integer
-            batch_size
-        """
-        self.n_splits = int(len(targets) / batch_size)
         self.targets = np.array(targets)
         self.ids = np.array(ids)
         self.batch_size = batch_size
-        self.batches_ids = []
+        self.ids_batches = []
 
     def make_batches(self, ids, targets):
         unique, counts = np.unique(targets, return_counts=True)
-
         if (counts[0] < 2 or counts[1] <2) or len(ids) <= self.batch_size:
-            self.batches_ids.append(ids)
+            self.ids_batches.append(ids)
         else:
             s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5)
-            left_batch_idx, right_batch_idx = [x for x in s.split(ids, targets)][0]
-            self.make_batches(ids[left_batch_idx], targets[left_batch_idx])
-            self.make_batches(ids[right_batch_idx], targets[right_batch_idx])
+            left_batch_indices, right_batch_indices = [x for x in s.split(ids, targets)][0]
+            self.make_batches(ids[left_batch_indices], targets[left_batch_indices])
+            self.make_batches(ids[right_batch_indices], targets[right_batch_indices])
 
     def gen_sample_array(self):
-        self.batches_ids = [] #to make sure only one time batches are created
+        self.ids_batches = [] #to make sure batches  are created only one time
         self.make_batches(self.ids, self.targets)
-        for i, batch_ids in enumerate(self.batches_ids):
-            batch_ids_indexes = np.searchsorted(self.ids, batch_ids)
-            print(f'{i}, {np.unique(np.array(self.targets[batch_ids_indexes]), return_counts=True)}, {np.sum(self.ids[batch_ids_indexes])}')
-            pass
-        check = 0
-        for batch_ids in self.batches_ids:
-            batch_ids_indexes = np.searchsorted(self.ids,batch_ids)
-            yield list(batch_ids_indexes)
+
+        #sanity check
+        test_ids = np.array([])
+        for i, ids_batch in enumerate(self.ids_batches):
+            ids_batch_indices = np.searchsorted(self.ids, ids_batch)
+            print(f'{i}, {np.unique(np.array(self.targets[ids_batch_indices]), return_counts=True)}, {np.sum(self.ids[ids_batch_indices])},{self.ids[ids_batch_indices][0:4]}')
+            test_ids = np.concatenate([test_ids, self.ids[ids_batch_indices]])
+        print(np.all(np.sort(test_ids) == np.sort(self.ids)))
+
+        for ids_batch in self.ids_batches:
+            ids_batch_indices = np.searchsorted(self.ids, ids_batch)
+            yield list(ids_batch_indices)
 
     def __iter__(self):
         return iter(self.gen_sample_array())
