@@ -104,8 +104,8 @@ if __name__ == '__main__':
                     train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
                     train_targets.append(int(df.loc[int(id), 'target']))
 
-
-            train_targets = (np.random.rand(240) > 0.9).astype(int)
+            if config.DEBUG:
+                train_targets = (np.random.rand(240) > 0.9).astype(int)
 
             train_dataset = dataset.SetiDataset(image_paths = train_images_path,
                                                     targets = train_targets,
@@ -113,22 +113,20 @@ if __name__ == '__main__':
                                                     resize = None,
                                                     augmentations = True)
             
-            # train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
-            #                                             batch_sampler = sampler.StratifiedSampler( ids = trIDs,
-            #                                                                                 targets = train_targets,
-            #                                                                                 batch_size = config.BATCH_SIZE),                              
-            #                                     # batch_size = bs,
-            #                                     # shuffle = True,
+            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+                                                        batch_sampler = sampler.StratifiedSampler( ids = trIDs,
+                                                                                            targets = train_targets,
+                                                                                            batch_size = config.BATCH_SIZE),                              
+                                                num_workers = 4,
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+                                                )
+
+
+            # train_loader = torch.utils.data.DataLoader(train_dataset,
+            #                                     batch_size = bs,
+            #                                     shuffle = True,
             #                                     num_workers = 4,
-            #                                     # worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-            #                                     )
-
-
-            train_loader = torch.utils.data.DataLoader(train_dataset,
-                                                batch_size = bs,
-                                                shuffle = True,
-                                                # num_workers = 4,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+            #                                     worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
     
             valid_images_path = []
             valid_targets = []
@@ -142,18 +140,29 @@ if __name__ == '__main__':
                     filename = df.loc[int(id),'id']
                     valid_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
                     valid_targets.append(int(df.loc[int(id), 'target']))
-    
+
+            if config.DEBUG:
+                valid_targets = (np.random.rand(80) > 0.9).astype(int)
+
             valid_dataset = dataset.SetiDataset(image_paths = valid_images_path,
                                                 targets = valid_targets,
                                                 ids = vIDs,
                                                 resize = None,
                                                 augmentations = False)
                                                     
-            valid_loader = torch.utils.data.DataLoader(valid_dataset,
-                                                        batch_size = bs,
-                                                        shuffle = True,
-                                                        num_workers = 4,
-                                                        worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+            # valid_loader = torch.utils.data.DataLoader(valid_dataset,
+            #                                             batch_size = bs,
+            #                                             shuffle = True,
+            #                                             num_workers = 4,
+            #                                             worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+
+            valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
+                                                        batch_sampler = sampler.StratifiedSampler( ids = vIDs,
+                                                                                            targets = valid_targets,
+                                                                                            batch_size = config.BATCH_SIZE),                              
+                                                num_workers = 4,
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+                                                )
             
             optimizer = torch.optim.Adam(model.parameters(), lr = lr)
    
@@ -183,13 +192,10 @@ if __name__ == '__main__':
                     scheduler.step(valid_loss)
                 else:
                     scheduler.step()
-                if config.DEBUG:
-                    train_roc_auc = 0
-                    valid_roc_auc = 0
-                else:
-                    train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
-                    
-                    valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
+
+                train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
+                
+                valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()
 
                 # train auc doesnot make sense when using mixup
