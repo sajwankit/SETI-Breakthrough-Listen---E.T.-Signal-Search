@@ -6,10 +6,10 @@ tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 
 
-DATETIME = datetime_NY.strftime('%m%d%H')
+# DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-# DATETIME = '061307'
+DATETIME = '061505'
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
