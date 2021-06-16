@@ -13,7 +13,7 @@ class DesignImage():
     def __init__(self, images_set, out_image_size = (256, 258), chl_pos_in_spatial = [0,1,2,3,4,5]):
         #out_image_size = (frequency, time)..cv2 needs as (x,y), np.array shape is (y,x)
         self.images_set = images_set
-        self.image_paths = glob.glob(f'{config.DATA_PATH}{self.images_set}/*/*.npy')[0:320]
+        self.image_paths = glob.glob(f'{config.DATA_PATH}{self.images_set}/*/*.npy')
         # p{channel} means position of channel in the final spatial image,  p{channel}: -1 means a channel is excluded
         self.chl_pos_in_spatial = chl_pos_in_spatial
         self.out_image_size = out_image_size

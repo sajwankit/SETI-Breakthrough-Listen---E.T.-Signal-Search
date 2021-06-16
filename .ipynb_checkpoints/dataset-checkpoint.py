@@ -16,6 +16,22 @@ class ImageTransform():
         # normalise image with 0 mean, 1 std
         return (image - np.mean(image)) / (np.std(image)).astype(np.float32)
     
+    def normalize_xy(self, image):
+        image = (image - np.mean(image, axis = 0, keepdims = True))/np.std(image, axis = 0, keepdims = True)
+        image = (image - np.mean(image, axis = 1, keepdims = True))/np.std(image, axis = 1, keepdims = True)
+        return image
+    
+    def normalize_ft(self, image, tstacks = 6, fstacks = 1):
+        final_shape = image.shape
+        chnl_shape = (final_shape[0]//tstacks, final_shape[1]//fstacks) #will be approx to note.
+        f = chnl_shape[1]
+        t = chnl_shape[0]
+        trans_image_array = np.copy(image)
+        for t_ in range(tstacks):
+            for f_ in range(fstacks):
+                trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f] = self.normalize_xy(trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f])
+        return trans_image_array
+    
     def minmax_norm(self, image):
         # min-max to bring image in range 0,1. albumentations requires it.
         return ((image - np.min(image))/(np.max(image) - np.min(image)))
@@ -179,7 +195,7 @@ class SetiDataset:
 #         print(target)    
 #         print('1ds', np.mean(image), np.std(image))
 #         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
-
+        image = imt.normalize_ft(image, )
         if config.INVERT_OFF_CHANNELS:
             #inverting off channels
             chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
@@ -190,7 +206,9 @@ class SetiDataset:
             max_pix = np.amax(image)
             for c in chnls_to_invert:
                 image[c*t:(c+1)*t, : f] = max_pix - image[c*t:(c+1)*t, : f]
-        image = imt.normalize(image)
+            image = imt.normalize(image, )
+#         print(np.mean(image), np.std(image))
+        
         
         
         

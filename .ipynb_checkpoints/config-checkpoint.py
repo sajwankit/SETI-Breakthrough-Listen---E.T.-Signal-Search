@@ -6,10 +6,10 @@ tz_NY = pytz.timezone('Asia/Kolkata')
 datetime_NY = datetime.datetime.now(tz_NY)
 
 
-# DATETIME = datetime_NY.strftime('%m%d%H')
+DATETIME = datetime_NY.strftime('%m%d%H')
 
 #for inference
-DATETIME = '061505'
+# DATETIME = '061604'
 
 i = 0
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
@@ -68,7 +68,7 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
-SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dt{DATETIME}'
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_normalized_ft_dt{DATETIME}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 

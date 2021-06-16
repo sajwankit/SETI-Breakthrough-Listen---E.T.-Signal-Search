@@ -37,13 +37,13 @@ class StratifiedSampler(Sampler):
         self.ids_batches = [] #to make sure batches  are created only one time
         self.make_batches(self.ids, self.targets)
 
-        # #sanity check
-        # test_ids = np.array([])
-        # for i, ids_batch in enumerate(self.ids_batches):
-        #     ids_batch_indices = np.searchsorted(self.ids, ids_batch)
-        #     print(f'{i}, {np.unique(np.array(self.targets[ids_batch_indices]), return_counts=True)}, {np.sum(self.ids[ids_batch_indices])},{self.ids[ids_batch_indices][0:4]}')
-        #     test_ids = np.concatenate([test_ids, self.ids[ids_batch_indices]])
-        # print(np.all(np.sort(test_ids) == np.sort(self.ids)))
+#         #sanity check
+#         test_ids = np.array([])
+#         for i, ids_batch in enumerate(self.ids_batches):
+#             ids_batch_indices = np.searchsorted(self.ids, ids_batch)
+#             print(f'{i}, {np.unique(np.array(self.targets[ids_batch_indices]), return_counts=True)}, {np.sum(self.ids[ids_batch_indices])},{self.ids[ids_batch_indices][0:4]}')
+#             test_ids = np.concatenate([test_ids, self.ids[ids_batch_indices]])
+#         print(np.all(np.sort(test_ids) == np.sort(self.ids)))
 
         for ids_batch in self.ids_batches:
             ids_batch_indices = np.searchsorted(self.ids, ids_batch)

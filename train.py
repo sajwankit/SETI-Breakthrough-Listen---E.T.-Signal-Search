@@ -113,20 +113,21 @@ if __name__ == '__main__':
                                                     resize = None,
                                                     augmentations = True)
             
-            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
-                                                        batch_sampler = sampler.StratifiedSampler( ids = trIDs,
-                                                                                            targets = train_targets,
-                                                                                            batch_size = config.BATCH_SIZE),                              
+#             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+#                                                         batch_sampler = sampler.StratifiedSampler( ids = trIDs,
+#                                                                                             targets = train_targets,
+#                                                                                             batch_size = config.BATCH_SIZE),                              
+#                                                 num_workers = 8,
+#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+#                                                 )
+
+
+            train_loader = torch.utils.data.DataLoader(train_dataset,
+                                                batch_size = bs,
+                                                shuffle = True,
                                                 num_workers = 4,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-                                                )
-
-
-            # train_loader = torch.utils.data.DataLoader(train_dataset,
-            #                                     batch_size = bs,
-            #                                     shuffle = True,
-            #                                     num_workers = 4,
-            #                                     worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+                                                      pin_memory = True)
     
             valid_images_path = []
             valid_targets = []
@@ -150,19 +151,20 @@ if __name__ == '__main__':
                                                 resize = None,
                                                 augmentations = False)
                                                     
-            # valid_loader = torch.utils.data.DataLoader(valid_dataset,
-            #                                             batch_size = bs,
-            #                                             shuffle = True,
-            #                                             num_workers = 4,
-            #                                             worker_init_fn = seedandlog.seed_torch(seed=config.SEED))
+            valid_loader = torch.utils.data.DataLoader(valid_dataset,
+                                                        batch_size = bs,
+                                                        shuffle = True,
+                                                        num_workers = 4,
+                                                        worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+                                                      pin_memory = True)
 
-            valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
-                                                        batch_sampler = sampler.StratifiedSampler( ids = vIDs,
-                                                                                            targets = valid_targets,
-                                                                                            batch_size = config.BATCH_SIZE),                              
-                                                num_workers = 4,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-                                                )
+#             valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
+#                                                         batch_sampler = sampler.StratifiedSampler( ids = vIDs,
+#                                                                                             targets = valid_targets,
+#                                                                                             batch_size = config.BATCH_SIZE),                              
+#                                                 num_workers = 8,
+#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+#                                                 )
             
             optimizer = torch.optim.Adam(model.parameters(), lr = lr)
    

@@ -73,6 +73,8 @@ def train(data_loader, model, optimizer, device, scaler = None):
         targets = data['targets']
         ids = data['ids']
         
+#         print(f'{batch_number}, {np.unique(np.array(targets), return_counts=True)}, {torch.sum(ids)},{ids[0:4]}')
+
         #moving inputs and targets to device: cpu or cuda
         inputs = inputs.to(device, dtype = torch.float)
         targets = targets.to(device, dtype = torch.float)
