@@ -36,7 +36,7 @@ INVERT_OFF_CHANNELS = True
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
+MIXUP = True
 MIXUP_APLHA = 1
 
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
@@ -44,7 +44,7 @@ NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 10
+EPOCHS = 50
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
