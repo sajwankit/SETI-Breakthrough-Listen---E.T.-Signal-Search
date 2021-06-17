@@ -36,7 +36,7 @@ INVERT_OFF_CHANNELS = True
 SEED = 42
 DEBUG = False
 MIXED_PRECISION = True
-MIXUP = True
+MIXUP = False
 MIXUP_APLHA = 1
 
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
@@ -44,12 +44,12 @@ NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 60
+EPOCHS = 10
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
 MODEL_NAME = 'resnet18d'
-CHANNELS = 1
+CHANNELS = 3
 MODEL_LOAD_FOR_INFER = 'auc'
 
 

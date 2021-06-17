@@ -21,16 +21,19 @@ class ImageTransform():
         image = (image - np.mean(image, axis = 1, keepdims = True))/np.std(image, axis = 1, keepdims = True)
         return image
     
-    def normalize_ft(self, image, tstacks = 6, fstacks = 1):
-        final_shape = image.shape
-        chnl_shape = (final_shape[0]//tstacks, final_shape[1]//fstacks) #will be approx to note.
-        f = chnl_shape[1]
-        t = chnl_shape[0]
-        trans_image_array = np.copy(image)
-        for t_ in range(tstacks):
-            for f_ in range(fstacks):
-                trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f] = self.normalize_xy(trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f])
-        return trans_image_array
+    def normalize_ft(self, image, tstacks = 6, fstacks = 1, p=0.5):
+        if np.random.uniform(0, 1) <= p: 
+            final_shape = image.shape
+            chnl_shape = (final_shape[0]//tstacks, final_shape[1]//fstacks) #will be approx to note.
+            f = chnl_shape[1]
+            t = chnl_shape[0]
+            trans_image_array = np.copy(image)
+            for t_ in range(tstacks):
+                for f_ in range(fstacks):
+                    trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f] = self.normalize_xy(trans_image_array[t_*t:(t_+1)*t, f_*f:(f_+1)*f])
+            return trans_image_array
+        else:
+            return image
     
     def minmax_norm(self, image):
         # min-max to bring image in range 0,1. albumentations requires it.
@@ -195,7 +198,9 @@ class SetiDataset:
 #         print(target)    
 #         print('1ds', np.mean(image), np.std(image))
 #         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
-        image = imt.normalize_ft(image, )
+        image1 = np.copy(image)
+        
+        image0 = np.copy(image)
         if config.INVERT_OFF_CHANNELS:
             #inverting off channels
             chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
@@ -203,26 +208,47 @@ class SetiDataset:
             t = chnl_shape[0]
             # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
             chnls_to_invert = [1, 3, 5]
-            max_pix = np.amax(image)
+            max_pix = np.amax(image0)
             for c in chnls_to_invert:
-                image[c*t:(c+1)*t, : f] = max_pix - image[c*t:(c+1)*t, : f]
-            image = imt.normalize(image, )
+                image0[c*t:(c+1)*t, : f] = max_pix - image0[c*t:(c+1)*t, : f]
+            image0 = imt.normalize(image0, )
+            
+        image2 = imt.normalize_ft(image, p=1)
+        if config.INVERT_OFF_CHANNELS:
+            #inverting off channels
+            chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
+            f = chnl_shape[1]
+            t = chnl_shape[0]
+            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+            chnls_to_invert = [1, 3, 5]
+            max_pix = np.amax(image2)
+            for c in chnls_to_invert:
+                image2[c*t:(c+1)*t, : f] = max_pix - image2[c*t:(c+1)*t, : f]
+            image2 = imt.normalize(image2, )
+        
+            
+            
+        
 #         print(np.mean(image), np.std(image))
         
         
         
+        image3ch = np.zeros((3, image.shape[0], image.shape[1]))
+        image3ch[0] = image0.reshape(1,image0.shape[0],image0.shape[1])
+        image3ch[1] = image1.reshape(1,image1.shape[0],image1.shape[1])
+        image3ch[2] = image2.reshape(1,image2.shape[0],image2.shape[1])
         
-        image = image.reshape(1,image.shape[0],image.shape[1])
+#         image = image.reshape(1,image.shape[0],image.shape[1])
         
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
     
         if self.targets is not None:
-            return{'images': torch.tensor(image, dtype = torch.float), 
+            return{'images': torch.tensor(image3ch, dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
                   'ids': torch.tensor(id, dtype = torch.int32)}
         else:
-            return{'images': torch.tensor(image, dtype = torch.float),
+            return{'images': torch.tensor(image3ch, dtype = torch.float),
                   'ids': torch.tensor(id, dtype = torch.int32)}
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
