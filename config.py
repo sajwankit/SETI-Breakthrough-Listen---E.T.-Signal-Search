@@ -44,7 +44,7 @@ NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 40
+EPOCHS = 60
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
@@ -68,7 +68,7 @@ MODEL_OUTPUT_PATH = out_path[i]
 
 AUG = 'SwapDropFlip'
 
-SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_normalized_ft_dt{DATETIME}'
+SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_normalized_ft'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 
