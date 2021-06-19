@@ -35,10 +35,10 @@ def mixup(inputs, targets):
     targets1, targets2 = targets, targets[index]
     return mixed_inputs, targets1, targets2, lam
 
-def loss_criterion(outputs, targets):
+def loss_criterion(logits, targets):
     if config.OHEM_LOSS:
-        batch_size = outputs.size(0) 
-        ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(outputs, targets.view(-1,1))
+        batch_size = logits.size(0) 
+        ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(logits, targets.view(-1,1))
 
         sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
         keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
@@ -48,7 +48,7 @@ def loss_criterion(outputs, targets):
         cls_loss = ohem_cls_loss.sum() / keep_num
         return cls_loss
     else:
-        return nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+        return nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -88,14 +88,14 @@ def train(data_loader, model, optimizer, device, scaler = None):
                 if config.MIXUP:
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                    outputs = model(mixed_inputs)
+                    logits = model(mixed_inputs)
                     #calculate loss
-                    loss = np.sqrt(lam)*loss_criterion(outputs, targets1)+np.sqrt(1 - lam)*loss_criterion(outputs, targets2)
+                    loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
                 else:
                     #Forward Step
-                    outputs = model(inputs)
+                    logits = model(inputs)
                     #calculate loss
-                    loss = loss_criterion(outputs, targets)
+                    loss = loss_criterion(logits, targets)
             #backward step
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -104,19 +104,19 @@ def train(data_loader, model, optimizer, device, scaler = None):
             if config.MIXUP:
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                    outputs = model(mixed_inputs)
+                    logits = model(mixed_inputs)
                     #calculate loss
-                    loss = np.sqrt(lam)*loss_criterion(outputs, targets1)+np.sqrt(1 - lam)*loss_criterion(outputs, targets2)
+                    loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
             else:
                 #Forward Step
-                outputs = model(inputs)
+                logits = model(inputs)
                 #calculate loss
-                loss = loss_criterion(outputs, targets)
+                loss = loss_criterion(logits, targets)
             loss.backward()
             optimizer.step()
         
-        # auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), outputs.detach().cpu().numpy().tolist())
-        # auc = metrics.roc_auc_score(targets, outputs)
+        # auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), logits.detach().cpu().numpy().tolist())
+        # auc = metrics.roc_auc_score(targets, logits)
 
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
@@ -128,7 +128,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 #            progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_outputs.extend(torch.sigmoid(outputs).detach().cpu().numpy().tolist())
+        final_outputs.extend(torch.sigmoid(logits).detach().cpu().numpy().tolist())
         final_ids.extend(ids)
     return final_outputs, final_targets, final_ids, losses.avg
 
@@ -164,13 +164,13 @@ def evaluate(data_loader, model, device):
             targets = targets.to(device, dtype = torch.float)
 
             #do forward step to generat prediction
-            outputs = model(inputs)
+            logits = model(inputs)
 
-            loss = nn.BCEWithLogitsLoss()(outputs, targets.view(-1,1))
+            loss = nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
             losses.update(loss.item(), config.BATCH_SIZE)
 
             targets = targets.detach().cpu().numpy().tolist()
-            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(logits).detach().cpu().numpy().tolist()
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)
@@ -206,8 +206,8 @@ def predict(data_loader, model, device):
 
             
             #do forward step to generate prediction
-            outputs = model(inputs)
-            outputs = torch.sigmoid(outputs).detach().cpu().numpy().tolist()
+            logits = model(inputs)
+            outputs = torch.sigmoid(logits).detach().cpu().numpy().tolist()
 
             final_outputs.extend(outputs)
 

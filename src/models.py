@@ -32,17 +32,17 @@ class Model(nn.Module):
         print(f'\nUsing {config.MODEL_NAME}, model output layer: {self.output_layer} with DROPOUT {config.DROPOUT}\n')
 
     def forward(self, x):
-        base_model_out = self.base_model(x)
+        base_model_logits = self.base_model(x)
         if config.DROPOUT:
             for i, dropout in enumerate(self.dropouts):
                 if i == 0:
-                    output = self.output_layer(dropout(base_model_out))
+                    logits = self.output_layer(dropout(base_model_out))
                 else:
-                    output += self.output_layer(dropout(base_model_out))
-            output /= len(self.dropouts)
-            return output
+                    logits += self.output_layer(dropout(base_model_out))
+            logits /= len(self.dropouts)
+            return logits
         else:
-            return base_model_output
+            return base_model_logits
         
         
 #         output = self.output_layer(model_last_layer)
