@@ -146,7 +146,7 @@ def evaluate(data_loader, model, device):
 
     #putting model to eval mode
     model.eval()
-
+    
     final_targets = []
     final_outputs = []
     final_ids = []
@@ -193,7 +193,7 @@ def predict(data_loader, model, device):
 
     #putting model to eval mode
     model.eval()
-    
+#     print(model.training)
     final_outputs = []
 
     #we use no_grad context:

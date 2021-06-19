@@ -79,7 +79,7 @@ if __name__ == '__main__':
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = models.Model(pretrained = True, training = True)
+            model = models.Model(pretrained = True)
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
@@ -185,7 +185,15 @@ if __name__ == '__main__':
             best_valid_loss = 999
             best_valid_roc_auc = -999
             for epoch in range(epochs):
-#                 config.OHEM_RATE = 0.6 + ((0.2-0.6)/(epochs-1 - 0))*epoch
+                
+                if config.OHEM_LOSS:
+                    if epoch >= (config.EPOCHS -12):
+                        initial_rate = 1
+                        final_rate = 0.4
+                        config.OHEM_RATE = initial_rate + (epoch - (config.EPOCHS-12))*(final_rate - initial_rate)/( (config.EPOCHS-1) - (config.EPOCHS-12) )
+                        print(f'applying ohem with rate {config.OHEM_RATE}')
+                    else:
+                        config.OHEM_RATE = 1
                 
                 st = time.time()
                 train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
