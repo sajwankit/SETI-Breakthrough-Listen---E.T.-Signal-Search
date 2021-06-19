@@ -8,6 +8,7 @@ import time
 from sklearn import metrics
 from torch.cuda import amp
 import numpy as np
+import utils
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -36,19 +37,23 @@ def mixup(inputs, targets):
     return mixed_inputs, targets1, targets2, lam
 
 def loss_criterion(logits, targets):
-    if config.OHEM_LOSS:
-        batch_size = logits.size(0) 
-        ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(logits, targets.view(-1,1))
+    classification_loss = utils.BCEWithLogitsLoss(logits, targets.view(-1,1), reduction='mean')
+    arcface_metric_loss = utils.ArcLoss(logits, targets.view(-1,1), reduction='mean')
+    loss = classification_loss + arcface_metric_loss
+    return loss
+    # if config.OHEM_LOSS:
+    #     batch_size = logits.size(0) 
+    #     ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(logits, targets.view(-1,1))
 
-        sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
-        keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
-        if keep_num < sorted_ohem_loss.size()[0]:
-            keep_idx_cuda = idx[:keep_num]
-            ohem_cls_loss = ohem_cls_loss[keep_idx_cuda]
-        cls_loss = ohem_cls_loss.sum() / keep_num
-        return cls_loss
-    else:
-        return nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
+    #     sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
+    #     keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
+    #     if keep_num < sorted_ohem_loss.size()[0]:
+    #         keep_idx_cuda = idx[:keep_num]
+    #         ohem_cls_loss = ohem_cls_loss[keep_idx_cuda]
+    #     cls_loss = ohem_cls_loss.sum() / keep_num
+    #     return cls_loss
+    # else:
+    #     return nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
