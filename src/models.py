@@ -59,6 +59,7 @@ class Net(nn.Module):
 
     def forward(self, x):
         backbone_logits = self.backbone(x)
+        logits = self.net_head(backbone_logits)
         arcface_logits = self.arcface_logits(backbone_logits)
         if config.DROPOUT:
             for i, dropout in enumerate(self.dropouts):
@@ -69,7 +70,7 @@ class Net(nn.Module):
             logits /= len(self.dropouts)
             return logits
         else:
-            return backbone_logits, arcface_logits
+            return logits, arcface_logits
         
 
 # class Model(nn.Module):

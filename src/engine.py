@@ -37,8 +37,10 @@ def mixup(inputs, targets):
     return mixed_inputs, targets1, targets2, lam
 
 def loss_criterion(logits, targets):
-    classification_loss = utils.BCEWithLogitsLoss(logits, targets.view(-1,1), reduction='mean')
-    arcface_metric_loss = utils.ArcLoss(logits, targets.view(-1,1), reduction='mean')
+    arcface_logits = logits[1]
+    logits = logits[0]
+    classification_loss = utils.BCEWithLogitsLoss(reduction='mean')(logits, targets, )
+    arcface_metric_loss = utils.ArcLoss(reduction='mean')(logits=arcface_logits, targets=targets, )
     loss = classification_loss + arcface_metric_loss
     return loss
     # if config.OHEM_LOSS:

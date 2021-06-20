@@ -1,22 +1,28 @@
-import config
+import torch
 import torch.nn as nn
+
 import math
+
+import config
 
 class Loss(nn.modules.Module):
     '''
     logits is output of the last layer of model
     '''
-    def __init__(self, logits, targets, reduction='none'):
+    def __init__(self, weight=None, size_average=None, reduce=None, reduction='none', pos_weight=None):
         super().__init__()
-        self.logits = logits
-        self.targets = targets
+        self.weight = weight,
+        self.size_average = size_average,
+        self.reduce = reduce,
+        self.pos_weight = pos_weight,
         self.reduction = reduction
      
 class BCEWithLogitsLoss(Loss):
-    def __init__(self):
-        super().__init__(logits, targets, reduction)
-    def forward(self):
-        return nn.BCEWithLogitsLoss()(self.logits, self.targets.view(-1,1), reduction=reduction)
+    def __init__(self, weight=None, size_average=None, reduce=None, reduction='none', pos_weight=None):
+        super().__init__(weight, size_average, reduce, reduction, pos_weight)
+
+    def forward(self, logits, targets):
+        return nn.BCEWithLogitsLoss(reduction=self.reduction)(logits, targets.view(-1,1))
 
 class ArcLoss(Loss):
     '''
@@ -29,8 +35,8 @@ class ArcLoss(Loss):
 
     MAKE SURE model logits takes care of above before using this loss
     '''
-    def __init__(self, logits, targets, feature_scale=30.0, margin=0.5):
-        super().__init__(logits, targets, reduction)
+    def __init__(self, weight=None, size_average=None, reduce=None, reduction='none', pos_weight=None, feature_scale=30.0, margin=0.5):
+        super().__init__(weight, size_average, reduce, reduction, pos_weight)
         self.feature_scale = feature_scale
         self.margin = margin
         self.margin_cos = math.cos(margin)
@@ -38,7 +44,7 @@ class ArcLoss(Loss):
         self.th = math.cos(math.pi - margin)
         self.mm = math.sin(math.pi - margin) * margin
 
-    def forward(self):
+    def forward(self, logits, targets):
         '''
         logits = logits = cos(theta)
         margin added to theta cos(theta+margin)
@@ -50,12 +56,12 @@ class ArcLoss(Loss):
         
         # labels2 = torch.zeros_like(logits)
         # labels.scatter_(1, labels.view(-1, 1).long(), 1)
-        targets = self.targets.view(-1,1)
+        targets = targets.view(-1,1)
         logits_plus_margin = (targets*logits_plus_margin)+((1-targets)*logits)
 
         logits_plus_margin *= self.feature_scale
 
-        loss = nn.BCEWithLogitsLoss()(logits_plus_margin, self.targets.view(-1,1), reduction = reduction)
+        loss = nn.BCEWithLogitsLoss(reduction=self.reduction)(logits_plus_margin, targets)
         
         return loss
 
