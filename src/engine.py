@@ -135,7 +135,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 #            progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_outputs.extend(torch.sigmoid(logits).detach().cpu().numpy().tolist())
+        final_outputs.extend(torch.sigmoid(logits[0]).detach().cpu().numpy().tolist())
         final_ids.extend(ids)
     return final_outputs, final_targets, final_ids, losses.avg
 

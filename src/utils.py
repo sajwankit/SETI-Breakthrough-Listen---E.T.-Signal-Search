@@ -56,12 +56,16 @@ class ArcLoss(Loss):
         
         # labels2 = torch.zeros_like(logits)
         # labels.scatter_(1, labels.view(-1, 1).long(), 1)
-        targets = targets.view(-1,1)
-        logits_plus_margin = (targets*logits_plus_margin)+((1-targets)*logits)
+        # targets = targets.view(-1,1).long()
+
+        targets_onehot = torch.FloatTensor(targets.size(0), config.TARGET_SIZE+1).to(targets.device)
+        targets_onehot.zero_()
+        targets_onehot.scatter_(1, targets.view(-1,1).long(), 1)
+
+        logits_plus_margin = (targets_onehot*logits_plus_margin)+((1-targets_onehot)*logits)
 
         logits_plus_margin *= self.feature_scale
-
-        loss = nn.BCEWithLogitsLoss(reduction=self.reduction)(logits_plus_margin, targets)
+        loss = torch.nn.CrossEntropyLoss(reduction="none")(logits_plus_margin, targets.long())
         
         return loss
 
