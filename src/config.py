@@ -11,7 +11,7 @@ DATETIME = datetime_NY.strftime('%m%d%H')
 #for inference
 # DATETIME = '061604'
 
-i = 0
+i = 1
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -34,7 +34,7 @@ if not ORIG_IMAGE:
 INVERT_OFF_CHANNELS = True
 
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 MIXUP = False
 MIXUP_APLHA = 1
@@ -51,7 +51,7 @@ FOLDS = 4
 MODEL_NAME = 'resnet18d'
 CHANNELS = 3
 MODEL_LOAD_FOR_INFER = 'auc'
-DROPOUT = True
+DROPOUT = False
 
 CURRENT_EPOCH = 0
 OHEM_LOSS = False

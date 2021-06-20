@@ -33,33 +33,33 @@ class ArcMarginProduct(nn.Module):
         return logits
 
 class Backbone(nn.Module):
-    def __init__(self, pretrained=True, backbone_out_features=1):
+    def __init__(self, pretrained=True):
         super(Backbone, self).__init__()
-        self.backbone = timm.create_model(config.MODEL_NAME,
+        self.model = timm.create_model(config.MODEL_NAME,
                                             pretrained=pretrained, in_chans=config.CHANNELS)
 
         if config.MODEL_NAME in ['resnet18', 'resnet18d']:
-            self.in_features = self.backbone.fc.in_features
+            self.in_features = self.model.fc.in_features
         else:
-            self.in_features = self.backbone.classifier.out_features
-        self.backbone.fc = nn.Linear(self.in_features, self.backbone_out_features)
-        print(f'\n Using {config.MODEL_NAME} as backbone, model output layer: {self.output_layer} with DROPOUT {config.DROPOUT}\n')
+            self.in_features = self.model.classifier.out_features
+        
+        print(f'\n Using {config.MODEL_NAME} as backbone, backbone head: {self.model.fc}\n')
 
     def forward(self, x):
-        backbone_logits = self.backbone(x)
-        return backbone_logits
+        logits = self.model(x)
+        return logits
 
 class Net(nn.Module):
-    def __init__(self, pretrained=True):
+    def __init__(self, pretrained=True, net_out_features=1):
         super(Net, self).__init__()
-        self.backbone_out_features = config.TARGET_SIZE
-        self.backbone = Backbone(pretrained=pretrained, backbone_out_features=self.backbone_out_features)
-
-        self.arcface_metric = ArcMarginProduct(self.backbone.fc.out_features, config.TARGET_SIZE)
+        self.net_out_features = net_out_features
+        self.backbone = Backbone(pretrained=pretrained)
+        self.net_head = nn.Linear(self.backbone.model.fc.out_features, self.net_out_features)
+        self.arcface_logits = ArcMarginProduct(self.backbone.model.fc.out_features, self.net_out_features)
 
     def forward(self, x):
         backbone_logits = self.backbone(x)
-        arcface_metric = self.arcface_metric(backbone_logits)
+        arcface_logits = self.arcface_logits(backbone_logits)
         if config.DROPOUT:
             for i, dropout in enumerate(self.dropouts):
                 if i == 0:
@@ -69,7 +69,7 @@ class Net(nn.Module):
             logits /= len(self.dropouts)
             return logits
         else:
-            return backbone_logits, arcface_metric
+            return backbone_logits, arcface_logits
         
 
 # class Model(nn.Module):

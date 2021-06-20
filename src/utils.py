@@ -6,15 +6,17 @@ class Loss(nn.modules.Module):
     '''
     logits is output of the last layer of model
     '''
-    def __init__(self, logits, targets):
+    def __init__(self, logits, targets, reduction='none'):
         super().__init__()
         self.logits = logits
         self.targets = targets
-    
+        self.reduction = reduction
      
 class BCEWithLogitsLoss(Loss):
+    def __init__(self):
+        super().__init__(logits, targets, reduction)
     def forward(self):
-        return nn.BCEWithLogitsLoss()(self.logits, self.targets.view(-1,1))
+        return nn.BCEWithLogitsLoss()(self.logits, self.targets.view(-1,1), reduction=reduction)
 
 class ArcLoss(Loss):
     '''
@@ -27,11 +29,10 @@ class ArcLoss(Loss):
 
     MAKE SURE model logits takes care of above before using this loss
     '''
-    def __init__(self, logits, targets, feature_scale=30.0, margin=0.5, reduction='mean'):
-        super().__init__(logits, targets)
+    def __init__(self, logits, targets, feature_scale=30.0, margin=0.5):
+        super().__init__(logits, targets, reduction)
         self.feature_scale = feature_scale
         self.margin = margin
-        self.reduction = reduction
         self.margin_cos = math.cos(margin)
         self.margin_sin = math.sin(margin)
         self.th = math.cos(math.pi - margin)

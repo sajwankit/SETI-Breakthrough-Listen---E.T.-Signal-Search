@@ -79,7 +79,7 @@ if __name__ == '__main__':
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = models.Model(pretrained = True)
+            model = models.Net(pretrained = True)
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
