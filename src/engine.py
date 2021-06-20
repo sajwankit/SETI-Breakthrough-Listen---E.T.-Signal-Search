@@ -41,7 +41,8 @@ def loss_criterion(logits, targets):
     logits = logits[0]
     classification_loss = utils.BCEWithLogitsLoss(reduction='mean')(logits, targets, )
     arcface_metric_loss = utils.ArcLoss(reduction='mean')(logits=arcface_logits, targets=targets, )
-    loss = classification_loss + arcface_metric_loss
+    bal = arcface_metric_loss/classification_loss
+    loss = classification_loss + 2*arcface_metric_loss/bal
     return loss
     # if config.OHEM_LOSS:
     #     batch_size = logits.size(0) 
@@ -173,11 +174,11 @@ def evaluate(data_loader, model, device):
             #do forward step to generat prediction
             logits = model(inputs)
 
-            loss = nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
+            loss = loss_criterion(logits, targets)
             losses.update(loss.item(), config.BATCH_SIZE)
 
             targets = targets.detach().cpu().numpy().tolist()
-            outputs = torch.sigmoid(logits).detach().cpu().numpy().tolist()
+            outputs = torch.sigmoid(logits[0]).detach().cpu().numpy().tolist()
             
             final_targets.extend(targets)
             final_outputs.extend(outputs)

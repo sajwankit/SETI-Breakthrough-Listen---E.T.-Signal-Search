@@ -18,6 +18,9 @@ import seedandlog
 
 import sampler
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from torch.cuda import amp
 torch.multiprocessing.set_sharing_strategy('file_system')
 if __name__ == '__main__':
@@ -83,11 +86,16 @@ if __name__ == '__main__':
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
-                model_creation_date = '0607'
-                states = torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_{config.MODEL_NAME}_fold{fold}_bs{bs}_size{config.IMAGE_SIZE[0]}_mixup{config.MIXUP}_dt{model_creation_date}.pth')
+                states = torch.load(f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
                 model.load_state_dict(states['model'])
+                optimizer.load_state_dict(states['optimizer'])
+                scheduler.load_state_dict(states['scheduler'])
+                scaler.load_state_dict(states['scaler'])
                 print('Saved Model LOADED!')
-    
+                start_epoch = states['epoch']
+            else:
+                start_epoch = 0
+                
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']
     
@@ -184,7 +192,11 @@ if __name__ == '__main__':
 
             best_valid_loss = 999
             best_valid_roc_auc = -999
-            for epoch in range(epochs):
+
+            '''
+            Training ON
+            '''
+            for epoch in range(start_epoch, epochs):
                 
                 if config.OHEM_LOSS:
                     if epoch >= (config.EPOCHS -12):
@@ -214,6 +226,10 @@ if __name__ == '__main__':
                 if valid_loss <= best_valid_loss:
                     best_valid_loss = valid_loss
                     torch.save({'model': model.state_dict(),
+                                'optimizer': optimizer.state_dict(),
+                                'scheduler': scheduler.state_dict(),
+                                'scaler': scaler.state_dict(),
+                                'epoch': epoch,
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
@@ -222,6 +238,10 @@ if __name__ == '__main__':
                 if valid_roc_auc >= best_valid_roc_auc:
                     best_valid_roc_auc = valid_roc_auc
                     torch.save({'model': model.state_dict(),
+                                'optimizer': optimizer.state_dict(),
+                                'scheduler': scheduler.state_dict(),
+                                'scaler': scaler.state_dict(),
+                                'epoch': epoch,
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
                                 'valid_targets': valid_targets},
