@@ -6,7 +6,7 @@ from sklearn import metrics
 import config
 import dataset
 import engine
-import models
+import model
 import validation_strategy as vs
 import seedandlog
 import os
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     
     saved_model_name = config.SAVED_MODEL_NAME
     
-    model = models.Model(pretrained = False)
+    model = model.get_model(pretrained=False, net_out_features=config.TARGET_SIZE)
     model.to(device)
     states = [torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_fold{fold}_{saved_model_name}.pth') for fold in range(config.FOLDS)]
 

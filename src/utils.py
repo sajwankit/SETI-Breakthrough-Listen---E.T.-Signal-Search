@@ -11,12 +11,12 @@ class Loss(nn.modules.Module):
     '''
     def __init__(self, weight=None, size_average=None, reduce=None, reduction='none', pos_weight=None):
         super().__init__()
-        self.weight = weight,
-        self.size_average = size_average,
-        self.reduce = reduce,
-        self.pos_weight = pos_weight,
+        self.weight = weight
+        self.size_average = size_average
+        self.reduce = reduce
+        self.pos_weight = pos_weight
         self.reduction = reduction
-     
+
 class BCEWithLogitsLoss(Loss):
     def __init__(self, weight=None, size_average=None, reduce=None, reduction='none', pos_weight=None):
         super().__init__(weight, size_average, reduce, reduction, pos_weight)
@@ -56,6 +56,7 @@ class ArcLoss(Loss):
         targets_onehot = torch.FloatTensor(targets.size(0), config.TARGET_SIZE+1).to(targets.device)
         targets_onehot.zero_()
         targets_onehot.scatter_(1, targets.view(-1,1).long(), 1)
+#         print(targets_onehot)
 
         logits_plus_margin = (targets_onehot*logits_plus_margin)+((1-targets_onehot)*logits)
 
@@ -65,4 +66,33 @@ class ArcLoss(Loss):
         return loss
 
 
-
+class OptSch:
+    def __init__(self, sch=None, opt='Adam'):
+        self.lr = config.INIT_LEARNING_RATE
+        self.opt = opt
+        self.sch = sch
+        self.eta_min = config.ETA_MIN
+        self.T_0 = config.T_0
+        self.T_max=config.T_MAX
+    
+    def get_opt_sch(self, model):
+        if self.opt=='Adam':
+            optimizer = torch.optim.Adam(model.parameters(), lr = self.lr)
+            
+        if self.sch=='CosineAnnealingWarmRestarts':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,
+                                                                             T_0 = self.T_0,
+                                                                             eta_min = self.eta_min,
+                                                                             last_epoch = -1)
+        elif self.sch=='ReduceLROnPlateau':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
+                                                                factor=config.FACTOR, patience=config.PATIENCE,
+                                                                verbose=True, eps=config.EPS)
+        elif self.sch=='CosineAnnealingLR':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
+                                                                   T_max = self.T_max,
+                                                                   eta_min = self.eta_min,
+                                                                   last_epoch = -1)
+        elif self.sch==None:
+            scheduler=None
+        return optimizer, scheduler

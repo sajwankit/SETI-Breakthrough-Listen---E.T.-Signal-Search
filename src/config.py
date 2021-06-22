@@ -1,17 +1,10 @@
-import datetime
-import pytz
 import os
-
-tz_NY = pytz.timezone('Asia/Kolkata')
-datetime_NY = datetime.datetime.now(tz_NY)
+i = 0
 
 
-DATETIME = datetime_NY.strftime('%m%d%H')
-
-#for inference
-# DATETIME = '061604'
-
-i = 1
+'''
+REQUIRED INPUT PATHS
+'''
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/']
 DATA_PATH = input_path[i]
 
@@ -31,23 +24,24 @@ if not ORIG_IMAGE:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
 
-INVERT_OFF_CHANNELS = True
-
+'''
+BASIC PARAMETERS
+'''    
 SEED = 42
-DEBUG = True
+DEBUG = False
 MIXED_PRECISION = True
-MIXUP = False
-MIXUP_APLHA = 1
-
-needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
-NEEDLE_PATH = needle_path[i]
-APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
+
+
+'''
+MODEL PARAMETERS
+'''
+FOLDS = 4
 EPOCHS = 12
 BATCH_SIZE = 32
 TARGET_SIZE = 1
-FOLDS = 4
+NET = 'Net_ArcFace'
 MODEL_NAME = 'resnet18d'
 CHANNELS = 3
 MODEL_LOAD_FOR_INFER = 'auc'
@@ -57,18 +51,42 @@ CURRENT_EPOCH = 0
 OHEM_LOSS = False
 OHEM_RATE = 0.7
 
+OPTIMIZER='Adam'
 SCHEDULER = 'CosineAnnealingWarmRestarts'
-LEARNING_RATE = 1e-4
+INIT_LEARNING_RATE = 1e-5
+ETA_MIN = 1e-8
 FACTOR = 0.1
 PATIENCE = 2
-EPS = 1e-8
+EPS = 1e-6
+T_0 = EPOCHS//4
+T_MAX = 7
 
+
+'''
+AUGMENTATION PARAMETERS
+'''
+MIXUP = False
+MIXUP_APLHA = 1
+INVERT_OFF_CHANNELS = True
+needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
+NEEDLE_PATH = needle_path[i]
+APPLY_NEEDLE = False
+AUG = 'SwapDropFlip'
+
+'''
+INFERENCE MODE
+'''
+INFER = True #SET TO FALSE IF REQUIRE JUST OOF CSV
+
+
+'''
+OUTPUT PATH FOR LOGS, SUBMISSIONS AND MODEL OUTPUT
+'''
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
 
-AUG = 'SwapDropFlip'
 
-SAVED_MODEL_NAME = f'{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
+SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/']
 
@@ -78,7 +96,7 @@ try:
 except:
     print('folder exists, make sure this call is from inference.py')
 
-INFER = True
+
 
 
 

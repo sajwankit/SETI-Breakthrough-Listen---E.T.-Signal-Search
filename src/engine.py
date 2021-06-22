@@ -40,9 +40,10 @@ def loss_criterion(logits, targets):
     arcface_logits = logits[1]
     logits = logits[0]
     classification_loss = utils.BCEWithLogitsLoss(reduction='mean')(logits, targets, )
-    arcface_metric_loss = utils.ArcLoss(reduction='mean')(logits=arcface_logits, targets=targets, )
-    bal = arcface_metric_loss/classification_loss
-    loss = classification_loss + 2*arcface_metric_loss/bal
+    arcface_metric_loss = utils.ArcLoss(reduction='mean', feature_scale =40, margin=0.5)(logits=arcface_logits, targets=targets, )
+#     bal = arcface_metric_loss/classification_loss
+#     loss = classification_loss + 2*arcface_metric_loss/bal
+    loss = arcface_metric_loss
     return loss
     # if config.OHEM_LOSS:
     #     batch_size = logits.size(0) 
@@ -136,8 +137,15 @@ def train(data_loader, model, optimizer, device, scaler = None):
 #            progressDisp_step = progressDisp_step*2
 
         final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_outputs.extend(torch.sigmoid(logits[0]).detach().cpu().numpy().tolist())
+        outputs_conf, outputs = torch.max(logits[1].softmax(1),1)
+        outputs = (logits[1].softmax(1)[:,1] + (1-logits[1].softmax(1)[:,0]))/2
+#         print(outputs)
+#         print(outputs_conf)
+#         print(outputs*outputs_conf)
+#         outputs = torch.sigmoid(logits[0])
+        final_outputs.extend((outputs).detach().cpu().numpy().tolist())
         final_ids.extend(ids)
+#     print(final_outputs[:100])
     return final_outputs, final_targets, final_ids, losses.avg
 
 
@@ -178,10 +186,19 @@ def evaluate(data_loader, model, device):
             losses.update(loss.item(), config.BATCH_SIZE)
 
             targets = targets.detach().cpu().numpy().tolist()
-            outputs = torch.sigmoid(logits[0]).detach().cpu().numpy().tolist()
+#             outputs_conf, outputs = torch.max(logits[1].softmax(1),1)
             
+    #         outputs = torch.sigmoid(logits[0])
+#             final_outputs.extend(outputs.detach().cpu().numpy().tolist())
+#             outputs = torch.sigmoid(logits[1])
+            outputs = (logits[1].softmax(1)[:,1] + (1-logits[1].softmax(1)[:,0]))/2
+#         print(outputs)
+#         print(outputs_conf)
+#         print(outputs*outputs_conf)
+#         outputs = torch.sigmoid(logits[0])
+            final_outputs.extend((outputs).detach().cpu().numpy().tolist())
             final_targets.extend(targets)
-            final_outputs.extend(outputs)
+#             final_outputs.extend((outputs*outputs_conf).detach().cpu().numpy().tolist())
             final_ids.extend(ids)
 #
 #            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:

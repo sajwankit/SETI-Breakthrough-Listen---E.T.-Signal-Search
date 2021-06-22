@@ -44,7 +44,7 @@ NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
-EPOCHS = 12
+EPOCHS = 4
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 FOLDS = 4
@@ -57,11 +57,15 @@ CURRENT_EPOCH = 0
 OHEM_LOSS = False
 OHEM_RATE = 0.7
 
+OPTIMIZER='Adam'
 SCHEDULER = 'CosineAnnealingWarmRestarts'
-LEARNING_RATE = 1e-4
+INIT_LEARNING_RATE = 1e-3
+ETA_MIN = 1e-8
 FACTOR = 0.1
 PATIENCE = 2
-EPS = 1e-8
+EPS = 1e-6
+T_0 = EPOCHS//4
+T_MAX = 7
 
 out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/']
 MODEL_OUTPUT_PATH = out_path[i]
