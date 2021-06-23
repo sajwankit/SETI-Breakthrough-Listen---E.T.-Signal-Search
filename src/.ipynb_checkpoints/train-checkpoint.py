@@ -13,10 +13,9 @@ import utils
 import config
 import dataset
 import engine
-import model
+import models
 import validation_strategy as vs
 import seedandlog
-
 import sampler
 
 import warnings
@@ -24,6 +23,8 @@ warnings.filterwarnings("ignore")
 
 from torch.cuda import amp
 torch.multiprocessing.set_sharing_strategy('file_system')
+
+
 if __name__ == '__main__':
     seedandlog.seed_torch(seed=config.SEED)
     parser = argparse.ArgumentParser()
@@ -41,48 +42,49 @@ if __name__ == '__main__':
 
     df = pd.read_csv(data_path+'train_labels.csv')
     if config.DEBUG:
-        # df = pd.concat([df.query('target == 1').sample(len(df.query('target==1'))//1000), df.query('target == 0').sample(len(df.query('target == 0'))//10000)]).sample(frac=1).reset_index(drop=True)
         ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
         df = df[df['id'].isin(ids)]
         df.reset_index(inplace = True, drop = True)
     images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
 
-    
-#    skFoldData = vs.get_SKFold(ids = df.index.values,
-#                                targets = targets,
-#                                n_folds = config.FOLDS,
-#                                seed = config.SEED,
-#                                shuffle = True)
+    '''
+    stratify based on target and image group
+    ''' 
+    skFoldData = vs.get_SKFold(ids = df.index.values,
+                               targets = targets,
+                               n_folds = config.FOLDS,
+                               seed = config.SEED,
+                               shuffle = True)
 
 
-    ######################################################################
-    # stratify based on target and image group
-    id_keys_map = {'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 'f':15}
-    id_keys = []
-    for key in df['id'].values.tolist():
-        try:
-            key = int(key[0])
-        except:
-            key = id_keys_map[key[0]]
-        id_keys.append(key)
-    target = df['target'].values.tolist()
-    multi_targets = [ [id_keys[x], target[x]] for x in range(len(df))]
+    '''
+    stratify based on target and image group
+    ''' 
+#     id_keys_map = {'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 'f':15}
+#     id_keys = []
+#     for key in df['id'].values.tolist():
+#         try:
+#             key = int(key[0])
+#         except:
+#             key = id_keys_map[key[0]]
+#         id_keys.append(key)
+#     target = df['target'].values.tolist()
+#     multi_targets = [ [id_keys[x], target[x]] for x in range(len(df))]
 
-    mskFoldData = vs.get_MSKFold(ids = df.index.values,
-                                multi_targets = np.array(multi_targets),
-                                nfolds = config.FOLDS,
-                                seed = config.SEED)
-    ########################################################################
+#     mskFoldData = vs.get_MSKFold(ids = df.index.values,
+#                                 multi_targets = np.array(multi_targets),
+#                                 nfolds = config.FOLDS,
+#                                 seed = config.SEED)
 
     logger = seedandlog.init_logger(log_name = f'{saved_model_name}')
     logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
-    for fold, foldData in enumerate(mskFoldData):
+    for fold, foldData in enumerate(skFoldData):
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = model.get_model(pretrained=True, net_out_features=config.TARGET_SIZE)
+            model = models.get_model(pretrained=True, net_out_features=config.TARGET_SIZE)
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
@@ -206,8 +208,10 @@ if __name__ == '__main__':
                     scheduler.step(valid_loss)
                 else:
                     scheduler.step()
-
-                train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
+                try:
+                    train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
+                except:
+                    train_roc_auc = -999
                 
                 valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
                 et = time.time()

@@ -6,7 +6,7 @@ from sklearn import metrics
 import config
 import dataset
 import engine
-import model
+import models
 import validation_strategy as vs
 import seedandlog
 import os
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     
     saved_model_name = config.SAVED_MODEL_NAME
     
-    model = model.get_model(pretrained=False, net_out_features=config.TARGET_SIZE)
+    model = models.get_model(pretrained=False, net_out_features=config.TARGET_SIZE)
     model.to(device)
     states = [torch.load(f'{config.MODEL_OUTPUT_PATH}{config.MODEL_LOAD_FOR_INFER}_fold{fold}_{saved_model_name}.pth') for fold in range(config.FOLDS)]
 
@@ -78,6 +78,6 @@ if __name__ == '__main__':
         mean_predictions = mean_predictions/config.FOLDS
 
         inference_df['target'] = mean_predictions
-        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}submission_cv{oof_auc}_{config.MODEL_LOAD_FOR_INFER}_{saved_model_name}', index=False)
+        inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}cv{oof_auc}_{config.MODEL_LOAD_FOR_INFER}_{saved_model_name}', index=False)
         print(inference_df[['id', 'target']].head())
     

@@ -21,7 +21,8 @@ class DesignImage():
     def simple_concat(self, image_path):
         image_array_name = image_path.split('/')[-1]
         image_array = np.load(image_path)
-        image_array = image_array.astype(np.float32)      
+        image_array = image_array.astype(np.float32)
+        image_array = ((image_array - np.mean(image_array)) / (np.std(image_array))).astype(np.float32)
         image_array = np.vstack(image_array)
         image_spatial =  cv2.resize(image_array, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
         

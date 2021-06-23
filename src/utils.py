@@ -5,6 +5,10 @@ import math
 
 import config
 
+
+'''
+LOSSES
+'''
 class Loss(nn.modules.Module):
     '''
     logits is output of the last layer of model
@@ -64,8 +68,11 @@ class ArcLoss(Loss):
         loss = torch.nn.CrossEntropyLoss(reduction=self.reduction)(logits_plus_margin, targets.long())
         
         return loss
+    
 
-
+'''
+OPTIMIZER AND SCHEDULER
+'''
 class OptSch:
     def __init__(self, sch=None, opt='Adam'):
         self.lr = config.INIT_LEARNING_RATE

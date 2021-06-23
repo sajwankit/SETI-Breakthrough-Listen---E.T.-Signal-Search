@@ -26,38 +26,35 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+           
+def get_loss(logits, targets, reduction='mean'):
+    if config.NET == 'Net_ArcFace':
+        loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.1)(logits=logits, targets=targets, )
+    else:
+        loss = utils.BCEWithLogitsLoss(reduction=reduction)(logits, targets, )
+    return loss
 
-                
+def loss_criterion(logits, targets):
+    if config.OHEM_LOSS:
+        batch_size = logits.size(0) 
+        ohem_cls_loss = get_loss(logits, targets, reduction='none')
+        sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
+        keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
+        if keep_num < sorted_ohem_loss.size()[0]:
+            keep_idx_cuda = idx[:keep_num]
+            ohem_cls_loss = ohem_cls_loss[keep_idx_cuda]
+        cls_loss = ohem_cls_loss.sum() / keep_num
+        return cls_loss
+    else:
+        return get_loss(logits, targets, reduction='mean')
+
 def mixup(inputs, targets):
     lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
     batch_size = inputs.size()[0]
     index = torch.randperm(batch_size)
     mixed_inputs = np.sqrt(lam) * inputs + np.sqrt((1 - lam)) * inputs[index, :]
     targets1, targets2 = targets, targets[index]
-    return mixed_inputs, targets1, targets2, lam
-
-def loss_criterion(logits, targets):
-    arcface_logits = logits[1]
-    logits = logits[0]
-    classification_loss = utils.BCEWithLogitsLoss(reduction='mean')(logits, targets, )
-    arcface_metric_loss = utils.ArcLoss(reduction='mean', feature_scale =40, margin=0.5)(logits=arcface_logits, targets=targets, )
-#     bal = arcface_metric_loss/classification_loss
-#     loss = classification_loss + 2*arcface_metric_loss/bal
-    loss = arcface_metric_loss
-    return loss
-    # if config.OHEM_LOSS:
-    #     batch_size = logits.size(0) 
-    #     ohem_cls_loss = nn.BCEWithLogitsLoss(reduction='none')(logits, targets.view(-1,1))
-
-    #     sorted_ohem_loss, idx = torch.sort(ohem_cls_loss, 0, descending=True)
-    #     keep_num = min(sorted_ohem_loss.size()[0], int(batch_size*config.OHEM_RATE) )
-    #     if keep_num < sorted_ohem_loss.size()[0]:
-    #         keep_idx_cuda = idx[:keep_num]
-    #         ohem_cls_loss = ohem_cls_loss[keep_idx_cuda]
-    #     cls_loss = ohem_cls_loss.sum() / keep_num
-    #     return cls_loss
-    # else:
-    #     return nn.BCEWithLogitsLoss()(logits, targets.view(-1,1))
+    return mixed_inputs, targets1, targets2, lam    
 
 def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
@@ -92,7 +89,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
         optimizer.zero_grad()
         
         if config.MIXED_PRECISION:
-            #mixed precision
+            ''' Mix Precision '''
             with amp.autocast():       
                 if config.MIXUP:
                     #Forward Step
@@ -111,11 +108,11 @@ def train(data_loader, model, optimizer, device, scaler = None):
             scaler.update()
         else:
             if config.MIXUP:
-                    #Forward Step
-                    mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                    logits = model(mixed_inputs)
-                    #calculate loss
-                    loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
+                #Forward Step
+                mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
+                logits = model(mixed_inputs)
+                #calculate loss
+                loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
             else:
                 #Forward Step
                 logits = model(inputs)
@@ -123,29 +120,29 @@ def train(data_loader, model, optimizer, device, scaler = None):
                 loss = loss_criterion(logits, targets)
             loss.backward()
             optimizer.step()
-        
-        # auc = metrics.roc_auc_score(targets.detach().cpu().numpy().tolist(), logits.detach().cpu().numpy().tolist())
-        # auc = metrics.roc_auc_score(targets, logits)
 
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
-                
-#
+
 #        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #            et = time.time()
 #            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
 #            progressDisp_step = progressDisp_step*2
 
-        final_targets.extend(targets.detach().cpu().numpy().tolist())
-        outputs_conf, outputs = torch.max(logits[1].softmax(1),1)
-        outputs = (logits[1].softmax(1)[:,1] + (1-logits[1].softmax(1)[:,0]))/2
-#         print(outputs)
-#         print(outputs_conf)
-#         print(outputs*outputs_conf)
-#         outputs = torch.sigmoid(logits[0])
+        
+        if config.NET == 'Net_ArcFace':
+#             outputs_conf, outputs = torch.max(logits.softmax(1),1)
+#                 outputs_conf, outputs = torch.max(logits.softmax(1),1)
+            outputs = (logits.softmax(1)[:,1] + (1-logits.softmax(1)[:,0]))/2
+#             sm = nn.Softmax(1)
+#             outputs = logits.sm(logits)[:,1]
+        else:
+            outputs = torch.sigmoid(logits)
+
         final_outputs.extend((outputs).detach().cpu().numpy().tolist())
+        final_targets.extend(targets.detach().cpu().numpy().tolist())
         final_ids.extend(ids)
-#     print(final_outputs[:100])
+
     return final_outputs, final_targets, final_ids, losses.avg
 
 
@@ -184,23 +181,17 @@ def evaluate(data_loader, model, device):
 
             loss = loss_criterion(logits, targets)
             losses.update(loss.item(), config.BATCH_SIZE)
-
-            targets = targets.detach().cpu().numpy().tolist()
-#             outputs_conf, outputs = torch.max(logits[1].softmax(1),1)
             
-    #         outputs = torch.sigmoid(logits[0])
-#             final_outputs.extend(outputs.detach().cpu().numpy().tolist())
-#             outputs = torch.sigmoid(logits[1])
-            outputs = (logits[1].softmax(1)[:,1] + (1-logits[1].softmax(1)[:,0]))/2
-#         print(outputs)
-#         print(outputs_conf)
-#         print(outputs*outputs_conf)
-#         outputs = torch.sigmoid(logits[0])
+            if config.NET == 'Net_ArcFace':
+#                 outputs_conf, outputs = torch.max(logits.softmax(1),1)
+                outputs = (logits.softmax(1)[:,1] + (1-logits.softmax(1)[:,0]))/2
+            else:
+                outputs = torch.sigmoid(logits)
+
             final_outputs.extend((outputs).detach().cpu().numpy().tolist())
-            final_targets.extend(targets)
-#             final_outputs.extend((outputs*outputs_conf).detach().cpu().numpy().tolist())
+            final_targets.extend(targets.detach().cpu().numpy().tolist())
             final_ids.extend(ids)
-#
+
 #            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #                et = time.time()
 #                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
