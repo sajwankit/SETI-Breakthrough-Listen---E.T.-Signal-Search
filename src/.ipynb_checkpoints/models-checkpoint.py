@@ -16,6 +16,8 @@ def get_model(pretrained=True, net_out_features=1):
         net = Net_Simple(pretrained=pretrained, net_out_features=net_out_features)
     elif config.NET == 'Net_SimpleBN':
         net = Net_SimpleBN(pretrained=pretrained, net_out_features=net_out_features)
+    elif config.NET == 'SeResNet':
+        net = SeResNet(pretrained=pretrained, net_out_features=net_out_features)
     return net
 
 class Backbone(nn.Module):
@@ -26,14 +28,17 @@ class Backbone(nn.Module):
 
         if config.MODEL_NAME in ['resnet18', 'resnet18d']:
             self.in_features = self.model.fc.in_features
+            print(f'\n Using {config.MODEL_NAME} as backbone, backbone head: {self.model.fc}\n')
+        elif config.MODEL_NAME in ['legacy_seresnet18', 'legacy_seresnext26_32x4d']:
+            self.in_features = self.model.last_linear.in_features
+            print(f'\n Using {config.MODEL_NAME} as backbone, backbone head: {self.model.last_linear}\n')
         else:
             self.in_features = self.model.classifier.out_features
-        
-        print(f'\n Using {config.MODEL_NAME} as backbone, backbone head: {self.model.fc}\n')
+#             print(f'\n Using {config.MODEL_NAME} as backbone, backbone head: {self.model.fc}\n')
 
     def forward(self, x):
-        logits = self.model(x)
-        return logits
+        x = self.model(x)
+        return x
 
 
 class ArcMarginProduct(nn.Module):
@@ -92,6 +97,31 @@ class Net_ArcFace(nn.Module):
         else:
             return x
 
+class Net_Simple(nn.Module):
+    def __init__(self, pretrained=True, net_out_features=1):
+        super().__init__()
+        self.net_out_features = net_out_features
+        self.backbone = Backbone(pretrained=pretrained)
+        self.batch_norm_layer = nn.BatchNorm1d(self.backbone.model.fc.out_features)
+        self.net_head = nn.Linear(self.backbone.model.fc.out_features, self.net_out_features)
+
+    def forward(self, x):
+        x = self.backbone(x)
+#         x = self.batch_norm_layer(x)
+        x = self.net_head(x)
+        
+        if config.DROPOUT:
+            for i, dropout in enumerate(self.dropouts):
+                if i == 0:
+                    logits = self.output_layer(dropout(x))
+                else:
+                    logits += self.output_layer(dropout(x))
+            logits /= len(self.dropouts)
+            return logits
+        else:
+            return x        
+        
+
 class Net_SimpleBN(nn.Module):
     def __init__(self, pretrained=True, net_out_features=1):
         super().__init__()
@@ -120,17 +150,23 @@ class Net_SimpleBN(nn.Module):
         else:
             return x
         
-class Net_Simple(nn.Module):
+
+        
+class SeResNet(nn.Module):
     def __init__(self, pretrained=True, net_out_features=1):
         super().__init__()
         self.net_out_features = net_out_features
         self.backbone = Backbone(pretrained=pretrained)
-        self.batch_norm_layer = nn.BatchNorm1d(self.backbone.model.fc.out_features)
-        self.net_head = nn.Linear(self.backbone.model.fc.out_features, self.net_out_features)
-
+        self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096)
+        self.batch_norm_layer = nn.BatchNorm1d(4096)
+        self.prelu = nn.PReLU()
+        self.net_head = nn.Linear(4096, self.net_out_features)
+        
     def forward(self, x):
         x = self.backbone(x)
-#         x = self.batch_norm_layer(x)
+        x = self.linear_layer(x)
+        x = self.batch_norm_layer(x)
+        x = self.prelu(x)
         x = self.net_head(x)
         
         if config.DROPOUT:
@@ -143,6 +179,10 @@ class Net_Simple(nn.Module):
             return logits
         else:
             return x
+        
+
+        
+        
 # class Model(nn.Module):
 #     def __init__(self, pretrained=True ):
 #         super().__init__()
