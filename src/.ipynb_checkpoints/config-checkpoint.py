@@ -14,7 +14,7 @@ if not ORIG_IMAGE:
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
     resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
-                        f'/kaggle/input/256258normed/']
+                        f'/kaggle/working/256258normed/']
 
 
 
@@ -69,7 +69,7 @@ AUGMENTATION PARAMETERS
 MIXUP = True
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
-needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/']
+needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']
 NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
 AUG = 'SwapDropFlip'
