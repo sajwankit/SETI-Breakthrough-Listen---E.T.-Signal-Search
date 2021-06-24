@@ -195,9 +195,7 @@ class SetiDataset:
             image = imt.flip(image = image, p = 0.5)
             image = imt.swap_channels(image = image, p = 0.65)
             image = imt.drop_channels(image = image, p = 0.25)
-#         print(target)    
-#         print('1ds', np.mean(image), np.std(image))
-#         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
+
         image1 = np.copy(image)
         
         image0 = np.copy(image)
@@ -227,12 +225,6 @@ class SetiDataset:
             image2 = imt.normalize(image2, )
         
             
-            
-        
-#         print(np.mean(image), np.std(image))
-        
-        
-        
         image3ch = np.zeros((3, image.shape[0], image.shape[1]))
         image3ch[0] = image0.reshape(1,image0.shape[0],image0.shape[1])
         image3ch[1] = image1.reshape(1,image1.shape[0],image1.shape[1])

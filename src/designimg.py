@@ -9,6 +9,12 @@ import os
 
 s = time.time()
 
+def normalize_channelwise(image_array):
+    for i in range(len(image_array.shape[0])):
+        image_array[i] -= image_array[i].mean()
+        image_array[i] /= image_array[i].std()
+    return image_array
+
 class DesignImage():
     def __init__(self, images_set, out_image_size = (256, 258), chl_pos_in_spatial = [0,1,2,3,4,5]):
         #out_image_size = (frequency, time)..cv2 needs as (x,y), np.array shape is (y,x)
@@ -22,7 +28,7 @@ class DesignImage():
         image_array_name = image_path.split('/')[-1]
         image_array = np.load(image_path)
         image_array = image_array.astype(np.float32)
-        image_array = ((image_array - np.mean(image_array)) / (np.std(image_array))).astype(np.float32)
+        image_array = normalize_channelwise(image_array)
         image_array = np.vstack(image_array)
         image_spatial =  cv2.resize(image_array, dsize=self.out_image_size, interpolation=cv2.INTER_AREA)
         
