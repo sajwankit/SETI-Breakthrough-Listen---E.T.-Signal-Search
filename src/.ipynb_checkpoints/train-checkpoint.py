@@ -202,18 +202,22 @@ if __name__ == '__main__':
                         config.OHEM_RATE = 1
                 
                 st = time.time()
-                train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
-                predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
+                if config.NET == 'NetArcFace':
+                    train_prediction_confs, train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
+                    prediction_confs, predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
+#                     train_roc_auc = metrics.roc_auc_score(np.array(train_targets), np.array(train_predictions)[:,1])
+#                     valid_roc_auc = metrics.roc_auc_score(np.array(valid_targets), np.array(predictions)[:,1])
+                else:
+                    train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
+                    predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
+                train_roc_auc = metrics.roc_auc_score(np.array(train_targets), np.array(train_predictions))
+                valid_roc_auc = metrics.roc_auc_score(np.array(valid_targets), np.array(predictions))
+                    
                 if config.SCHEDULER == 'ReduceLROnPlateau':
                     scheduler.step(valid_loss)
                 else:
                     scheduler.step()
-                try:
-                    train_roc_auc = metrics.roc_auc_score(train_targets, train_predictions)
-                except:
-                    train_roc_auc = -999
-                
-                valid_roc_auc = metrics.roc_auc_score(valid_targets, predictions)
+
                 et = time.time()
 
                 # train auc doesnot make sense when using mixup
@@ -228,6 +232,7 @@ if __name__ == '__main__':
                                 'epoch': epoch,
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
+                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
                                 'valid_targets': valid_targets},
                                 f'{config.MODEL_OUTPUT_PATH}loss_fold{fold}_{saved_model_name}.pth')
 
@@ -240,6 +245,7 @@ if __name__ == '__main__':
                                 'epoch': epoch,
                                 'valid_ids': valid_ids,
                                 'predictions': predictions,
+                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
                                 'valid_targets': valid_targets},
                                 f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
 

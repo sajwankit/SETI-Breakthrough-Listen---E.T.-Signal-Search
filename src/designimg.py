@@ -10,7 +10,7 @@ import os
 s = time.time()
 
 def normalize_channelwise(image_array):
-    for i in range(len(image_array.shape[0])):
+    for i in range(image_array.shape[0]):
         image_array[i] -= image_array[i].mean()
         image_array[i] /= image_array[i].std()
     return image_array

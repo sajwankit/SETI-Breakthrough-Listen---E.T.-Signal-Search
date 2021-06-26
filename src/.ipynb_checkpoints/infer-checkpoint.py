@@ -12,7 +12,7 @@ import seedandlog
 import os
 
 from tqdm import tqdm
-
+torch.multiprocessing.set_sharing_strategy('file_system')
 if __name__ == '__main__':
     seedandlog.seed_torch(seed=config.SEED)
 
@@ -69,15 +69,25 @@ if __name__ == '__main__':
 
         predictions_all_folds = []
         mean_predictions = np.array([0]*len(inference_df))
+        if config.NET == 'NetArcFace':
+            mean_prediction_confs = np.array([[0,0]]*len(inference_df))
         print('Inference ON ! \n')
         for fold in tqdm(range(config.FOLDS)):
-            model.load_state_dict(states[fold]['model'])                                    
-            predictions = engine.predict(test_loader, model, device)
+            model.load_state_dict(states[fold]['model']) 
+            if config.NET == 'NetArcFace':
+                prediction_confs, predictions = engine.predict(test_loader, model, device)
+                mean_prediction_confs = mean_prediction_confs + np.array(prediction_confs)
+            else:
+                predictions = engine.predict(test_loader, model, device)
             mean_predictions = mean_predictions + np.array(predictions)
             # predictions_all_folds.append(predictions)
         mean_predictions = mean_predictions/config.FOLDS
-
         inference_df['target'] = mean_predictions
+        if config.NET == 'NetArcFace':
+            mean_prediction_confs = mean_prediction_confs/config.FOLDS
+            inference_df['target_conf_0'] = mean_prediction_confs[:, 0]
+            inference_df['target_conf_1'] = mean_prediction_confs[:, 1]
+            inference_df.to_csv(f'{config.LOG_DIR}inference_arcface.csv')
         inference_df[['id', 'target']].to_csv(f'{config.LOG_DIR}cv{oof_auc}_{config.MODEL_LOAD_FOR_INFER}_{saved_model_name}', index=False)
         print(inference_df[['id', 'target']].head())
     

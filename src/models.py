@@ -10,12 +10,12 @@ import config
 import utils
 
 def get_model(pretrained=True, net_out_features=1):
-    if config.NET == 'Net_ArcFace':
-        net = Net_ArcFace(pretrained=pretrained, net_out_features=net_out_features)
-    elif config.NET == 'Net_Simple':
-        net = Net_Simple(pretrained=pretrained, net_out_features=net_out_features)
-    elif config.NET == 'Net_SimpleBN':
-        net = Net_SimpleBN(pretrained=pretrained, net_out_features=net_out_features)
+    if config.NET == 'NetArcFace':
+        net = NetArcFace(pretrained=pretrained, net_out_features=net_out_features)
+    elif config.NET == 'NetSimple':
+        net = NetSimple(pretrained=pretrained, net_out_features=net_out_features)
+    elif config.NET == 'NetSimpleBN':
+        net = NetSimpleBN(pretrained=pretrained, net_out_features=net_out_features)
     elif config.NET == 'SeResNet':
         net = SeResNet(pretrained=pretrained, net_out_features=net_out_features)
     return net
@@ -64,25 +64,29 @@ class ArcMarginProduct(nn.Module):
         logits = F.linear(F.normalize(features), F.normalize(self.weight))
         return logits
 
-class Net_ArcFace(nn.Module):
+class NetArcFace(nn.Module):
     def __init__(self, pretrained=True, net_out_features=1):
         super().__init__()
         self.net_out_features = net_out_features
         self.backbone = Backbone(pretrained=pretrained)
-        self.net_head = nn.Linear(self.backbone.model.fc.out_features, self.net_out_features)
+#         self.net_head = nn.Linear(self.backbone.model.fc.out_features, self.net_out_features)
         
         
-        
-        self.linear_layer = nn.Linear(self.backbone.model.fc.out_features, 4096)
-        self.batch_norm_layer = nn.BatchNorm1d(4096)
+        if config.MODEL_NAME in ['legacy_seresnet18', 'legacy_seresnext26_32x4d']:
+            self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096*6)
+        elif config.MODEL_NAME in ['resnet18', 'resnet18d']:
+            self.linear_layer = nn.Linear(self.backbone.model.fc.out_features, 4096*6)
+        self.batch_norm_layer = nn.BatchNorm1d(4096*6)
+        self.linear_layer2 = nn.Linear(4096*6, 4096*3)
         self.prelu = nn.PReLU()
-        self.arcface_logits = ArcMarginProduct(4096, self.net_out_features+1)
+        self.arcface_logits = ArcMarginProduct(self.backbone.model.last_linear.out_features, self.net_out_features+1)
 
     def forward(self, x):
         x = self.backbone(x)
 #         x = self.net_head(x)
-        x = self.linear_layer(x)
-        x = self.batch_norm_layer(x)
+#         x = self.linear_layer(x)
+#         x = self.batch_norm_layer(x)
+#         x = self.linear_layer2(x)
         x = self.prelu(x)
         x = self.arcface_logits(x)
         
@@ -97,7 +101,7 @@ class Net_ArcFace(nn.Module):
         else:
             return x
 
-class Net_Simple(nn.Module):
+class NetSimple(nn.Module):
     def __init__(self, pretrained=True, net_out_features=1):
         super().__init__()
         self.net_out_features = net_out_features
@@ -122,12 +126,15 @@ class Net_Simple(nn.Module):
             return x        
         
 
-class Net_SimpleBN(nn.Module):
+class NetSimpleBN(nn.Module):
     def __init__(self, pretrained=True, net_out_features=1):
         super().__init__()
         self.net_out_features = net_out_features
         self.backbone = Backbone(pretrained=pretrained)
-        self.linear_layer = nn.Linear(self.backbone.model.fc.out_features, 4096)
+        if config.MODEL_NAME in ['legacy_seresnet18', 'legacy_seresnext26_32x4d']:
+            self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096)
+        elif config.MODEL_NAME in ['resnet18', 'resnet18d']:
+            self.linear_layer = nn.Linear(self.backbone.model.fc.out_features, 4096)
         self.batch_norm_layer = nn.BatchNorm1d(4096)
         self.prelu = nn.PReLU()
         self.net_head = nn.Linear(4096, self.net_out_features)
@@ -160,12 +167,12 @@ class SeResNet(nn.Module):
         self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096)
         self.batch_norm_layer = nn.BatchNorm1d(4096)
         self.prelu = nn.PReLU()
-        self.net_head = nn.Linear(4096, self.net_out_features)
+        self.net_head = nn.Linear(self.backbone.model.last_linear.out_features, self.net_out_features)
         
     def forward(self, x):
         x = self.backbone(x)
-        x = self.linear_layer(x)
-        x = self.batch_norm_layer(x)
+#         x = self.linear_layer(x)
+#         x = self.batch_norm_layer(x)
         x = self.prelu(x)
         x = self.net_head(x)
         

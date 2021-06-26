@@ -28,8 +28,8 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
            
 def get_loss(logits, targets, reduction='mean'):
-    if config.NET == 'Net_ArcFace':
-        loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.1)(logits=logits, targets=targets, )
+    if config.NET == 'NetArcFace':
+        loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.2)(logits=logits, targets=targets, )
     else:
         loss = utils.BCEWithLogitsLoss(reduction=reduction)(logits, targets, )
     return loss
@@ -68,6 +68,8 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
     final_targets = []
     final_outputs = []
+    if config.NET == 'NetArcFace':
+        final_output_confs = []
     final_ids = []
 
 #    len_data_loader = len(data_loader)
@@ -130,21 +132,22 @@ def train(data_loader, model, optimizer, device, scaler = None):
 #            progressDisp_step = progressDisp_step*2
 
         
-        if config.NET == 'Net_ArcFace':
-#             outputs_conf, outputs = torch.max(logits.softmax(1),1)
-#                 outputs_conf, outputs = torch.max(logits.softmax(1),1)
-            outputs = (logits.softmax(1)[:,1] + (1-logits.softmax(1)[:,0]))/2
-#             sm = nn.Softmax(1)
-#             outputs = logits.sm(logits)[:,1]
+        if config.NET == 'NetArcFace':
+            output_confs = logits.softmax(1)
+            outputs = output_confs[:, 1]
         else:
             outputs = torch.sigmoid(logits)
-
-        final_outputs.extend((outputs).detach().cpu().numpy().tolist())
+        
+        if config.NET == 'NetArcFace':
+            final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
+        final_outputs.extend(outputs.detach().cpu().numpy().tolist())
         final_targets.extend(targets.detach().cpu().numpy().tolist())
         final_ids.extend(ids)
-
-    return final_outputs, final_targets, final_ids, losses.avg
-
+        
+    if config.NET == 'NetArcFace':
+        return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
+    else:
+        return final_outputs, final_targets, final_ids, losses.avg
 
 def evaluate(data_loader, model, device):
     #this function does evaluation for one epoch
@@ -163,6 +166,8 @@ def evaluate(data_loader, model, device):
     final_targets = []
     final_outputs = []
     final_ids = []
+    if config.NET == 'NetArcFace':
+        final_output_confs = []
 
     #we use no_grad context:
     with torch.no_grad():
@@ -182,13 +187,15 @@ def evaluate(data_loader, model, device):
             loss = loss_criterion(logits, targets)
             losses.update(loss.item(), config.BATCH_SIZE)
             
-            if config.NET == 'Net_ArcFace':
-#                 outputs_conf, outputs = torch.max(logits.softmax(1),1)
-                outputs = (logits.softmax(1)[:,1] + (1-logits.softmax(1)[:,0]))/2
+            if config.NET == 'NetArcFace':
+                output_confs = logits.softmax(1)
+                outputs = output_confs[:, 1]
             else:
                 outputs = torch.sigmoid(logits)
-
-            final_outputs.extend((outputs).detach().cpu().numpy().tolist())
+            
+            if config.NET == 'NetArcFace':
+                final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
+            final_outputs.extend(outputs.detach().cpu().numpy().tolist())
             final_targets.extend(targets.detach().cpu().numpy().tolist())
             final_ids.extend(ids)
 
@@ -196,8 +203,11 @@ def evaluate(data_loader, model, device):
 #                et = time.time()
 #                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
-
-    return final_outputs, final_targets, final_ids, losses.avg
+        
+    if config.NET == 'NetArcFace':
+        return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
+    else:
+        return final_outputs, final_targets, final_ids, losses.avg
 
 
 def predict(data_loader, model, device):
@@ -211,7 +221,9 @@ def predict(data_loader, model, device):
     model.eval()
 #     print(model.training)
     final_outputs = []
-
+    if config.NET == 'NetArcFace':
+        final_output_confs = []
+        
     #we use no_grad context:
     with torch.no_grad():
 
@@ -223,16 +235,24 @@ def predict(data_loader, model, device):
             
             #do forward step to generate prediction
             logits = model(inputs)
-            outputs = torch.sigmoid(logits).detach().cpu().numpy().tolist()
-
-            final_outputs.extend(outputs)
-
+            if config.NET == 'NetArcFace':
+                output_confs = logits.softmax(1)
+                outputs = output_confs[:, 1]
+            else:
+                outputs = torch.sigmoid(logits)
+                
+            if config.NET == 'NetArcFace':
+                final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
+            final_outputs.extend(outputs.detach().cpu().numpy().tolist())
+            
 #            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #                et = time.time()
 #                print(f'batch: {batch_number} of {len_data_loader}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
-
-    return final_outputs
+    if config.NET == 'NetArcFace':
+        return final_output_confs, final_outputs
+    else:
+        return final_outputs
 
     
 

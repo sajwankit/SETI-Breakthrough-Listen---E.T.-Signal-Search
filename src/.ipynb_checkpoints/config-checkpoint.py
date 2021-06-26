@@ -1,5 +1,5 @@
 import os
-i = 2
+i = 0
 
 
 '''
@@ -39,7 +39,7 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 20
+EPOCHS = 52
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
@@ -59,7 +59,7 @@ ETA_MIN = 1e-8
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-6
-T_0 = EPOCHS//5
+T_0 = EPOCHS//4
 T_MAX = 7
 
 
