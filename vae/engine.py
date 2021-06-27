@@ -53,10 +53,7 @@ def loss_criterion(logits, targets):
         cls_loss = ohem_cls_loss.sum() / keep_num
         return cls_loss
     else:
-        if config.NET == 'VAE':
-            return get_loss(logits, targets, reduction='mean')
-        else:
-            return get_loss(logits, targets, reduction='mean')
+        return get_loss(logits, targets, reduction='mean')
 
 def mixup(inputs, targets):
     lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
@@ -208,7 +205,7 @@ def evaluate(data_loader, model, device):
     if config.NET == 'VAE':
         recon_losses = AverageMeter()
         kld_losses = AverageMeter()
-        
+
     if config.NET == 'VAE':
         recon_losses = AverageMeter()
         kld_losses = AverageMeter()   

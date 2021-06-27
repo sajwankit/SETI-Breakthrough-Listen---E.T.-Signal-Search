@@ -2,91 +2,10 @@ from torch import nn
 from abc import abstractmethod
 import timm
 import models
-
-class Encoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.encoder_backbone = models.Backbone(pretrained=pretrained)
-        self.fc_mu = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dims)
-        self.fc_logvar = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dims)
-
-    def forward(self, x):
-        x = self.encoder_backbone(x)
-        x_mu = self.fc_mu(x)
-        x_logvar = self.fc_logvar(x)
-        return x_mu, x_logvar
-
-class Decoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-        modules = []
-        if hidden_dims is None:
-            hidden_dims = [32, 64, 128, 256, 512]
-
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1]*4)
-        hidden_dims.reverse()
-
-        for i in range(len(hidden_dims)-1):
-            modules.append(
-                nn.Sequential(
-                    nn.ConvTranspose2d(hidden_dims[i],
-                                       hidden_dims[i + 1],
-                                       kernel_size=3,
-                                       stride = 2,
-                                       padding=1,
-                                       output_padding=1),
-                    nn.BatchNorm2d(hidden_dims[i + 1]),
-                    nn.LeakyReLU())
-            )
-        
-        self.decoder_backbone = nn.Sequential(*modules)
-
-        self.final_layer = nn.Sequential(
-                            nn.ConvTranspose2d(hidden_dims[-1],
-                                               hidden_dims[-1],
-                                               kernel_size=3,
-                                               stride=2,
-                                               padding=1,
-                                               output_padding=1),
-                            nn.BatchNorm2d(hidden_dims[-1]),
-                            nn.LeakyReLU(),
-                            nn.Conv2d(hidden_dims[-1], out_channels= in_channels,
-                                      kernel_size= 3, padding= 1),
-                            nn.Tanh())
-    def forward(self, z):
-        z = self.decoder_input(z)
-        z = self.decoder_backbone(z)
-        z = self.final_layer(z)
-        return z
-
-class VariationalAutoencoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.encoder = Encoder()
-        self.decoder = Decoder()
-        self.kldw =  self.kldw
-
-    def reparameterize(self, mu, logvar):
-        '''
-        Reparameterization trick to sample from N(mu, var) from
-        N(0,1).
-        :param mu: (Tensor) Mean of the latent Gaussian [B x D]
-        :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
-        :return: (Tensor) [B x D]
-        '''
-        if self.training:
-            # the reparameterization trick
-            std = logvar.mul(0.5).exp_()
-            eps = torch.empty_like(std).normal_()
-            return eps.mul(std).add_(mu)
-        else:
-            return mu
-
-    def forward(self, x):
-        latent_mu, latent_logvar = self.encoder(x)
-        latent = self.reparameterize(latent_mu, latent_logvar)
-        x_recon = self.decoder(latent)
-        return [x_recon, latent_mu, latent_logvar]
+from pl_bolts.models.autoencoders.components import (
+    resnet18_decoder,
+    resnet18_encoder,
+)
 
 def vae_loss(recon_x, x, mu, logvar, kldw):
     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
@@ -94,4 +13,66 @@ def vae_loss(recon_x, x, mu, logvar, kldw):
 
     loss = recon_loss + kldw * kld_loss
     return [loss, recons_loss, -kld_loss]
-    
+
+
+class VAE(nn.Module):
+    def __init__(self, enc_out_dim=512, latent_dim=256, input_shape=(256, 258)):
+        super().__init__()
+
+        self.encoder = resnet18_encoder9(first_conv=False, maxpool1=False)
+        self.decoder = resnet18_decoder(
+            latent_dim=latent_dim,
+            input_height=input_height,
+            first_conv=False,
+            maxpool1=False
+        )
+        # distribution parameters
+        self.fc_mu = nn.Linear(enc_out_dim, latent_dim)
+        self.fc_var = nn.Linear(enc_out_dim, latent_dim)
+
+        # for the gaussian likelihood
+        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+
+     def gaussian_likelihood(self, x_hat, logscale, x):
+        scale = torch.exp(logscale)
+        mean = x_hat
+        dist = torch.distributions.Normal(mean, scale)
+
+        # measure prob of seeing image under p(x|z)
+        log_pxz = dist.log_prob(x)
+        return log_pxz.sum(dim=(1, 2, 3))
+
+    def kl_divergence(self, z, mu, std):
+        # --------------------------
+        # Monte carlo KL divergence
+        # --------------------------
+        # 1. define the first two probabilities (in this case Normal for both)
+        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
+        q = torch.distributions.Normal(mu, std)
+
+        # 2. get the probabilities from the equation
+        log_qzx = q.log_prob(z)
+        log_pz = p.log_prob(z)
+
+        # kl
+        kl = (log_qzx - log_pz)
+        kl = kl.sum(-1)
+        return kl
+
+    def forward(self, x):
+        x_encoded = self.encoder(x)
+        mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
+
+        '''
+        sample z from q
+        '''
+        std = torch.exp(log_var/2)
+        q = torch.distributions.Normal(mu, std)
+        z = q.rsample()
+
+        '''
+        reconstructed x from decoder
+        '''
+        recon_x = self.decoder(z)
+
+        return recon_x, x, mu, log_var
