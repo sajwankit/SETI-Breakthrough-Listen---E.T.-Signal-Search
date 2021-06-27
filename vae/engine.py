@@ -169,7 +169,9 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
-
+        if config.NET == 'VAE':
+            recon_losses.update(loss.item(), config.BATCH_SIZE)
+            kld_losses.update(loss.item(), config.BATCH_SIZE)
 #        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #            et = time.time()
 #            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
@@ -180,16 +182,13 @@ def train(data_loader, model, optimizer, device, scaler = None):
             output_confs = logits.softmax(1)
             outputs = output_confs[:, 1]
         else:
-            if config.NET == 'VAE':
-                pass
-            else:
+            if config.NET != 'VAE':
                 outputs = torch.sigmoid(logits)
         
         if config.NET == 'NetArcFace':
             final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
-        elif config.NET == 'VAE':
-                pass
-        else:
+        
+        if config.NET != 'VAE':
             outputs = torch.sigmoid(logits)
             final_outputs.extend(outputs.detach().cpu().numpy().tolist())
             final_targets.extend(targets.detach().cpu().numpy().tolist())
@@ -206,7 +205,13 @@ def evaluate(data_loader, model, device):
     #this function does evaluation for one epoch
 
     losses = AverageMeter()
-
+    if config.NET == 'VAE':
+        recon_losses = AverageMeter()
+        kld_losses = AverageMeter()
+        
+    if config.NET == 'VAE':
+        recon_losses = AverageMeter()
+        kld_losses = AverageMeter()   
 
 #    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
@@ -237,20 +242,32 @@ def evaluate(data_loader, model, device):
             #do forward step to generat prediction
             logits = model(inputs)
 
-            loss = loss_criterion(logits, targets)
+            l = loss_criterion(logits, targets)
+            loss = l[0]
+            recon_loss = l[1]
+            kld_loss  = l[2]
+            
+            #update average loss, auc
             losses.update(loss.item(), config.BATCH_SIZE)
+            if config.NET == 'VAE':
+                recon_losses.update(loss.item(), config.BATCH_SIZE)
+                kld_losses.update(loss.item(), config.BATCH_SIZE)
             
             if config.NET == 'NetArcFace':
                 output_confs = logits.softmax(1)
                 outputs = output_confs[:, 1]
             else:
-                outputs = torch.sigmoid(logits)
+                if config.NET != 'VAE':
+                    outputs = torch.sigmoid(logits)
             
             if config.NET == 'NetArcFace':
                 final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
-            final_outputs.extend(outputs.detach().cpu().numpy().tolist())
-            final_targets.extend(targets.detach().cpu().numpy().tolist())
-            final_ids.extend(ids)
+            
+            if config.NET != 'VAE':
+                outputs = torch.sigmoid(logits)
+                final_outputs.extend(outputs.detach().cpu().numpy().tolist())
+                final_targets.extend(targets.detach().cpu().numpy().tolist())
+                final_ids.extend(ids)
 
 #            if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #                et = time.time()
@@ -259,6 +276,8 @@ def evaluate(data_loader, model, device):
         
     if config.NET == 'NetArcFace':
         return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
+    elif config.NET == 'VAE':
+        return losses.avg, recon_losses.avg, kld_losses.avg
     else:
         return final_outputs, final_targets, final_ids, losses.avg
 
