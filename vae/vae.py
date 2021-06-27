@@ -4,6 +4,7 @@ from abc import abstractmethod
 import timm
 import models
 import config
+import math
 
 from pl_bolts.models.autoencoders.components import (
     resnet18_decoder,
@@ -23,7 +24,7 @@ class VAE_loss(nn.Module):
 
         # measure prob of seeing image under p(x|z)
         log_pxz = dist.log_prob(x)
-        return log_pxz.sum(dim=(1, 2, 3)).mean()
+        return log_pxz.sum(dim=(1, 2, 3))
 
     def kl_divergence(self, z, mu, std):
         # --------------------------
@@ -38,15 +39,18 @@ class VAE_loss(nn.Module):
         log_pz = p.log_prob(z)
 
         # kl
+        # kl = 0 means both distributions are identical
         kl = (log_qzx - log_pz)
         kl = kl.sum(-1)
-        return kl.mean()
+        return kl
     
     def forward(self, recon_x, x, mu, log_var, z):
         recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
         kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
-        loss = recon_loss + self.kldw * kld_loss
-        return [loss, recon_loss, -kld_loss]
+        scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
+        #elbo loss
+        loss = self.kldw*kld_loss*scale - recon_loss
+        return [loss.mean(), recon_loss.mean(), kld_loss.mean()]
 
 # def decoder_final_layer():
 #     self.final_layer = nn.Sequential(
@@ -135,8 +139,8 @@ class VAE(nn.Module):
         '''
         reconstructed x from decoder
         '''
-        z = z.view(z.size(0), z.size(1), 1, 1)
-        recon_x = self.decoder(z)
+        z_temp = z.view(z.size(0), z.size(1), 1, 1)
+        recon_x = self.decoder(z_temp)
         recon_x = nn.functional.interpolate(recon_x, size=(258, 256))
         return recon_x, x, mu, log_var, z
     

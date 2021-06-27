@@ -10,6 +10,7 @@ from torch.cuda import amp
 import numpy as np
 import utils
 import vae
+import math
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -167,8 +168,8 @@ def train(data_loader, model, optimizer, device, scaler = None):
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
         if config.NET == 'VAE':
-            recon_losses.update(loss.item(), config.BATCH_SIZE)
-            kld_losses.update(loss.item(), config.BATCH_SIZE)
+            recon_losses.update(recon_loss.item(), config.BATCH_SIZE)
+            kld_losses.update(kld_loss.item(), config.BATCH_SIZE)
 #        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
 #            et = time.time()
 #            print(f'batch: {batch_number} of {len_data_loader}, loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
@@ -247,8 +248,8 @@ def evaluate(data_loader, model, device):
             #update average loss, auc
             losses.update(loss.item(), config.BATCH_SIZE)
             if config.NET == 'VAE':
-                recon_losses.update(loss.item(), config.BATCH_SIZE)
-                kld_losses.update(loss.item(), config.BATCH_SIZE)
+                recon_losses.update(recon_loss.item(), config.BATCH_SIZE)
+                kld_losses.update(kld_loss.item(), config.BATCH_SIZE)
             
             if config.NET == 'NetArcFace':
                 output_confs = logits.softmax(1)
