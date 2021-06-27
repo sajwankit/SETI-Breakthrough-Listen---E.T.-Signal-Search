@@ -228,12 +228,12 @@ class VariationalAutoencoder(nn.Module):
         latent_mu, latent_logvar = self.encoder(x)
         latent = self.reparameterize(latent_mu, latent_logvar)
         x_recon = self.decoder(latent)
-        return x_recon, latent_mu, latent_logvar
+        return [x_recon, latent_mu, latent_logvar]
 
-    def loss_function(self, recon_x, x, mu, logvar):
-        recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()), dim=1, dim=0)
+def vae_loss(recon_x, x, mu, logvar, kldw):
+    recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
+    kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()), dim=1, dim=0)
 
-        loss = recon_loss + self.kldw * kld_loss
-        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':-kld_loss}
+    loss = recon_loss + kldw * kld_loss
+    return [loss, recons_loss, -kld_loss]
     

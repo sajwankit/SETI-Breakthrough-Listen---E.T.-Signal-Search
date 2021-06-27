@@ -18,6 +18,8 @@ import validation_strategy as vs
 import seedandlog
 import sampler
 
+import vae
+
 import warnings
 warnings.filterwarnings("ignore")
 

@@ -9,6 +9,7 @@ from sklearn import metrics
 from torch.cuda import amp
 import numpy as np
 import utils
+import vae
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -30,6 +31,12 @@ class AverageMeter(object):
 def get_loss(logits, targets, reduction='mean'):
     if config.NET == 'NetArcFace':
         loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.2)(logits=logits, targets=targets, )
+    elif config.NET == 'VAE':
+        loss = vae.vae_loss(recon_x=logits[0],
+                            x=logits[1], 
+                            mu=logits[2],
+                            logvar=logits[3],
+                            kldw=1)
     else:
         loss = utils.BCEWithLogitsLoss(reduction=reduction)(logits, targets, )
     return loss
@@ -46,7 +53,10 @@ def loss_criterion(logits, targets):
         cls_loss = ohem_cls_loss.sum() / keep_num
         return cls_loss
     else:
-        return get_loss(logits, targets, reduction='mean')
+        if config.NET == 'VAE':
+            return get_loss(logits, targets, reduction='mean')
+        else:
+            return get_loss(logits, targets, reduction='mean')
 
 def mixup(inputs, targets):
     lam = np.random.beta(config.MIXUP_APLHA, config.MIXUP_APLHA)
@@ -60,7 +70,9 @@ def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
 #     print(f'ohem rate: {config.OHEM_RATE}')
     losses = AverageMeter()
-
+    if config.NET == 'VAE':
+        recon_losses = AverageMeter()
+        kld_losses = AverageMeter()
     #putting model to train mode
     model.train()   
 
@@ -97,16 +109,29 @@ def train(data_loader, model, optimizer, device, scaler = None):
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
                     if config.NET == 'VAE':
-                        
+                        logits = model(mixed_inputs)
+                        l = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
+                        loss = l[0]
+                        recon_loss = l[1]
+                        kld_loss  = l[2]
                     else:
                         logits = model(mixed_inputs)
                         #calculate loss
                         loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
                 else:
-                    #Forward Step
-                    logits = model(inputs)
-                    #calculate loss
-                    loss = loss_criterion(logits, targets)
+                    if config.NET == 'VAE':
+                        #Forward Step
+                        logits = model(inputs)
+                        #calculate loss
+                        l = loss_criterion(logits, targets)
+                        loss = l[0]
+                        recon_loss = l[1]
+                        kld_loss  = l[2]
+                    else:
+                        #Forward Step
+                        logits = model(inputs)
+                        #calculate loss
+                        loss = loss_criterion(logits, targets)
             #backward step
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -115,14 +140,30 @@ def train(data_loader, model, optimizer, device, scaler = None):
             if config.MIXUP:
                 #Forward Step
                 mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                logits = model(mixed_inputs)
-                #calculate loss
-                loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
+                if config.NET == 'VAE':
+                    logits = model(mixed_inputs)
+                    l = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
+                    loss = l[0]
+                    recon_loss = l[1]
+                    kld_loss  = l[2]
+                else:
+                    logits = model(mixed_inputs)
+                    #calculate loss
+                    loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
             else:
-                #Forward Step
-                logits = model(inputs)
-                #calculate loss
-                loss = loss_criterion(logits, targets)
+                if config.NET == 'VAE':
+                    #Forward Step
+                    logits = model(inputs)
+                    #calculate loss
+                    l = loss_criterion(logits, targets)
+                    loss = l[0]
+                    recon_loss = l[1]
+                    kld_loss  = l[2]
+                else:
+                    #Forward Step
+                    logits = model(inputs)
+                    #calculate loss
+                    loss = loss_criterion(logits, targets)
             loss.backward()
             optimizer.step()
 
@@ -139,16 +180,25 @@ def train(data_loader, model, optimizer, device, scaler = None):
             output_confs = logits.softmax(1)
             outputs = output_confs[:, 1]
         else:
-            outputs = torch.sigmoid(logits)
+            if config.NET == 'VAE':
+                pass
+            else:
+                outputs = torch.sigmoid(logits)
         
         if config.NET == 'NetArcFace':
             final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
-        final_outputs.extend(outputs.detach().cpu().numpy().tolist())
-        final_targets.extend(targets.detach().cpu().numpy().tolist())
-        final_ids.extend(ids)
+        elif config.NET == 'VAE':
+                pass
+        else:
+            outputs = torch.sigmoid(logits)
+            final_outputs.extend(outputs.detach().cpu().numpy().tolist())
+            final_targets.extend(targets.detach().cpu().numpy().tolist())
+            final_ids.extend(ids)
         
     if config.NET == 'NetArcFace':
         return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
+    elif config.NET == 'VAE':
+        return losses.avg, recon_losses.avg, kld_losses.avg
     else:
         return final_outputs, final_targets, final_ids, losses.avg
 
