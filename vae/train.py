@@ -80,7 +80,10 @@ if __name__ == '__main__':
 #                                 seed = config.SEED)
 
     logger = seedandlog.init_logger(log_name = f'{saved_model_name}')
-    logger.info(f'fold,epoch,val_loss,val_rec, val_kld, train_loss, train_rec, train_kld, time')
+    if config.NET == 'VAE':
+        logger.info(f'fold,epoch,valid_loss,valid_recon_loss, valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time')
+    else:
+        logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
     for fold, foldData in enumerate(skFoldData):
         if fold == args.fold or args.fold is None:
@@ -189,8 +192,8 @@ if __name__ == '__main__':
             else:
                 scaler = None
 
-            best_valid_loss = 999
-            best_valid_roc_auc = -999
+            best_valid_loss = np.inf
+            best_valid_roc_auc = -np.inf
 
             '''
             Training ON
@@ -214,13 +217,15 @@ if __name__ == '__main__':
 #                     valid_roc_auc = metrics.roc_auc_score(np.array(valid_targets), np.array(predictions)[:,1])
                 else:
                     if config.NET == 'VAE':
-                        train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
-                        predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
+                        train_loss, train_recon_loss, train_kld_loss = engine.train(train_loader, model, optimizer, device, scaler)
+                        valid_loss, valid_recon_loss, valid_kld_loss = engine.evaluate(valid_loader, model, device)
                     else:
                         train_predictions, train_targets, train_ids, train_loss = engine.train(train_loader, model, optimizer, device, scaler)
                         predictions, valid_targets, valid_ids, valid_loss = engine.evaluate(valid_loader, model, device)
-                train_roc_auc = metrics.roc_auc_score(np.array(train_targets), np.array(train_predictions))
-                valid_roc_auc = metrics.roc_auc_score(np.array(valid_targets), np.array(predictions))
+                
+                if config.NET != 'VAE':
+                    train_roc_auc = metrics.roc_auc_score(np.array(train_targets), np.array(train_predictions))
+                    valid_roc_auc = metrics.roc_auc_score(np.array(valid_targets), np.array(predictions))
                     
                 if config.SCHEDULER == 'ReduceLROnPlateau':
                     scheduler.step(valid_loss)
@@ -229,8 +234,12 @@ if __name__ == '__main__':
 
                 et = time.time()
 
-                # train auc doesnot make sense when using mixup
-                logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{train_loss}, {(et-st)/60}')
+
+                if config.NET == 'VAE':
+                    logger.info(f'{fold},{epoch},{valid_loss},{valid_recon_loss},{valid_kld_loss},{train_loss},{train_recon_loss},{train_kld_loss}, {(et-st)/60}')
+                else:
+                    # train auc doesnot make sense when using mixup
+                    logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{train_loss}, {(et-st)/60}')
                 
                 if valid_loss <= best_valid_loss:
                     best_valid_loss = valid_loss
@@ -239,10 +248,10 @@ if __name__ == '__main__':
                                 'scheduler': scheduler.state_dict(),
                                 'scaler': scaler.state_dict(),
                                 'epoch': epoch,
-                                'valid_ids': valid_ids,
-                                'predictions': predictions,
+                                'valid_ids': valid_ids if config.NET != 'VAE' else 0,
+                                'predictions': predictions if config.NET != 'VAE' else 0,
                                 'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
-                                'valid_targets': valid_targets},
+                                'valid_targets': valid_targets if config.NET != 'VAE' else 0},
                                 f'{config.MODEL_OUTPUT_PATH}loss_fold{fold}_{saved_model_name}.pth')
 
                 if valid_roc_auc >= best_valid_roc_auc:
@@ -252,10 +261,10 @@ if __name__ == '__main__':
                                 'scheduler': scheduler.state_dict(),
                                 'scaler': scaler.state_dict(),
                                 'epoch': epoch,
-                                'valid_ids': valid_ids,
-                                'predictions': predictions,
-                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
-                                'valid_targets': valid_targets},
+                                'valid_ids': valid_ids if config.NET != 'VAE' else 0,
+                                'predictions': predictions if config.NET != 'VAE' else 0,
+                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' and config.NET != 'VAE' else 1,
+                                'valid_targets': valid_targets if config.NET != 'VAE' else 0},
                                 f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
 
 
