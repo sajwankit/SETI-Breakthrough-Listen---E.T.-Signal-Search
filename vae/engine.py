@@ -32,11 +32,11 @@ def get_loss(logits, targets, reduction='mean'):
     if config.NET == 'NetArcFace':
         loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.2)(logits=logits, targets=targets, )
     elif config.NET == 'VAE':
-        loss = vae.vae_loss(recon_x=logits[0],
+        loss = vae.VAE_loss(kldw=1)(recon_x=logits[0],
                             x=logits[1], 
                             mu=logits[2],
                             logvar=logits[3],
-                            kldw=1)
+                            z=logits[4])
     else:
         loss = utils.BCEWithLogitsLoss(reduction=reduction)(logits, targets, )
     return loss
