@@ -35,7 +35,7 @@ def get_loss(logits, targets, reduction='mean'):
         loss = vae.VAE_loss(kldw=1)(recon_x=logits[0],
                             x=logits[1], 
                             mu=logits[2],
-                            logvar=logits[3],
+                            log_var=logits[3],
                             z=logits[4])
     else:
         loss = utils.BCEWithLogitsLoss(reduction=reduction)(logits, targets, )

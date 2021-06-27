@@ -90,7 +90,7 @@ if __name__ == '__main__':
         
             #for every fold model should start from zero training
             if config.NET == 'VAE':
-                model = vae.VariationalAutoencoder(pretrained=True, )
+                model = vae.VAE()
             else:
                 model = models.get_model(pretrained=True, net_out_features=config.TARGET_SIZE)
             model.to(device)
@@ -241,31 +241,32 @@ if __name__ == '__main__':
                     # train auc doesnot make sense when using mixup
                     logger.info(f'{fold},{epoch},{valid_loss},{valid_roc_auc},{train_roc_auc},{train_loss}, {(et-st)/60}')
                 
-                if valid_loss <= best_valid_loss:
-                    best_valid_loss = valid_loss
-                    torch.save({'model': model.state_dict(),
-                                'optimizer': optimizer.state_dict(),
-                                'scheduler': scheduler.state_dict(),
-                                'scaler': scaler.state_dict(),
-                                'epoch': epoch,
-                                'valid_ids': valid_ids if config.NET != 'VAE' else 0,
-                                'predictions': predictions if config.NET != 'VAE' else 0,
-                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
-                                'valid_targets': valid_targets if config.NET != 'VAE' else 0},
-                                f'{config.MODEL_OUTPUT_PATH}loss_fold{fold}_{saved_model_name}.pth')
-
-                if valid_roc_auc >= best_valid_roc_auc:
-                    best_valid_roc_auc = valid_roc_auc
-                    torch.save({'model': model.state_dict(),
-                                'optimizer': optimizer.state_dict(),
-                                'scheduler': scheduler.state_dict(),
-                                'scaler': scaler.state_dict(),
-                                'epoch': epoch,
-                                'valid_ids': valid_ids if config.NET != 'VAE' else 0,
-                                'predictions': predictions if config.NET != 'VAE' else 0,
-                                'prediction_confs': prediction_confs if config.NET == 'NetArcFace' and config.NET != 'VAE' else 1,
-                                'valid_targets': valid_targets if config.NET != 'VAE' else 0},
-                                f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
+                if config.NET != 'VAE':
+                    if valid_loss <= best_valid_loss:
+                        best_valid_loss = valid_loss
+                        torch.save({'model': model.state_dict(),
+                                    'optimizer': optimizer.state_dict(),
+                                    'scheduler': scheduler.state_dict(),
+                                    'scaler': scaler.state_dict(),
+                                    'epoch': epoch,
+                                    'valid_ids': valid_ids if config.NET != 'VAE' else 0,
+                                    'predictions': predictions if config.NET != 'VAE' else 0,
+                                    'prediction_confs': prediction_confs if config.NET == 'NetArcFace' else 1,
+                                    'valid_targets': valid_targets if config.NET != 'VAE' else 0},
+                                    f'{config.MODEL_OUTPUT_PATH}loss_fold{fold}_{saved_model_name}.pth')
+                    
+                    if valid_roc_auc >= best_valid_roc_auc:
+                        best_valid_roc_auc = valid_roc_auc
+                        torch.save({'model': model.state_dict(),
+                                    'optimizer': optimizer.state_dict(),
+                                    'scheduler': scheduler.state_dict(),
+                                    'scaler': scaler.state_dict(),
+                                    'epoch': epoch,
+                                    'valid_ids': valid_ids if config.NET != 'VAE' else 0,
+                                    'predictions': predictions if config.NET != 'VAE' else 0,
+                                    'prediction_confs': prediction_confs if config.NET == 'NetArcFace' and config.NET != 'VAE' else 1,
+                                    'valid_targets': valid_targets if config.NET != 'VAE' else 0},
+                                    f'{config.MODEL_OUTPUT_PATH}auc_fold{fold}_{saved_model_name}.pth')
 
 
 
