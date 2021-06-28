@@ -164,15 +164,15 @@ class SeResNet(nn.Module):
         super().__init__()
         self.net_out_features = net_out_features
         self.backbone = Backbone(pretrained=pretrained)
-        self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096*2)
-        self.batch_norm_layer = nn.BatchNorm1d(4096*2)
+        self.linear_layer = nn.Linear(self.backbone.model.last_linear.out_features, 4096)
+        self.batch_norm_layer = nn.BatchNorm1d(4096)
         self.prelu = nn.PReLU()
-        self.net_head = nn.Linear(4096*2, self.net_out_features)
+        self.net_head = nn.Linear(self.backbone.model.last_linear.out_features, self.net_out_features)
         
     def forward(self, x):
         x = self.backbone(x)
-        x = self.linear_layer(x)
-        x = self.batch_norm_layer(x)
+#         x = self.linear_layer(x)
+#         x = self.batch_norm_layer(x)
         x = self.prelu(x)
         x = self.net_head(x)
         
