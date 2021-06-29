@@ -156,16 +156,18 @@ class ImageTransform():
         return trans_image_array, ftarget_type 
 
 class SetiDataset:
-    def __init__(self, df, eval=False, resize=None, augmentations = None):
+    def __init__(self, df, valid=False, pred=False, resize=None, augmentations = None):
         self.df = df
         self.resize = resize
         self.augmentations = augmentations
-        self.eval = eval
+        self.pred = pred
     def __len__(self):
         return len(self.df)
         
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
+
+        
         print(item)
         image = np.load(self.df.loc[item, 'image_path'])
         
@@ -176,7 +178,7 @@ class SetiDataset:
             image = np.vstack(image)
             image = image.astype(np.float32)
             
-        if not self.eval:
+        if not self.pred:
             target = self.df.loc[item, 'target']
 
         if self.resize is not None:
@@ -239,7 +241,7 @@ class SetiDataset:
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
     
-        if not self.eval:
+        if not self.pred:
             return{'images': torch.tensor(image3ch, dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
                   'ids': torch.tensor(dfidx, dtype = torch.int32)}

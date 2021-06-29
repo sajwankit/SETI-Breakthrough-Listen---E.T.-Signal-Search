@@ -12,6 +12,7 @@ class Sampler:
     def __len__(self):
         raise NotImplementedError
 
+
 class StratifiedSampler(Sampler):
     '''
     takes in original indices belonging to a fold and corresponding target
@@ -28,7 +29,6 @@ class StratifiedSampler(Sampler):
         if self.oversample_rate > 0:
             self.oversample(self.X, self.labels)
         
-        
     def oversample(self, X, labels):
         target_pos_indices = np.argwhere(self.labels).reshape(-1,)
         X_pos = self.X[target_pos_indices]
@@ -42,17 +42,17 @@ class StratifiedSampler(Sampler):
         if (counts[0] < 2 or counts[1] <2) or len(X) <= self.batch_size:
             self.X_batches.append(X)
         else:
-            
+
             s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5, random_state=seed_per_epoch)
             left_batch_indices, right_batch_indices = [x for x in s.split(X, labels)][0]
             self.make_batches(X[left_batch_indices], labels[left_batch_indices], seed_per_epoch=seed_per_epoch)
             self.make_batches(X[right_batch_indices], labels[right_batch_indices], seed_per_epoch=seed_per_epoch)
 
     def gen_sample_array(self):
+            
         self.X_batches = []
-        seed_per_epoch = np.random.randint(10,20)
+        seed_per_epoch = np.random.randint(10,20000)
         self.make_batches(self.X, self.labels, seed_per_epoch=seed_per_epoch)
-        print(seed_per_epoch)
         for X_batch in self.X_batches:
 #             print(X_batch)
             yield list(X_batch)

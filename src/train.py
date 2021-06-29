@@ -59,11 +59,13 @@ if __name__ == '__main__':
             image_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
         #                     print(train_images_path)
     df['image_path'] = np.array(image_paths)
-
+    df['orig_index'] = df.index.values
+    
+    
     '''
     stratify based on target and image group+
     ''' 
-    skFoldData = vs.get_SKFold(X = df.index.values,
+    skFoldData = vs.get_SKFold(X = df.orig_index.values,
                                labels = df.target,
                                n_folds = config.FOLDS,
                                seed = config.SEED,
@@ -138,7 +140,7 @@ if __name__ == '__main__':
 #                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
 #                                                       pin_memory = True)
 
-            valid_dataset = dataset.SetiDataset(df=df,
+            valid_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(vIDs)].reset_index(drop=True),
                                                 resize = None,
                                                 augmentations = False)
                                                     
@@ -149,14 +151,12 @@ if __name__ == '__main__':
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
-#             valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
-#                                                         batch_sampler = sampler.StratifiedSampler( ids = vIDs,
-#                                                                                             targets = valid_targets,
-#                                                                                             batch_size =config.BATCH_SIZE,
-#                                                                                             oversample_rate=7),                              
-#                                                 num_workers = 8,
-#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-#                                                 )
+            # valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
+            #                                             batch_sampler = sampler.StratifiedSampler( X = vIDs,
+            #                                                                                 labels = df[df.index.isin(vIDs)].target.values,
+            #                                                                                 batch_size =config.BATCH_SIZE,
+            #                                                                                 oversample_rate=0),                              
+            #                                     )
 
             optimizer, scheduler = utils.OptSch(opt=config.OPTIMIZER, sch=config.SCHEDULER).get_opt_sch(model)
 
