@@ -168,6 +168,7 @@ class SetiDataset:
         
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
+        print(item)
         image = np.load(self.image_paths[item])
         
         id = self.ids[item]

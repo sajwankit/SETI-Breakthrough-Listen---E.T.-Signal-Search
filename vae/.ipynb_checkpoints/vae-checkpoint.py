@@ -45,11 +45,16 @@ class VAE_loss(nn.Module):
         return kl
     
     def forward(self, recon_x, x, mu, log_var, z):
-        recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
-        kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
-#         scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
-        #elbo loss
-        loss = self.kldw*kld_loss - recon_loss
+#         recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
+#         kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
+# #         scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
+#         #elbo loss
+#         loss = self.kldw*kld_loss - recon_loss
+        recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
+        kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+
+        loss = recon_loss + self.kldw * kld_loss
+        
         return [loss.mean(), recon_loss.mean(), kld_loss.mean()]
 
 # def decoder_final_layer():
@@ -142,6 +147,7 @@ class VAE(nn.Module):
         z_temp = z.view(z.size(0), z.size(1), 1, 1)
         recon_x = self.decoder(z_temp)
         recon_x = nn.functional.interpolate(recon_x, size=(258, 256))
+        recon_x = nn.functional.instance_norm(recon_x)
         return recon_x, x, mu, log_var, z
     
     
@@ -151,3 +157,98 @@ class VAE(nn.Module):
 
 #     loss = recon_loss + kldw * kld_loss
 #     return [loss, recons_loss, -kld_loss]
+
+
+class BetaVAE(nn.Module):
+    num_iter = 0
+    def __init__(self,
+                 latent_dim=1024,
+                 input_shape=(32, 3, 258, 256),
+                ):
+        super().__init__()
+
+
+        self.encoder_backbone = models.Backbone(pretrained=True)
+
+        self.decoder = Decoder(latent_dim=latent_dim, )
+
+        # distribution parametersInterpolate
+        self.fc_mu = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
+        self.fc_var = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
+
+        # for the gaussian likelihood
+        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+
+    def forward(self, x):
+        x_encoded = self.encoder_backbone(x)
+        mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
+
+        '''
+        sample z from q
+        '''
+        std = torch.exp(log_var/2)
+        q = torch.distributions.Normal(mu, std)
+        z = q.rsample()
+
+        '''
+        reconstructed x from decoder
+        '''
+        z_temp = z.view(z.size(0), z.size(1), 1, 1)
+        recon_x = self.decoder(z_temp)
+        recon_x = nn.functional.interpolate(recon_x, size=(258, 256))
+        recon_x = nn.functional.instance_norm(recon_x)
+        return recon_x, x, mu, log_var, z
+
+    
+class BetaVAE_loss(nn.Module):
+    def __init__(self,
+             kldw=1,
+             beta=4,
+             gamma=1000,
+             max_capacity=25,
+             capacity_max_iter=1e5,
+             loss_type='B'
+            ):
+        super().__init__()
+        self.beta = beta
+        self.gamma = gamma
+        self.c_max = torch.Tensor([max_capacity])
+        self.c_stop_iter = capacity_max_iter
+        self.num_iter = 0
+        self.kldw = kldw
+        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+
+    def gaussian_likelihood(self, recon_x, log_scale, x):
+        dist = torch.distributions.Normal(recon_x, torch.exp(log_scale.to(config.DEVICE)))
+
+        # measure prob of seeing image under p(x|z)
+        log_pxz = dist.log_prob(x)
+        return log_pxz.sum(dim=(1, 2, 3))
+
+    def kl_divergence(self, z, mu, std):
+        # --------------------------
+        # Monte carlo KL divergence
+        # --------------------------
+        # 1. define the first two probabilities (in this case Normal for both)
+        p = torch.distributions.Normal(torch.zeros_like(mu).to(config.DEVICE), torch.ones_like(std).to(config.DEVICE))
+        q = torch.distributions.Normal(mu, std)
+
+        # 2. get the probabilities from the equation
+        log_qzx = q.log_prob(z)
+        log_pz = p.log_prob(z)
+
+        # kl
+        # kl = 0 means both distributions are identical
+        kl = (log_qzx - log_pz)
+        kl = kl.sum(-1)
+        return kl
+    
+    def forward(self, recon_x, x, mu, log_var, z):
+        self.num_iter += 1
+        recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
+        kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        self.c_max = self.c_max.to(config.DEVICE)
+        c = torch.clamp(self.c_max/self.c_stop_iter*self.num_iter, 0, self.c_max.data[0])
+        loss = recon_loss + self.gamma*self.kldw * (kld_loss-c).abs()
+        
+        return [loss.mean(), recon_loss.mean(), kld_loss.mean()]

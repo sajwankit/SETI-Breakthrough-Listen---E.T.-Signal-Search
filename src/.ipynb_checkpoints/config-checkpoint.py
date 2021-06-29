@@ -39,11 +39,11 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 44
+EPOCHS = 10
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
-MODEL_NAME = 'legacy_seresnext26_32x4d'
+MODEL_NAME = 'legacy_seresnet18'
 CHANNELS = 3
 MODEL_LOAD_FOR_INFER = 'auc'
 DROPOUT = False
@@ -66,7 +66,7 @@ T_MAX = 7
 '''
 AUGMENTATION PARAMETERS
 '''
-MIXUP = True
+MIXUP = False
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']

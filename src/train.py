@@ -112,6 +112,7 @@ if __name__ == '__main__':
 #                    for resized images
                     filename = df.loc[int(id),'id']
                     train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+#                     print(train_images_path)
                     train_targets.append(int(df.loc[int(id), 'target']))
 
             if config.DEBUG:
@@ -123,21 +124,23 @@ if __name__ == '__main__':
                                                     resize = None,
                                                     augmentations = True)
             
-#             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
-#                                                         batch_sampler = sampler.StratifiedSampler( ids = trIDs,
-#                                                                                             targets = train_targets,
-#                                                                                             batch_size = config.BATCH_SIZE),                              
-#                                                 num_workers = 8,
-#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-#                                                 )
+            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+                                                        batch_sampler = sampler.StratifiedSampler(
+                                                                                                X=trIDs,
+                                                                                                labels=train_targets,
+                                                                                                batch_size=config.BATCH_SIZE,
+                                                                                                oversample_rate=0),                              
+                                                num_workers = 8,
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
+                                                )
 
 
-            train_loader = torch.utils.data.DataLoader(train_dataset,
-                                                batch_size = bs,
-                                                shuffle = True,
-                                                num_workers = 4,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
-                                                      pin_memory = True)
+#             train_loader = torch.utils.data.DataLoader(train_dataset,
+#                                                 batch_size = bs,
+#                                                 shuffle = True,
+#                                                 num_workers = 4,
+#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+#                                                       pin_memory = True)
     
             valid_images_path = []
             valid_targets = []
@@ -171,7 +174,8 @@ if __name__ == '__main__':
 #             valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
 #                                                         batch_sampler = sampler.StratifiedSampler( ids = vIDs,
 #                                                                                             targets = valid_targets,
-#                                                                                             batch_size = config.BATCH_SIZE),                              
+#                                                                                             batch_size =config.BATCH_SIZE,
+#                                                                                             oversample_rate=7),                              
 #                                                 num_workers = 8,
 #                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
 #                                                 )

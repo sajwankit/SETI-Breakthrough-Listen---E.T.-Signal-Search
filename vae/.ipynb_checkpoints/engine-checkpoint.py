@@ -32,8 +32,8 @@ class AverageMeter(object):
 def get_loss(logits, targets, reduction='mean'):
     if config.NET == 'NetArcFace':
         loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.2)(logits=logits, targets=targets, )
-    elif config.NET == 'VAE':
-        loss = vae.VAE_loss(kldw=0.5)(recon_x=logits[0],
+    elif 'VAE' in config.NET:
+        loss = vae.BetaVAE_loss(kldw=0.001)(recon_x=logits[0],
                             x=logits[1], 
                             mu=logits[2],
                             log_var=logits[3],
@@ -68,7 +68,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
     #this function does training for one epoch
 #     print(f'ohem rate: {config.OHEM_RATE}')
     losses = AverageMeter()
-    if config.NET == 'VAE':
+    if 'VAE' in config.NET:
         recon_losses = AverageMeter()
         kld_losses = AverageMeter()
     #putting model to train mode
@@ -106,7 +106,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
                 if config.MIXUP:
                     #Forward Step
                     mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                    if config.NET == 'VAE':
+                    if 'VAE' in config.NET:
                         logits = model(mixed_inputs)
                         l = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
                         loss = l[0]
@@ -117,7 +117,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
                         #calculate loss
                         loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
                 else:
-                    if config.NET == 'VAE':
+                    if 'VAE' in config.NET:
                         #Forward Step
                         logits = model(inputs)
                         #calculate loss
@@ -138,7 +138,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
             if config.MIXUP:
                 #Forward Step
                 mixed_inputs, targets1, targets2, lam = mixup(inputs, targets)
-                if config.NET == 'VAE':
+                if 'VAE' in config.NET:
                     logits = model(mixed_inputs)
                     l = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
                     loss = l[0]
@@ -149,7 +149,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
                     #calculate loss
                     loss = np.sqrt(lam)*loss_criterion(logits, targets1)+np.sqrt(1 - lam)*loss_criterion(logits, targets2)
             else:
-                if config.NET == 'VAE':
+                if 'VAE' in config.NET:
                     #Forward Step
                     logits = model(inputs)
                     #calculate loss
@@ -167,7 +167,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
         #update average loss, auc
         losses.update(loss.item(), config.BATCH_SIZE)
-        if config.NET == 'VAE':
+        if 'VAE' in config.NET:
             recon_losses.update(recon_loss.item(), config.BATCH_SIZE)
             kld_losses.update(kld_loss.item(), config.BATCH_SIZE)
 #        if batch_number == int(len_data_loader * progressDisp_stepsize) * progressDisp_step:
@@ -180,13 +180,13 @@ def train(data_loader, model, optimizer, device, scaler = None):
             output_confs = logits.softmax(1)
             outputs = output_confs[:, 1]
         else:
-            if config.NET != 'VAE':
+            if 'VAE' not in config.NET:
                 outputs = torch.sigmoid(logits)
         
         if config.NET == 'NetArcFace':
             final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
         
-        if config.NET != 'VAE':
+        if 'VAE' not in config.NET:
             outputs = torch.sigmoid(logits)
             final_outputs.extend(outputs.detach().cpu().numpy().tolist())
             final_targets.extend(targets.detach().cpu().numpy().tolist())
@@ -194,7 +194,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
         
     if config.NET == 'NetArcFace':
         return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
-    elif config.NET == 'VAE':
+    elif 'VAE' in config.NET:
         return losses.avg, recon_losses.avg, kld_losses.avg
     else:
         return final_outputs, final_targets, final_ids, losses.avg
@@ -203,11 +203,11 @@ def evaluate(data_loader, model, device):
     #this function does evaluation for one epoch
 
     losses = AverageMeter()
-    if config.NET == 'VAE':
+    if 'VAE' in config.NET:
         recon_losses = AverageMeter()
         kld_losses = AverageMeter()
 
-    if config.NET == 'VAE':
+    if 'VAE' in config.NET:
         recon_losses = AverageMeter()
         kld_losses = AverageMeter()   
 
@@ -247,7 +247,7 @@ def evaluate(data_loader, model, device):
             
             #update average loss, auc
             losses.update(loss.item(), config.BATCH_SIZE)
-            if config.NET == 'VAE':
+            if 'VAE' in config.NET:
                 recon_losses.update(recon_loss.item(), config.BATCH_SIZE)
                 kld_losses.update(kld_loss.item(), config.BATCH_SIZE)
             
@@ -255,13 +255,13 @@ def evaluate(data_loader, model, device):
                 output_confs = logits.softmax(1)
                 outputs = output_confs[:, 1]
             else:
-                if config.NET != 'VAE':
+                if 'VAE' not in config.NET:
                     outputs = torch.sigmoid(logits)
             
             if config.NET == 'NetArcFace':
                 final_output_confs.extend(output_confs.detach().cpu().numpy().tolist())
             
-            if config.NET != 'VAE':
+            if 'VAE' not in config.NET:
                 outputs = torch.sigmoid(logits)
                 final_outputs.extend(outputs.detach().cpu().numpy().tolist())
                 final_targets.extend(targets.detach().cpu().numpy().tolist())
@@ -274,7 +274,7 @@ def evaluate(data_loader, model, device):
         
     if config.NET == 'NetArcFace':
         return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
-    elif config.NET == 'VAE':
+    elif 'VAE' in config.NET:
         return losses.avg, recon_losses.avg, kld_losses.avg
     else:
         return final_outputs, final_targets, final_ids, losses.avg
