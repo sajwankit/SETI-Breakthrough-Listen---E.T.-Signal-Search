@@ -1,5 +1,5 @@
 import os
-i = 0
+i = 1
 
 
 '''
@@ -29,7 +29,7 @@ if not ORIG_IMAGE:
 BASIC PARAMETERS
 '''    
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
