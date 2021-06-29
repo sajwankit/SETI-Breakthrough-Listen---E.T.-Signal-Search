@@ -159,7 +159,6 @@ def evaluate(data_loader, model, device):
     progressDisp_stepsize = 0.05
     progressDisp_step = 1
 
-
     #putting model to eval mode
     model.eval()
     
