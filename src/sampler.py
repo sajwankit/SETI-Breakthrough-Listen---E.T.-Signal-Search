@@ -12,7 +12,6 @@ class Sampler:
     def __len__(self):
         raise NotImplementedError
 
-
 class StratifiedSampler(Sampler):
     '''
     takes in original indices belonging to a fold and corresponding target
