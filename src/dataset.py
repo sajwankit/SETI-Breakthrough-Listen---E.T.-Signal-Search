@@ -167,11 +167,9 @@ class SetiDataset:
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
 
-        
-        print(item)
         image = np.load(self.df.loc[item, 'image_path'])
         
-        dfidx = item
+        dfidx = self.df.loc[item, 'orig_index']
                 
         if config.ORIG_IMAGE:
 #           converting 6 channels to 1 for original image, inverting off channels

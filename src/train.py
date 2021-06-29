@@ -128,7 +128,7 @@ if __name__ == '__main__':
                                                                                                 X=trIDs,
                                                                                                 labels=df[df.index.isin(trIDs)].target.values,
                                                                                                 batch_size=config.BATCH_SIZE,
-                                                                                                oversample_rate=0),                              
+                                                                                                oversample_rate=1),                              
                                                 )
                                                 
 

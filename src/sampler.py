@@ -27,11 +27,10 @@ class StratifiedSampler(Sampler):
         self.X_batches = []
         self.oversample_rate = oversample_rate
         if self.oversample_rate > 0:
-            self.oversample(self.X, self.labels)
+            self.oversample()
         
-    def oversample(self, X, labels):
+    def oversample(self):
         target_pos_indices = np.argwhere(self.labels).reshape(-1,)
-        X_pos = self.X[target_pos_indices]
         self.X = np.append(self.X, np.tile(self.X[target_pos_indices], self.oversample_rate))
 #         print(self.X)
         self.labels = np.append(self.labels, np.tile(self.labels[target_pos_indices], self.oversample_rate))
