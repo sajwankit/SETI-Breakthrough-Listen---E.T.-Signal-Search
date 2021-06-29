@@ -45,24 +45,26 @@ if __name__ == '__main__':
         ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
         df = df[df['id'].isin(ids)]
 
-    targets = df.target.values
-    if config.DEBUG:
-        targets = (np.random.rand(320) > 0.9).astype(int)
-    images_paths = []
+        df.target = (np.random.rand(320) > 0.5).astype(int)
+        
+
+    image_paths = []
     for id in df.index.values:
         if config.ORIG_IMAGE:
         #                     for original images
-            images_paths.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+            image_paths.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
         else:
         #                    for resized images
             filename = df.loc[int(id),'id']
-            images_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+            image_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
         #                     print(train_images_path)
+    df['image_path'] = np.array(image_paths)
+
     '''
     stratify based on target and image group+
     ''' 
     skFoldData = vs.get_SKFold(X = df.index.values,
-                               labels = targets,
+                               labels = df.target,
                                n_folds = config.FOLDS,
                                seed = config.SEED,
                                shuffle = True)
@@ -115,16 +117,14 @@ if __name__ == '__main__':
 
             
 
-            train_dataset = dataset.SetiDataset(image_paths = images_paths,
-                                                    targets = targets[trIDs],
-                                                    ids = trIDs,
+            train_dataset = dataset.SetiDataset(df=df,
                                                     resize = None,
                                                     augmentations = True)
             
             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
                                                         batch_sampler = sampler.StratifiedSampler(
                                                                                                 X=trIDs,
-                                                                                                labels=targets[trIDs],
+                                                                                                labels=df[df.index.isin(trIDs)].target.values,
                                                                                                 batch_size=config.BATCH_SIZE,
                                                                                                 oversample_rate=0),                              
                                                 )
@@ -138,9 +138,7 @@ if __name__ == '__main__':
 #                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
 #                                                       pin_memory = True)
 
-            valid_dataset = dataset.SetiDataset(image_paths = images_paths,
-                                                targets = targets[vIDs],
-                                                ids = vIDs,
+            valid_dataset = dataset.SetiDataset(df=df,
                                                 resize = None,
                                                 augmentations = False)
                                                     

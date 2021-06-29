@@ -12,14 +12,14 @@ def get_Kfold(len_samples, n_folds, seed = 2021, shuffle = True):
     kFoldsData = {}
     kf = KFold(n_splits = n_folds,shuffle = shuffle,random_state = seed)
     for fold,(idxT,idxV) in enumerate(kf.split(np.arange(len_samples))):
-        kFoldsData[fold] = {'trIDs':idxT, 'vIDs':idxV}
+        kFoldsData[fold] = {'trIDs':X[idxT], 'vIDs':X[idxV]}
     return kFoldsData
 
 def get_SKFold(X, labels, n_folds, seed = 2021, shuffle = True):
     skFoldsData = []
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
     for fold,(idxT,idxV) in enumerate(skf.split(X, labels)):
-        skFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
+        skFoldsData.append({'trIDs': X[idxT], 'vIDs': X[idxV]})
     return skFoldsData
 
 def get_MSKFold(X, multi_labels, nfolds, seed = 2021):
@@ -27,7 +27,7 @@ def get_MSKFold(X, multi_labels, nfolds, seed = 2021):
     mskf = MultilabelStratifiedKFold(n_splits=nfolds, shuffle=True, random_state=seed)
     msKFoldsData = []
     for fold, (idxT, idxV) in enumerate(mskf.split(np.array(X), np.array(multi_labels))):
-        msKFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
+        msKFoldsData.append({'trIDs':X[idxT], 'vIDs':X[idxV]})
     return msKFoldsData
 
 ############TRYING THE VALIDATION STRATEGY######################################

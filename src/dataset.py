@@ -156,30 +156,28 @@ class ImageTransform():
         return trans_image_array, ftarget_type 
 
 class SetiDataset:
-    def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
-        self.image_paths = image_paths
-        self.targets = targets
-        self.ids = ids
+    def __init__(self, df, eval=False, resize=None, augmentations = None):
+        self.df = df
         self.resize = resize
         self.augmentations = augmentations
-
+        self.eval = eval
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.df)
         
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
         print(item)
-        image = np.load(self.image_paths[item])
+        image = np.load(self.df.loc[item, 'image_path'])
         
-        id = self.ids[item]
+        dfidx = item
                 
         if config.ORIG_IMAGE:
 #           converting 6 channels to 1 for original image, inverting off channels
             image = np.vstack(image)
             image = image.astype(np.float32)
             
-        if self.targets is not None:
-            target = self.targets[item]
+        if not self.eval:
+            target = self.df.loc[item, 'target']
 
         if self.resize is not None:
             image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
@@ -241,13 +239,13 @@ class SetiDataset:
         #pytorch expects channelHeightWidth instead of HeightWidthChannel
         # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
     
-        if self.targets is not None:
+        if not self.eval:
             return{'images': torch.tensor(image3ch, dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
-                  'ids': torch.tensor(id, dtype = torch.int32)}
+                  'ids': torch.tensor(dfidx, dtype = torch.int32)}
         else:
             return{'images': torch.tensor(image3ch, dtype = torch.float),
-                  'ids': torch.tensor(id, dtype = torch.int32)}
+                  'ids': torch.tensor(dfidx, dtype = torch.int32)}
 
 # i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
 
