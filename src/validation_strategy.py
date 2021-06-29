@@ -15,18 +15,18 @@ def get_Kfold(len_samples, n_folds, seed = 2021, shuffle = True):
         kFoldsData[fold] = {'trIDs':idxT, 'vIDs':idxV}
     return kFoldsData
 
-def get_SKFold(ids, targets, n_folds, seed = 2021, shuffle = True):
+def get_SKFold(X, labels, n_folds, seed = 2021, shuffle = True):
     skFoldsData = []
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
-    for fold,(idxT,idxV) in enumerate(skf.split(ids, targets)):
+    for fold,(idxT,idxV) in enumerate(skf.split(X, labels)):
         skFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
     return skFoldsData
 
-def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
+def get_MSKFold(X, multi_labels, nfolds, seed = 2021):
     # mskf = IterativeStratification(n_splits=nfolds, order=1)
     mskf = MultilabelStratifiedKFold(n_splits=nfolds, shuffle=True, random_state=seed)
     msKFoldsData = []
-    for fold, (idxT, idxV) in enumerate(mskf.split(np.array(ids), np.array(multi_targets))):
+    for fold, (idxT, idxV) in enumerate(mskf.split(np.array(X), np.array(multi_labels))):
         msKFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
     return msKFoldsData
 
@@ -41,11 +41,11 @@ def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
 #         key = id_keys_map[key[0]]
 #     id_keys.append(key)
 # target = trl['target'].values.tolist()
-# multi_targets = [ [id_keys[x], target[x]] for x in range(len(trl))]
+# multi_labels = [ [id_keys[x], target[x]] for x in range(len(trl))]
 
 
 # mskFoldData = get_MSKFold(ids = trl.index.values,
-#                                 multi_targets = np.array(multi_targets),
+#                                 multi_labels = np.array(multi_labels),
 #                                 nfolds = config.FOLDS,
 #                                 seed = config.SEED)
 

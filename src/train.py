@@ -44,26 +44,25 @@ if __name__ == '__main__':
     if config.DEBUG:
         ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
         df = df[df['id'].isin(ids)]
-        df.reset_index(inplace = True, drop = True)
 
     targets = df.target.values
     if config.DEBUG:
-        train_targets = (np.random.rand(240) > 0.9).astype(int)
+        targets = (np.random.rand(320) > 0.9).astype(int)
     images_paths = []
-        for id in df.index.values:
-            if config.ORIG_IMAGE:
-            #                     for original images
-                train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
-            else:
-            #                    for resized images
-                filename = df.loc[int(id),'id']
-                images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
-            #                     print(train_images_path)
+    for id in df.index.values:
+        if config.ORIG_IMAGE:
+        #                     for original images
+            images_paths.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+        else:
+        #                    for resized images
+            filename = df.loc[int(id),'id']
+            images_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+        #                     print(train_images_path)
     '''
     stratify based on target and image group+
     ''' 
-    skFoldData = vs.get_SKFold(ids = df.index.values,
-                               targets = targets,
+    skFoldData = vs.get_SKFold(X = df.index.values,
+                               labels = targets,
                                n_folds = config.FOLDS,
                                seed = config.SEED,
                                shuffle = True)
@@ -138,9 +137,6 @@ if __name__ == '__main__':
 #                                                 num_workers = 4,
 #                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
 #                                                       pin_memory = True)
-
-            if config.DEBUG:
-                valid_targets = (np.random.rand(80) > 0.9).astype(int)
 
             valid_dataset = dataset.SetiDataset(image_paths = images_paths,
                                                 targets = targets[vIDs],
