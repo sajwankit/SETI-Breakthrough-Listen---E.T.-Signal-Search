@@ -156,6 +156,7 @@ class ImageTransform():
         return trans_image_array, ftarget_type 
 
 class SetiDataset:
+    
     def __init__(self, df, valid=False, pred=False, resize=None, augmentations = None):
         self.df = df
         self.resize = resize
