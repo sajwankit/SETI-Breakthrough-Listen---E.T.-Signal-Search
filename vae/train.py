@@ -44,8 +44,8 @@ if __name__ == '__main__':
 
     df = pd.read_csv(data_path+'train_labels.csv')
     if config.DEBUG:
-        ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
-        df = df[df['id'].isin(ids)]
+
+        df = df.sample(frac=0.1, replace=False, random_state=1)
         df.reset_index(inplace = True, drop = True)
     images = list(glob.glob(data_path+'train/*'))
     targets = df.target.values
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         
             #for every fold model should start from zero training
             if 'VAE' in config.NET:
-                model = vae.BetaVAE()
+                model = vae.VAE()
             else:
                 model = models.get_model(pretrained=True, net_out_features=config.TARGET_SIZE)
             model.to(device)

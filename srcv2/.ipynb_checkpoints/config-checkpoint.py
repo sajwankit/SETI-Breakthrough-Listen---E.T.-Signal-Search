@@ -1,5 +1,5 @@
 import os
-i = 1
+i = 0
 
 
 '''
@@ -8,15 +8,25 @@ REQUIRED INPUT PATHS
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/', '/kaggle/input/256258normed/']
 DATA_PATH = input_path[i]
 
-ORIG_IMAGE = True
+ORIG_IMAGE = False
 IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse with np.array shape
 if not ORIG_IMAGE:
+    NORM_IMAGE_SIZE = (256,273)
+    norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
+                         f'/content/drive/MyDrive/SETI/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
+                        f'/kaggle/working/256258normed/']
+    NORM_IMAGE_PATH = norm_image_path[i]
+    try:
+        os.makedirs(NORM_IMAGE_PATH[:-1])
+    except:
+        print(f'error creating {NORM_IMAGE_PATH[:-1]}')
+    SAVE_IMAGE = True
+    
+    
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
     resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                         f'/kaggle/working/256258normed/']
-
-
 
     RESIZED_IMAGE_PATH = resize_image_path[i]
     try:
@@ -24,7 +34,11 @@ if not ORIG_IMAGE:
     except:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
-
+    
+    
+        
+        
+        
 '''
 BASIC PARAMETERS
 '''    
@@ -39,13 +53,13 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 150
+EPOCHS = 10
 BATCH_SIZE = 32
 TARGET_SIZE = 1
-NET = 'VAE'
+NET = 'SeResNet'
 MODEL_NAME = 'legacy_seresnet18'
-CHANNELS = 1
-MODEL_LOAD_FOR_INFER = 'loss'
+CHANNELS = 3
+MODEL_LOAD_FOR_INFER = 'auc'
 DROPOUT = False
 
 CURRENT_EPOCH = 0
@@ -66,14 +80,14 @@ T_MAX = 7
 '''
 AUGMENTATION PARAMETERS
 '''
-MIXUP = False
+OVERSAMPLE = 3
+MIXUP = True
 MIXUP_APLHA = 1
-INVERT_OFF_CHANNELS = False
+INVERT_OFF_CHANNELS = True
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']
 NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
-AUG = 'None'
-APPLYAUG = False
+AUG = 'SwapDropFlip'
 
 '''
 INFERENCE MODE
@@ -89,7 +103,7 @@ out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/',
 MODEL_OUTPUT_PATH = out_path[i]
 
 
-SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
+SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ups{OVERSAMPLE}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/', '/kaggle/working/']
 
