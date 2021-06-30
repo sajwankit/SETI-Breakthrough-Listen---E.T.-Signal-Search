@@ -66,7 +66,7 @@ if __name__ == '__main__':
     stratify based on target and image group+
     ''' 
     skFoldData = vs.get_SKFold(X = df.orig_index.values,
-                               labels = df.target,
+                               labels = df.target.values,
                                n_folds = config.FOLDS,
                                seed = config.SEED,
                                shuffle = True)
@@ -116,28 +116,44 @@ if __name__ == '__main__':
             vIDs = foldData['vIDs']
     
 
-
+            if config.OVERSAMPLE > 0:
+                temp = df[df.orig_index.isin(trIDs)].reset_index(drop=True)
+                print(f'{len(temp[temp.target == 0])} train negatives')
+                print(f'{len(temp[temp.target == 1])} train positives')
+                
+                pos = df[df.orig_index.isin(trIDs)]
+                pos = pos[pos.target == 1]
+                print(pos.head())
+                print(len(pos))
+                for _ in range(config.OVERSAMPLE):
+                    df = df.append(pos, ignore_index=True)
+                    
+                temp = df[df.orig_index.isin(trIDs)].reset_index(drop=True)
+                print(f'{len(temp[temp.target == 0])} train negatives after upsampling')
+                print(f'{len(temp[temp.target == 1])} train positives after upsampling')
+                print('Duplicate eg:')
+                print(temp.query('id == "001c619bdf53"'))
+                    
+                
+            train_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(trIDs)].reset_index(drop=True), resize = None, augmentations = True)
             
-
-            train_dataset = dataset.SetiDataset(df=df,
-                                                    resize = None,
-                                                    augmentations = True)
-            
-            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
-                                                        batch_sampler = sampler.StratifiedSampler(
-                                                                                                X=trIDs,
-                                                                                                labels=df[df.index.isin(trIDs)].target.values,
-                                                                                                batch_size=config.BATCH_SIZE,
-                                                                                                oversample_rate=1),                              
-                                                )
+#             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+#                                                         batch_sampler = sampler.StratifiedSampler(
+#                                                                                                 X=trIDs,
+#                                                                                                 labels=df[df.index.isin(trIDs)].target.values,
+#                                                                                                 batch_size=config.BATCH_SIZE,
+#                                                                                                 oversample_rate=config.OVERSAMPLE),
+#                                                        num_workers = 8,
+#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+#                                                 )
                                                 
 
-#             train_loader = torch.utils.data.DataLoader(train_dataset,
-#                                                 batch_size = bs,
-#                                                 shuffle = True,
-#                                                 num_workers = 4,
-#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
-#                                                       pin_memory = True)
+            train_loader = torch.utils.data.DataLoader(train_dataset,
+                                                batch_size = bs,
+                                                shuffle = True,
+                                                num_workers = 8,
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+                                                      pin_memory = True)
 
             valid_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(vIDs)].reset_index(drop=True),
                                                 resize = None,
@@ -146,7 +162,7 @@ if __name__ == '__main__':
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,
                                                         shuffle = True,
-                                                        num_workers = 1,
+                                                        num_workers = 8,
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 

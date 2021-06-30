@@ -44,15 +44,29 @@ if __name__ == '__main__':
     if config.DEBUG:
         ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
         df = df[df['id'].isin(ids)]
-        df.reset_index(inplace = True, drop = True)
-    images = list(glob.glob(data_path+'train/*'))
-    targets = df.target.values
 
+        df.target = (np.random.rand(320) > 0.5).astype(int)
+        
+
+    image_paths = []
+    for id in df.index.values:
+        if config.ORIG_IMAGE:
+        #                     for original images
+            image_paths.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
+        else:
+        #                    for resized images
+            filename = df.loc[int(id),'id']
+            image_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
+        #                     print(train_images_path)
+    df['image_path'] = np.array(image_paths)
+    df['orig_index'] = df.index.values
+    
+    
     '''
-    stratify based on target and image group
+    stratify based on target and image group+
     ''' 
-    skFoldData = vs.get_SKFold(ids = df.index.values,
-                               targets = targets,
+    skFoldData = vs.get_SKFold(X = df.orig_index.values,
+                               labels = df.target.values,
                                n_folds = config.FOLDS,
                                seed = config.SEED,
                                shuffle = True)
@@ -101,84 +115,63 @@ if __name__ == '__main__':
             trIDs = foldData['trIDs']
             vIDs = foldData['vIDs']
     
-            train_images_path = []
-            train_targets = []
-            for id in trIDs:
-                if config.ORIG_IMAGE:
-#                     for original images
-                    train_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
-                    train_targets.append(int(df.loc[int(id), 'target']))
-                else:
-#                    for resized images
-                    filename = df.loc[int(id),'id']
-                    train_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
-#                     print(train_images_path)
-                    train_targets.append(int(df.loc[int(id), 'target']))
 
-            if config.DEBUG:
-                train_targets = (np.random.rand(240) > 0.9).astype(int)
-
-            train_dataset = dataset.SetiDataset(image_paths = train_images_path,
-                                                    targets = train_targets,
-                                                    ids = trIDs,
-                                                    resize = None,
-                                                    augmentations = True)
+            if config.OVERSAMPLE > 0:
+                temp = df[df.orig_index.isin(trIDs)].reset_index(drop=True)
+                print(f'{len(temp[temp.target == 0])} train negatives')
+                print(f'{len(temp[temp.target == 1])} train positives')
+                
+                pos = df[df.orig_index.isin(trIDs)]
+                pos = pos[pos.target == 1]
+                print(pos.head())
+                print(len(pos))
+                for _ in range(config.OVERSAMPLE):
+                    df = df.append(pos, ignore_index=True)
+                    
+                temp = df[df.orig_index.isin(trIDs)].reset_index(drop=True)
+                print(f'{len(temp[temp.target == 0])} train negatives after upsampling')
+                print(f'{len(temp[temp.target == 1])} train positives after upsampling')
+                print('Duplicate eg:')
+                print(temp.query('id == "001c619bdf53"'))
+                    
+                
+            train_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(trIDs)].reset_index(drop=True), resize = None, augmentations = True)
             
-            train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
-                                                        batch_sampler = sampler.StratifiedSampler(
-                                                                                                X=trIDs,
-                                                                                                labels=train_targets,
-                                                                                                batch_size=config.BATCH_SIZE,
-                                                                                                oversample_rate=0),                              
-                                                num_workers = 8,
-                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-                                                )
-
-
-#             train_loader = torch.utils.data.DataLoader(train_dataset,
-#                                                 batch_size = bs,
-#                                                 shuffle = True,
-#                                                 num_workers = 4,
+#             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
+#                                                         batch_sampler = sampler.StratifiedSampler(
+#                                                                                                 X=trIDs,
+#                                                                                                 labels=df[df.index.isin(trIDs)].target.values,
+#                                                                                                 batch_size=config.BATCH_SIZE,
+#                                                                                                 oversample_rate=config.OVERSAMPLE),
+#                                                        num_workers = 8,
 #                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
-#                                                       pin_memory = True)
-    
-            valid_images_path = []
-            valid_targets = []
-            for id in vIDs:
-                if config.ORIG_IMAGE:
-#                 for original images
-                    valid_images_path.append(data_path+'train/'+str(df.loc[int(id),'id'])[0]+'/'+str(df.loc[int(id),'id'])+'.npy')
-                    valid_targets.append(int(df.loc[int(id), 'target']))
-                else:
-#                     for resized images
-                    filename = df.loc[int(id),'id']
-                    valid_images_path.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
-                    valid_targets.append(int(df.loc[int(id), 'target']))
+#                                                 )
+                                                
 
-            if config.DEBUG:
-                valid_targets = (np.random.rand(80) > 0.9).astype(int)
+            train_loader = torch.utils.data.DataLoader(train_dataset,
+                                                batch_size = bs,
+                                                shuffle = True,
+                                                num_workers = 8,
+                                                worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
+                                                      pin_memory = True)
 
-            valid_dataset = dataset.SetiDataset(image_paths = valid_images_path,
-                                                targets = valid_targets,
-                                                ids = vIDs,
+            valid_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(vIDs)].reset_index(drop=True),
                                                 resize = None,
                                                 augmentations = False)
                                                     
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,
                                                         shuffle = True,
-                                                        num_workers = 4,
+                                                        num_workers = 8,
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
-#             valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
-#                                                         batch_sampler = sampler.StratifiedSampler( ids = vIDs,
-#                                                                                             targets = valid_targets,
-#                                                                                             batch_size =config.BATCH_SIZE,
-#                                                                                             oversample_rate=7),                              
-#                                                 num_workers = 8,
-#                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED)
-#                                                 )
+            # valid_loader = torch.utils.data.DataLoader(valid_dataset, pin_memory = True,
+            #                                             batch_sampler = sampler.StratifiedSampler( X = vIDs,
+            #                                                                                 labels = df[df.index.isin(vIDs)].target.values,
+            #                                                                                 batch_size =config.BATCH_SIZE,
+            #                                                                                 oversample_rate=0),                              
+            #                                     )
 
             optimizer, scheduler = utils.OptSch(opt=config.OPTIMIZER, sch=config.SCHEDULER).get_opt_sch(model)
 

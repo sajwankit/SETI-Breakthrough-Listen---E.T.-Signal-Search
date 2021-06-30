@@ -59,9 +59,9 @@ if __name__ == '__main__':
             inference_df = pd.read_csv(data_path+'sample_submission.csv')
             
         inference_df['image_path'] = inference_df['id'].apply(get_test_file_path)
+        inference_df['orig_index'] = inference_df.index.values
 
-
-        test_dataset = dataset.SetiDataset(image_paths = inference_df['image_path'].values.tolist(), ids = inference_df.index.values.tolist())
+        test_dataset = dataset.SetiDataset(df=inference_df, resize = None, augmentations = None, pred=True)
         test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.BATCH_SIZE,
                                              shuffle=False, 
                                             num_workers=4)

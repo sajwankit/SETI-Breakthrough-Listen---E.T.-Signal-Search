@@ -26,12 +26,10 @@ class StratifiedSampler(Sampler):
         self.X_batches = []
         self.oversample_rate = oversample_rate
         if self.oversample_rate > 0:
-            self.oversample(self.X, self.labels)
+            self.oversample()
         
-        
-    def oversample(self, X, labels):
+    def oversample(self):
         target_pos_indices = np.argwhere(self.labels).reshape(-1,)
-        X_pos = self.X[target_pos_indices]
         self.X = np.append(self.X, np.tile(self.X[target_pos_indices], self.oversample_rate))
 #         print(self.X)
         self.labels = np.append(self.labels, np.tile(self.labels[target_pos_indices], self.oversample_rate))
@@ -42,19 +40,19 @@ class StratifiedSampler(Sampler):
         if (counts[0] < 2 or counts[1] <2) or len(X) <= self.batch_size:
             self.X_batches.append(X)
         else:
-            
+
             s = StratifiedShuffleSplit(n_splits = 1, test_size = 0.5, random_state=seed_per_epoch)
             left_batch_indices, right_batch_indices = [x for x in s.split(X, labels)][0]
             self.make_batches(X[left_batch_indices], labels[left_batch_indices], seed_per_epoch=seed_per_epoch)
             self.make_batches(X[right_batch_indices], labels[right_batch_indices], seed_per_epoch=seed_per_epoch)
 
     def gen_sample_array(self):
+            
         self.X_batches = []
-        seed_per_epoch = np.random.randint(10,20)
+        seed_per_epoch = np.random.randint(10,20000)
         self.make_batches(self.X, self.labels, seed_per_epoch=seed_per_epoch)
-        print(seed_per_epoch)
+#         print(f' No of batches: {len(self.X_batches)}, batch length: {len(self.X_batches[0])} or {len(self.X_batches[1123])}  , batch eg {self.X_batches[455]} or {self.X_batches[1000]}')
         for X_batch in self.X_batches:
-#             print(X_batch)
             yield list(X_batch)
 
     def __iter__(self):

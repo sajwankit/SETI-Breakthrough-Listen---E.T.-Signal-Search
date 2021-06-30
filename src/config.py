@@ -1,5 +1,5 @@
 import os
-i = 1
+i = 0
 
 
 '''
@@ -29,7 +29,7 @@ if not ORIG_IMAGE:
 BASIC PARAMETERS
 '''    
 SEED = 42
-DEBUG = True
+DEBUG = False
 MIXED_PRECISION = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
@@ -39,7 +39,7 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 10
+EPOCHS = 7
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
@@ -66,6 +66,7 @@ T_MAX = 7
 '''
 AUGMENTATION PARAMETERS
 '''
+OVERSAMPLE = 7
 MIXUP = False
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
@@ -88,7 +89,7 @@ out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/',
 MODEL_OUTPUT_PATH = out_path[i]
 
 
-SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ohem{OHEM_LOSS}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
+SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ups{OVERSAMPLE}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/', '/kaggle/working/']
 

@@ -51,8 +51,8 @@ class StratifiedSampler(Sampler):
         self.X_batches = []
         seed_per_epoch = np.random.randint(10,20000)
         self.make_batches(self.X, self.labels, seed_per_epoch=seed_per_epoch)
+#         print(f' No of batches: {len(self.X_batches)}, batch length: {len(self.X_batches[0])} or {len(self.X_batches[1123])}  , batch eg {self.X_batches[455]} or {self.X_batches[1000]}')
         for X_batch in self.X_batches:
-#             print(X_batch)
             yield list(X_batch)
 
     def __iter__(self):
