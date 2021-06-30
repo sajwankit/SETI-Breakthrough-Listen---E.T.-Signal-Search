@@ -11,12 +11,22 @@ DATA_PATH = input_path[i]
 ORIG_IMAGE = False
 IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse with np.array shape
 if not ORIG_IMAGE:
+    NORM_IMAGE_SIZE = (256,273)
+    norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
+                         f'/content/drive/MyDrive/SETI/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
+                        f'/kaggle/working/256258normed/']
+    NORM_IMAGE_PATH = norm_image_path[i]
+    try:
+        os.makedirs(NORM_IMAGE_PATH[:-1])
+    except:
+        print(f'error creating {NORM_IMAGE_PATH[:-1]}')
+    SAVE_IMAGE = True
+    
+    
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
     resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/resized_images/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                         f'/kaggle/working/256258normed/']
-
-
 
     RESIZED_IMAGE_PATH = resize_image_path[i]
     try:
@@ -24,7 +34,11 @@ if not ORIG_IMAGE:
     except:
         print(f'error creating {RESIZED_IMAGE_PATH[:-1]}')
     SAVE_IMAGE = True
-
+    
+    
+        
+        
+        
 '''
 BASIC PARAMETERS
 '''    
