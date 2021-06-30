@@ -44,9 +44,9 @@ if __name__ == '__main__':
     df = pd.read_csv(data_path+'train_labels.csv')
     if config.DEBUG:
         if config.IMAGE_TYPE != 'resized':
-            df = df.sample(frac=0.1, replace=False, random_state=1)
+            df = df.sample(frac=0.01, replace=False, random_state=1)
             df.reset_index(inplace = True, drop = True)
-            df.target = (np.random.rand(320) > 0.5).astype(int)
+            df.target = (np.random.rand(len(df)) > 0.5).astype(int)
         else:
             ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
             df = df[df['id'].isin(ids)]

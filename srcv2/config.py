@@ -31,7 +31,7 @@ RESIZED_IMAGE_PATH = resize_image_path[i]
 
 SAVE_IMAGE = True
 
-IMAGE_TYPE = 'resized'
+IMAGE_TYPE = 'norm'
     
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''    
         
