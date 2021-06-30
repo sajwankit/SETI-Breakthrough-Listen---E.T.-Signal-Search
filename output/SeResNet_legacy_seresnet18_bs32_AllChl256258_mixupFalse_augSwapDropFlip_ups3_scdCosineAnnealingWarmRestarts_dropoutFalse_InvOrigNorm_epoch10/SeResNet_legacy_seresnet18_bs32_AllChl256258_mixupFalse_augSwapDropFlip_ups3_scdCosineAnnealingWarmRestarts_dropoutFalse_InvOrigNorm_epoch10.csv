@@ -3,3 +3,4 @@ fold,epoch,val_loss,val_auc,tr_auc, train_loss, time
 fold,epoch,val_loss,val_auc,tr_auc, train_loss, time
 fold,epoch,val_loss,val_auc,tr_auc, train_loss, time
 fold,epoch,val_loss,val_auc,tr_auc, train_loss, time
+0,0,3174608.9583333335,3174602.125,6845.61474609375,3762669.8375,3762661.48125,8343.95673828125, 2.0406811833381653
