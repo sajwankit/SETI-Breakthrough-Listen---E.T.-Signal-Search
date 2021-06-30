@@ -33,7 +33,7 @@ def get_loss(logits, targets, reduction='mean'):
     if config.NET == 'NetArcFace':
         loss = utils.ArcLoss(reduction=reduction, feature_scale=30, margin=0.2)(logits=logits, targets=targets, )
     elif 'VAE' in config.NET:
-        loss = vae.BetaVAE_loss(kldw=0.001)(recon_x=logits[0],
+        loss = vae.VAE_loss(kldw=0.001)(recon_x=logits[0],
                             x=logits[1], 
                             mu=logits[2],
                             log_var=logits[3],
@@ -201,15 +201,10 @@ def train(data_loader, model, optimizer, device, scaler = None):
 
 def evaluate(data_loader, model, device):
     #this function does evaluation for one epoch
-
     losses = AverageMeter()
     if 'VAE' in config.NET:
         recon_losses = AverageMeter()
-        kld_losses = AverageMeter()
-
-    if 'VAE' in config.NET:
-        recon_losses = AverageMeter()
-        kld_losses = AverageMeter()   
+        kld_losses = AverageMeter()  
 
 #    len_data_loader = len(data_loader)
     progressDisp_stepsize = 0.05
@@ -238,9 +233,11 @@ def evaluate(data_loader, model, device):
             targets = targets.to(device, dtype = torch.float)
 
             #do forward step to generat prediction
+            print('err in returing logits')
             logits = model(inputs)
-
+            
             l = loss_criterion(logits, targets)
+             
             loss = l[0]
             recon_loss = l[1]
             kld_loss  = l[2]
@@ -271,7 +268,7 @@ def evaluate(data_loader, model, device):
 #                et = time.time()
 #                print(f'batch: {batch_number} of {len_data_loader}, v_loss: {loss}. Time Elapsed: {(et-st)/60} minutes')
 #                progressDisp_step = progressDisp_step*2
-        
+    
     if config.NET == 'NetArcFace':
         return final_output_confs, final_outputs, final_targets, final_ids, losses.avg
     elif 'VAE' in config.NET:

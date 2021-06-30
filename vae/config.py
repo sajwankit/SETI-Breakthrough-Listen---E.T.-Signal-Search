@@ -8,7 +8,7 @@ REQUIRED INPUT PATHS
 input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/', '/kaggle/input/256258normed/']
 DATA_PATH = input_path[i]
 
-ORIG_IMAGE = False
+ORIG_IMAGE = True
 IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse with np.array shape
 if not ORIG_IMAGE:
     IMAGE_SIZE = (256,258) # (freq, time): aligning with cv2, not to confuse with np.array shape
@@ -40,11 +40,11 @@ MODEL PARAMETERS
 '''
 FOLDS = 4
 EPOCHS = 150
-BATCH_SIZE = 768
+BATCH_SIZE = 32
 TARGET_SIZE = 1
-NET = 'BetaVAE'
+NET = 'VAE'
 MODEL_NAME = 'legacy_seresnet18'
-CHANNELS = 3
+CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'loss'
 DROPOUT = False
 
@@ -68,11 +68,12 @@ AUGMENTATION PARAMETERS
 '''
 MIXUP = False
 MIXUP_APLHA = 1
-INVERT_OFF_CHANNELS = True
+INVERT_OFF_CHANNELS = False
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']
 NEEDLE_PATH = needle_path[i]
 APPLY_NEEDLE = False
-AUG = 'SwapDropFlip'
+AUG = 'None'
+APPLYAUG = False
 
 '''
 INFERENCE MODE

@@ -129,7 +129,7 @@ if __name__ == '__main__':
                                                     targets = train_targets,
                                                     ids = trIDs,
                                                     resize = None,
-                                                    augmentations = True)
+                                                    augmentations = config.APPLYAUG)
             
 #             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
 #                                                         batch_sampler = sampler.StratifiedSampler( ids = trIDs,
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                                                 targets = valid_targets,
                                                 ids = vIDs,
                                                 resize = None,
-                                                augmentations = False)
+                                                augmentations = config.APPLYAUG)
                                                     
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,

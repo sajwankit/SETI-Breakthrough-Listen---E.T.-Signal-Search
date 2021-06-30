@@ -1,0 +1,1 @@
+fold,epoch,valid_loss,valid_recon_loss, valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time

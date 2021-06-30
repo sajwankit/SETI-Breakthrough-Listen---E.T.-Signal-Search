@@ -93,13 +93,13 @@ class Decoder(nn.Module):
         self.decoder_final_layer = nn.Sequential(
                                             nn.ConvTranspose2d(
                                                                 in_channels=hidden_dims[-1],
-                                                                out_channels=config.CHANNELS,
+                                                                out_channels=config.CHANNELS+2,
                                                                 kernel_size=3,
                                                                 stride = 2,
                                                                 padding=1,
                                                                 output_padding=1
                                                                 ),
-                                            nn.BatchNorm2d(config.CHANNELS),
+                                            nn.BatchNorm2d(config.CHANNELS+2),
                                             nn.LeakyReLU(),
                                             )
                                             
@@ -109,7 +109,7 @@ class Decoder(nn.Module):
         return recon_x
 
 class VAE(nn.Module):
-    def __init__(self, latent_dim=1024, input_shape=(32, 3, 258, 256)):
+    def __init__(self, latent_dim=1024, input_shape=(32, 3, 273, 256)):
         super().__init__()
 
         # self.encoder = resnet18_encoder(first_conv=False, maxpool1=False)
@@ -146,7 +146,7 @@ class VAE(nn.Module):
         '''
         z_temp = z.view(z.size(0), z.size(1), 1, 1)
         recon_x = self.decoder(z_temp)
-        recon_x = nn.functional.interpolate(recon_x, size=(258, 256))
+        recon_x = nn.functional.interpolate(recon_x, size=(273, 256))
         recon_x = nn.functional.instance_norm(recon_x)
         return recon_x, x, mu, log_var, z
     
@@ -163,7 +163,7 @@ class BetaVAE(nn.Module):
     num_iter = 0
     def __init__(self,
                  latent_dim=1024,
-                 input_shape=(32, 3, 258, 256),
+                 input_shape=(32, 3, 273, 256),
                 ):
         super().__init__()
 
@@ -195,7 +195,7 @@ class BetaVAE(nn.Module):
         '''
         z_temp = z.view(z.size(0), z.size(1), 1, 1)
         recon_x = self.decoder(z_temp)
-        recon_x = nn.functional.interpolate(recon_x, size=(258, 256))
+        recon_x = nn.functional.interpolate(recon_x, size=(273, 256))
         recon_x = nn.functional.instance_norm(recon_x)
         return recon_x, x, mu, log_var, z
 

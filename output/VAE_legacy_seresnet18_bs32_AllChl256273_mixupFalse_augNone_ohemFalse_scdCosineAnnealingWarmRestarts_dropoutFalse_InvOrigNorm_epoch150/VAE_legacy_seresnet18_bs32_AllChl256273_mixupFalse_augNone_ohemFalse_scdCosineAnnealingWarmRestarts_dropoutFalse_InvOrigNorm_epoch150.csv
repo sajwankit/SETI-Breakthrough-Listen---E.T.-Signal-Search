@@ -1,0 +1,4 @@
+fold,epoch,valid_loss,valid_recon_loss, valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+fold,epoch,valid_loss,valid_recon_loss, valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+fold,epoch,valid_loss,valid_recon_loss, valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+0,0,nan,nan,735824271.7687565,nan,nan,71545262.73875791, 7.232894400755565

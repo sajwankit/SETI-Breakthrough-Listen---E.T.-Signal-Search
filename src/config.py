@@ -39,7 +39,7 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 7
+EPOCHS = 10
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
@@ -66,8 +66,8 @@ T_MAX = 7
 '''
 AUGMENTATION PARAMETERS
 '''
-OVERSAMPLE = 7
-MIXUP = False
+OVERSAMPLE = 3
+MIXUP = True
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']
