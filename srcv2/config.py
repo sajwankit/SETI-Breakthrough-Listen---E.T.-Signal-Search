@@ -1,6 +1,6 @@
 
 import os
-i = 0
+i = 1
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
@@ -14,11 +14,11 @@ ORIG_IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse wi
 RESIZED_IMAGE_SIZE = (256, 258)
 NORM_ORIG_IMAGE_SIZE = (256,273)
 
-IMAGE_SIZE = NORM_ORIG_IMAGE_SIZE
+IMAGE_SIZE = RESIZED_IMAGE_SIZE
 ORIG_IMAGE = False
 
-norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
-                         f'/content/drive/MyDrive/SETI/normalized_images_seti/{NORM_IMAGE_SIZE[0]}{NORM_IMAGE_SIZE[1]}/',
+norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
+                         f'/content/drive/MyDrive/SETI/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                         f'/kaggle/working/256258normed/']
 
 resize_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/resized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -31,7 +31,7 @@ RESIZED_IMAGE_PATH = resize_image_path[i]
 
 SAVE_IMAGE = True
 
-IMAGE_TYPE = 'norm'
+IMAGE_TYPE = 'resized'
     
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''    
         
@@ -41,7 +41,7 @@ IMAGE_TYPE = 'norm'
 BASIC PARAMETERS
 '''    
 SEED = 42
-DEBUG = False
+DEBUG = True
 MIXED_PRECISION = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
@@ -56,7 +56,7 @@ BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
 MODEL_NAME = 'legacy_seresnet18'
-CHANNELS = 3
+CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'auc'
 DROPOUT = False
 
@@ -79,7 +79,7 @@ T_MAX = 7
 AUGMENTATION PARAMETERS
 '''
 OVERSAMPLE = 3
-MIXUP = True
+MIXUP = False
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
 needle_path = ['/mnt/gfs/gv1/project_sonar_data/seti/needles/', '/content/drive/MyDrive/SETI/ext_needle/', '']

@@ -10,6 +10,7 @@ import glob
 
 class ImageTransform():
     def __init__(self):
+        pass
 
     def normalize(self, image):
         # normalise image with 0 mean, 1 std
@@ -157,7 +158,6 @@ class ImageTransform():
 class SetiDataset:
     def __init__(self, df, pred=False, augmentations = None):
         self.df = df
-        self.resize = resize
         self.augmentations = augmentations
         self.pred = pred
 
@@ -179,7 +179,7 @@ class SetiDataset:
             target = self.df.loc[item, 'target']
         
 
-        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        ''''''
         '''
         Use following when 6 channels concatenated and 3 channel image generated
         '''
@@ -235,13 +235,13 @@ class SetiDataset:
         # image3ch[1] = image1.reshape(1,image1.shape[0],image1.shape[1])
         # image3ch[2] = image2.reshape(1,image2.shape[0],image2.shape[1])
 
-        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        ''''''
         '''
         Use when single channel image passed
         '''  
         image = image.reshape(1,image.shape[0],image.shape[1])
 
-        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        ''''''
     
         if not self.pred:
             return{'images': torch.tensor(image, dtype = torch.float), 

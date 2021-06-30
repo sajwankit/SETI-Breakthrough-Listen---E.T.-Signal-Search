@@ -12,7 +12,7 @@ from sklearn import metrics
 import utils
 import config
 import dataset
-import engine
+import vaeengine
 import models
 import validation_strategy as vs
 import seedandlog
@@ -43,20 +43,28 @@ if __name__ == '__main__':
 
     df = pd.read_csv(data_path+'train_labels.csv')
     if config.DEBUG:
-        df = df.sample(frac=0.1, replace=False, random_state=1)
-        df.reset_index(inplace = True, drop = True)
-        df.target = (np.random.rand(320) > 0.5).astype(int)
-        
+        if config.IMAGE_TYPE != 'resized':
+            df = df.sample(frac=0.1, replace=False, random_state=1)
+            df.reset_index(inplace = True, drop = True)
+            df.target = (np.random.rand(320) > 0.5).astype(int)
+        else:
+            ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
+            df = df[df['id'].isin(ids)]
+
+            df.target = (np.random.rand(320) > 0.5).astype(int)
 
     image_paths = []
     for id in df.index.values:
-        config.IMAGE_TYPE == 'orig':
+        if config.IMAGE_TYPE == 'orig':
         #   for original images
-            image_paths.append(f'{data_path}train/{df.loc[int(id),'id'][0]}/{df.loc[int(id),'id']}.npy')
+            image_paths.append(f'{data_path}train/{df.loc[int(id),"id"][0]}/{df.loc[int(id),"id"]}.npy')
         else:
         #   for resized images or norm images
             filename = df.loc[int(id),'id']
-            image_paths.append(f'{config.NORM_IMAGE_PATH}train/{filename}.npy')
+            if config.IMAGE_TYPE == 'norm':
+                image_paths.append(f'{config.NORM_IMAGE_PATH}train/{filename}__0.npy')
+            else:
+                image_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
 
     df['image_path'] = np.array(image_paths)
     df['orig_index'] = df.index.values
@@ -151,18 +159,17 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset,
                                                 batch_size = bs,
                                                 shuffle = True,
-                                                num_workers = 4,
+                                                num_workers = 2,
                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
             valid_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(vIDs)].reset_index(drop=True),
-                                                resize = None,
                                                 augmentations = False)
                                                     
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,
                                                         shuffle = True,
-                                                        num_workers = 4,
+                                                        num_workers = 2,
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
@@ -199,8 +206,8 @@ if __name__ == '__main__':
                         config.OHEM_RATE = 1
                 
                 st = time.time()
-                train_loss, train_recon_loss, train_kld_loss = engine.train(train_loader, model, optimizer, device, scaler)
-                valid_loss, valid_recon_loss, valid_kld_loss = engine.evaluate(valid_loader, model, device)
+                train_loss, train_recon_loss, train_kld_loss = vaeengine.train(train_loader, model, optimizer, device, scaler)
+                valid_loss, valid_recon_loss, valid_kld_loss = vaeengine.evaluate(valid_loader, model, device)
               
                 if config.SCHEDULER == 'ReduceLROnPlateau':
                     scheduler.step(valid_loss)

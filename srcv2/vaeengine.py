@@ -143,7 +143,7 @@ def train(data_loader, model, optimizer, device, scaler = None):
         recon_losses.update(recon_loss.item(), config.BATCH_SIZE)
         kld_losses.update(kld_loss.item(), config.BATCH_SIZE)
 
-    return final_outputs, final_targets, final_ids, losses.avg
+    return losses.avg, recon_losses.avg, kld_losses.avg
 
 def evaluate(data_loader, model, device):
     #this function does evaluation for one epoch
