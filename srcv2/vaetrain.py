@@ -18,6 +18,7 @@ import validation_strategy as vs
 import seedandlog
 import sampler
 import vae
+import u_net
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -106,7 +107,16 @@ if __name__ == '__main__':
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = vae.VAE()
+            if 'vae' in config.NET:
+                model = vae.VAE()
+            elif 'unet' in config.NET:
+                model = u_net.myUnet(
+                    encoder_name="resnet18",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                    encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
+                    in_channels=1,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                    classes=2,                      # model output channels (number of classes in your dataset)
+                )
+
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
@@ -159,7 +169,7 @@ if __name__ == '__main__':
             train_loader = torch.utils.data.DataLoader(train_dataset,
                                                 batch_size = bs,
                                                 shuffle = True,
-                                                num_workers = 4,
+                                                num_workers = 2,
                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
@@ -169,7 +179,7 @@ if __name__ == '__main__':
             valid_loader = torch.utils.data.DataLoader(valid_dataset,
                                                         batch_size = bs,
                                                         shuffle = True,
-                                                        num_workers = 4,
+                                                        num_workers = 2,
                                                         worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 

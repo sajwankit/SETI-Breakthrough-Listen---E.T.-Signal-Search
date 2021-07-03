@@ -6,11 +6,6 @@ import models
 import config
 import math
 
-from pl_bolts.models.autoencoders.components import (
-    resnet18_decoder,
-    resnet18_encoder,
-)
-
 
 class VAE_loss(nn.Module):
     def __init__(self, kldw=1):
