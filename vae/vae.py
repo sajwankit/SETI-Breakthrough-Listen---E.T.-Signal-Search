@@ -45,15 +45,15 @@ class VAE_loss(nn.Module):
         return kl
     
     def forward(self, recon_x, x, mu, log_var, z):
-#         recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
-#         kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
-# #         scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
-#         #elbo loss
-#         loss = self.kldw*kld_loss - recon_loss
-        recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
-        kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
+        kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
+#         scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
+        #elbo loss
+        loss = self.kldw*kld_loss - recon_loss
+#         recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
+#         kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-        loss = recon_loss + self.kldw * kld_loss
+#         loss = recon_loss + self.kldw * kld_loss
         
         return [loss.mean(), recon_loss.mean(), kld_loss.mean()]
 
@@ -93,13 +93,13 @@ class Decoder(nn.Module):
         self.decoder_final_layer = nn.Sequential(
                                             nn.ConvTranspose2d(
                                                                 in_channels=hidden_dims[-1],
-                                                                out_channels=config.CHANNELS+2,
+                                                                out_channels=config.CHANNELS,
                                                                 kernel_size=3,
                                                                 stride = 2,
                                                                 padding=1,
                                                                 output_padding=1
                                                                 ),
-                                            nn.BatchNorm2d(config.CHANNELS+2),
+                                            nn.BatchNorm2d(config.CHANNELS),
                                             nn.LeakyReLU(),
                                             )
                                             

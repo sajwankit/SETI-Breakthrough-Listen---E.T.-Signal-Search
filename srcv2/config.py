@@ -1,6 +1,6 @@
 
 import os
-i = 1
+i = 0
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
@@ -14,7 +14,7 @@ ORIG_IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse wi
 RESIZED_IMAGE_SIZE = (256, 258)
 NORM_ORIG_IMAGE_SIZE = (256,273)
 
-IMAGE_SIZE = RESIZED_IMAGE_SIZE
+IMAGE_SIZE = NORM_ORIG_IMAGE_SIZE
 ORIG_IMAGE = False
 
 norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -41,7 +41,7 @@ IMAGE_TYPE = 'norm'
 BASIC PARAMETERS
 '''    
 SEED = 42
-DEBUG = True
+DEBUG = False
 MIXED_PRECISION = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
@@ -51,7 +51,7 @@ DEVICE = 'cuda'
 MODEL PARAMETERS
 '''
 FOLDS = 4
-EPOCHS = 4
+EPOCHS = 150
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'SeResNet'
@@ -66,19 +66,19 @@ OHEM_RATE = 0.7
 
 OPTIMIZER='Adam'
 SCHEDULER = 'CosineAnnealingWarmRestarts'
-INIT_LEARNING_RATE = 1e-4
-ETA_MIN = 1e-8
+INIT_LEARNING_RATE = 1e-6
+ETA_MIN = 1e-10
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-6
-T_0 = EPOCHS//4
+T_0 = EPOCHS//10
 T_MAX = 7
 
 
 '''
 AUGMENTATION PARAMETERS
 '''
-OVERSAMPLE = 3
+OVERSAMPLE = 0
 MIXUP = False
 MIXUP_APLHA = 1
 INVERT_OFF_CHANNELS = True
@@ -101,7 +101,7 @@ out_path = ['/home/asajw/seti_models/', '/content/drive/MyDrive/SETI/output/',
 MODEL_OUTPUT_PATH = out_path[i]
 
 
-SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_AllChl{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ups{OVERSAMPLE}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
+SAVED_MODEL_NAME = f'{NET}_{MODEL_NAME}_bs{BATCH_SIZE}_Chl0_{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}_mixup{MIXUP}_aug{AUG}_ups{OVERSAMPLE}_scd{SCHEDULER}_dropout{DROPOUT}_InvOrigNorm_epoch{EPOCHS}'
 
 log_path = ['/home/asajw/SETI/output/', '/content/SETI/output/', '/kaggle/working/']
 
