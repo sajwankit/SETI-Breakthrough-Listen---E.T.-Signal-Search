@@ -18,6 +18,7 @@ import validation_strategy as vs
 import seedandlog
 import sampler
 import vae
+import u_net
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -42,6 +43,7 @@ if __name__ == '__main__':
     target_size = config.TARGET_SIZE
 
     df = pd.read_csv(data_path+'train_labels.csv')
+    
     if config.DEBUG:
         if config.IMAGE_TYPE != 'resized':
             df = df.sample(frac=0.01, replace=False, random_state=1)
@@ -51,7 +53,7 @@ if __name__ == '__main__':
             ids = [x.split('/')[-1].split('.')[0] for x in glob.glob(f'{config.RESIZED_IMAGE_PATH}train/*.npy')][:320]
             df = df[df['id'].isin(ids)]
 
-            df.target = (np.random.rand(320) > 0.5).astype(int)
+#             df.target = (np.random.rand(320) > 0.5).astype(int)
 
     image_paths = []
     for id in df.index.values:
@@ -62,22 +64,57 @@ if __name__ == '__main__':
         #   for resized images or norm images
             filename = df.loc[int(id),'id']
             if config.IMAGE_TYPE == 'norm':
-                image_paths.append(f'{config.NORM_IMAGE_PATH}train/{filename}.npy__0.npy')
+                image_paths.append(f'{config.NORM_IMAGE_PATH}train/{filename}.npy__')
             else:
                 image_paths.append(f'{config.RESIZED_IMAGE_PATH}train/{filename}.npy')
-
+    
     df['image_path'] = np.array(image_paths)
     df['orig_index'] = df.index.values
+    
+    '''
+    passing only negative samples
+    '''
+    df = df.query('target==0')
+    
+    '''
+    include test images for training
+    '''
+#     if config.IMAGE_TYPE == 'orig':
+#         test_images_paths = glob.glob(f'{data_path}test/*/*.npy')
+#     elif config.IMAGE_TYPE == 'resized':
+#         test_images_paths = glob.glob(f'{config.RESIZED_IMAGE_PATH}test/*.npy')
+#     inference_df = pd.read_csv(data_path+'sample_submission.csv')
+#     inference_df['orig_index'] = inference_df.index.values
+#     inference_df['orig_index'] += len(df)
+#     inference_df['image_path'] = test_images_paths
+#     inference_df['target'] = -1
+#     if config.DEBUG:
+#         inference_df = inference_df[:20]
+#     df = df.append(inference_df)
+#     print(len(df))
+#     print(df)
+        
+#     noSplitData = vs.get_noSplit(X = df.orig_index.values,
+#                                labels = df.target.values,
+#                                n_folds = 1,
+#                                seed = config.SEED,
+#                                shuffle = True)
+        
+    simpleSplitData = vs.simple_Split(X = df.orig_index.values,
+                               labels = df.target.values,
+                               n_folds = 1,
+                               seed = config.SEED,
+                               shuffle = True)    
     
     
     '''
     stratify based on target and image group+
     ''' 
-    skFoldData = vs.get_SKFold(X = df.orig_index.values,
-                               labels = df.target.values,
-                               n_folds = config.FOLDS,
-                               seed = config.SEED,
-                               shuffle = True)
+#     skFoldData = vs.get_SKFold(X = df.orig_index.values,
+#                                labels = df.target.values,
+#                                n_folds = config.FOLDS,
+#                                seed = config.SEED,
+#                                shuffle = True)
 
 
     '''
@@ -100,13 +137,27 @@ if __name__ == '__main__':
 #                                 seed = config.SEED)
 
     logger = seedandlog.init_logger(log_name = f'{saved_model_name}')
-    logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
+    if 'unet' in config.NET or 'ae' in config.NET:
+        logger.info(f'fold,epoch,valid_loss,valid_recon_loss,valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time') 
+    else:
+        logger.info(f'fold,epoch,val_loss,val_auc,tr_auc, train_loss, time')
 
-    for fold, foldData in enumerate(skFoldData):
+    for fold, foldData in enumerate(simpleSplitData):
         if fold == args.fold or args.fold is None:
         
             #for every fold model should start from zero training
-            model = vae.VAE()
+            if 'vae' in config.NET:
+                model = vae.VAE()
+            elif 'unet' in config.NET:
+                model = u_net.myUnet(
+                    encoder_name="resnet18",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                    encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
+                    in_channels=1,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                    classes=2,                      # model output channels (number of classes in your dataset)
+                )
+            elif 'ae' in config.NET:
+                model = vae.AE2()
+
             model.to(device)
             
             if config.LOAD_SAVED_MODEL:
@@ -141,9 +192,9 @@ if __name__ == '__main__':
                 print(f'{len(temp[temp.target == 0])} train negatives after upsampling')
                 print(f'{len(temp[temp.target == 1])} train positives after upsampling')
 
-                train_dataset = dataset.SetiDataset(df=df_u[df_u.orig_index.isin(trIDs)].reset_index(drop=True), augmentations = True)
+                train_dataset = dataset.SetiDataset(df=df_u[df_u.orig_index.isin(trIDs)].reset_index(drop=True), augmentations = False)
             else:
-                train_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(trIDs)].reset_index(drop=True), augmentations = True)
+                train_dataset = dataset.SetiDataset(df=df[df.orig_index.isin(trIDs)].reset_index(drop=True), augmentations = False)
             
 #             train_loader = torch.utils.data.DataLoader(train_dataset, pin_memory = True,
 #                                                         batch_sampler = sampler.StratifiedSampler(
@@ -189,7 +240,7 @@ if __name__ == '__main__':
                 scaler = None
 
             best_valid_loss = np.inf
-            best_valid_roc_auc = -999
+            best_valid_roc_auc = -np.inf
 
             '''
             Training ON
@@ -245,3 +296,4 @@ if __name__ == '__main__':
 
 
 
+s

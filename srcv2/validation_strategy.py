@@ -6,6 +6,33 @@ import config
 # from skmultilearn.model_selection import IterativeStratification
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
+def get_noSplit(X, labels, n_folds=1, seed = 2021, shuffle = True):
+    '''
+    train set contains both train+test ids
+    valid set contains test ids
+    '''
+    noSplitData = []
+    X_valids = []
+    for i in range(len(labels)):
+        if labels[i] == -1 and len(X_valids)<=100:
+            X_valids.append(X[i])
+    noSplitData.append({'trIDs': X, 'vIDs': X_valids})
+    return noSplitData
+
+def simple_Split(X, labels, n_folds=1, seed = 2021, shuffle = True):
+    '''
+    train set contains both train+test ids
+    valid set contains test ids
+    '''
+    simpleSplitData = []
+    X_train_idx = np.random.choice(np.arange(X.shape[0]), size= int(0.9*len(X)))
+    
+    X_train = X[X_train_idx]
+    X_valid = X[~X_train_idx]
+    print(X_train.shape[0], X_train[0])
+    simpleSplitData.append({'trIDs': X_train, 'vIDs': X_valid})
+    return simpleSplitData
+
 
 # create kfolds, return: list of tuples: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number)
 # if fold_number specified, return: list with single tuple: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number) 

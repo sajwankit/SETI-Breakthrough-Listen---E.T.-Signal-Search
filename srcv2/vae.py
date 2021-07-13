@@ -70,57 +70,45 @@ class Encoder(nn.Module):
     def __init__(self, latent_dim):
         super().__init__()
         modules = []
+        hidden_dims = [1024, 512, 256, 128, 64, 32, 16, 8]
+        hidden_dims.reverse()
+        print(hidden_dims)
         self.encoder_init_layer = nn.Sequential(
-                                            nn.ConvTranspose2d(
-                                                                in_channels=hidden_dims[-1],
-                                                                out_channels=config.CHANNELS,
+                                            nn.Conv2d(
+                                                                in_channels=3,
+                                                                out_channels=hidden_dims[0],
                                                                 kernel_size=3,
                                                                 stride = 2,
                                                                 padding=1,
-                                                                output_padding=1
                                                                 ),
-                                            nn.BatchNorm2d(config.CHANNELS),
+                                            nn.BatchNorm2d(hidden_dims[0]),
                                             nn.LeakyReLU(),
                                             )
-        hidden_dims = [1024, 512, 256, 128, 64, 32, 16, 8]
-        hidden_dims.reverse()
+        
         for i in range(len(hidden_dims)-1):
             modules.append(
                 nn.Sequential(
-                    nn.ConvTranspose2d(in_channels=hidden_dims[i],
+                    nn.Conv2d(in_channels=hidden_dims[i],
                                        out_channels=hidden_dims[i + 1],
                                        kernel_size=3,
                                        stride = 2,
                                        padding=1,
-                                       output_padding=1),
+                             ),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())
             )
+        self.encoder_backbone = nn.Sequential(*modules)
 
-        self.decoder_backbone = nn.Sequential(*modules)
-        self.decoder_final_layer = nn.Sequential(
-                                            nn.ConvTranspose2d(
-                                                                in_channels=hidden_dims[-1],
-                                                                out_channels=config.CHANNELS,
-                                                                kernel_size=3,
-                                                                stride = 2,
-                                                                padding=1,
-                                                                output_padding=1
-                                                                ),
-                                            nn.BatchNorm2d(config.CHANNELS),
-                                            nn.LeakyReLU(),
-                                            )
-                                            
-    def forward(self, z):
-        recon_x = self.decoder_backbone(z)
-        recon_x = self.decoder_final_layer(recon_x)
-        return recon_x
+    def forward(self, x):
+        x = self.encoder_init_layer(x)
+        x = self.encoder_backbone(x)
+        return x
 
 class Decoder(nn.Module):
     def __init__(self, latent_dim):
         super().__init__()
         modules = []
-        hidden_dims = [1024, 512, 256, 128, 64, 32, 16, 8]
+        hidden_dims = [1024*4, 1024, 512, 128, 32, 16, 8]
         for i in range(len(hidden_dims)-1):
             modules.append(
                 nn.Sequential(
@@ -131,7 +119,8 @@ class Decoder(nn.Module):
                                        padding=1,
                                        output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
-                    nn.LeakyReLU())
+                    
+                )
             )
 
         self.decoder_backbone = nn.Sequential(*modules)
@@ -145,7 +134,7 @@ class Decoder(nn.Module):
                                                                 output_padding=1
                                                                 ),
                                             nn.BatchNorm2d(config.CHANNELS),
-                                            nn.PReLU(init=1)
+                                            
                                             )
                                             
     def forward(self, z):
@@ -153,18 +142,12 @@ class Decoder(nn.Module):
         recon_x = self.decoder_final_layer(recon_x)
         return recon_x
 
-class VAE2(nn.Module):
-    def __init__(self, latent_dim=1024, input_shape=(32, 3, 273, 256)):
+class AE(nn.Module):
+    def __init__(self, latent_dim=1024):
         super().__init__()
 
         # self.encoder = resnet18_encoder(first_conv=False, maxpool1=False)
-        self.encoder = resnet18_encoder(False, False)
-        self.decoder = resnet18_decoder(
-            latent_dim=latent_dim,
-            input_height=256,
-            first_conv=False,
-            maxpool1=False
-        )
+        self.encoder = Encoder(latent_dim=latent_dim,)
 
         self.decoder = Decoder(latent_dim=latent_dim, )
 
@@ -177,28 +160,80 @@ class VAE2(nn.Module):
 
     def forward(self, x):
         xt = nn.functional.interpolate(x, size=(256, 256))
-        xt = xt.repeat(1, 3, 1, 1)
+#         xt = xt.repeat(1, 3, 1, 1)
+
         x_encoded = self.encoder(xt)
-        mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
+#         mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
 
-        '''
-        sample z from q
-        '''
-        std = torch.exp(log_var/2)
-        q = torch.distributions.Normal(mu, std)
-        z = q.rsample()
+#         '''
+#         sample z from q
+#         '''
+#         std = torch.exp(log_var/2)
+#         q = torch.distributions.Normal(mu, std)
+#         z = q.rsample()
 
-        '''
-        reconstructed x from decoder
-        '''
-        z_temp = z.view(z.size(0), z.size(1), 1, 1)
-        recon_x = self.decoder(z_temp)
+#         '''
+#         reconstructed x from decoder
+#         '''
+#         z_temp = z.view(z.size(0), z.size(1), 1, 1)
+        recon_x = self.decoder(x_encoded)
         recon_x = nn.functional.interpolate(recon_x, size=(config.IMAGE_SIZE[1], config.IMAGE_SIZE[0]))
         recon_x = nn.functional.instance_norm(recon_x)
-        recon_x = recon_x[:, 0, :, :]
-        return recon_x, x, mu, log_var, z
+#         recon_x = recon_x[:, 0, :, :]
+        return recon_x, x, torch.randn(1), torch.randn(1), torch.randn(1)
+    
+
+######################################################################################################################    
+class AE2(nn.Module):
+    def __init__(self, latent_dim=1024*4):
+        super().__init__()
+
+        # self.encoder = resnet18_encoder(first_conv=False, maxpool1=False)
+        self.encoder_backbone = models.Backbone(pretrained=True)
+        self.encoder_output = nn.Linear(1000, 1024*4)
+        self.decoder = Decoder(latent_dim=latent_dim, )
+
+        # distribution parametersInterpolate
+        self.fc_mu = nn.Linear(512, latent_dim)
+        self.fc_var = nn.Linear(512, latent_dim)
+
+        # for the gaussian likelihood
+        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+
+    def forward(self, x):
+        xt = nn.functional.interpolate(x, size=(256, 256))
+#         xt = xt.repeat(1, 3, 1, 1)
+
+        x_encoded = self.encoder_backbone(xt)
+        x_encoded = self.encoder_output(x_encoded)
+        x_encoded = x_encoded.view(x_encoded.size(0), x_encoded.size(1), 1, 1)
+#         mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
+
+#         '''
+#         sample z from q
+#         '''
+#         std = torch.exp(log_var/2)
+#         q = torch.distributions.Normal(mu, std)
+#         z = q.rsample()
+
+#         '''
+#         reconstructed x from decoder
+#         '''
+#         z_temp = z.view(z.size(0), z.size(1), 1, 1)
+        recon_x = self.decoder(x_encoded)
+        recon_x = nn.functional.interpolate(recon_x, size=(config.IMAGE_SIZE[1], config.IMAGE_SIZE[0]))
+        recon_x = nn.functional.instance_norm(recon_x)
+#         recon_x = recon_x[:, 0, :, :]
+        return recon_x, x, torch.randn(1), torch.randn(1), torch.randn(1)    
     
     
+    
+    
+    
+    
+    
+    
+
 # def vae_loss(recon_x, x, mu, logvar, kldw):
 #     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
 #     kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()), dim=1, dim=0)

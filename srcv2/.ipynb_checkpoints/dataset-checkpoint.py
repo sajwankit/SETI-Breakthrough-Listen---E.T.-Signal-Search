@@ -9,8 +9,8 @@ import cv2
 import glob
 
 class ImageTransform():
-    def __init__(self, image_array):
-        self.image_array = image_array
+    def __init__(self):
+        pass
 
     def normalize(self, image):
         # normalise image with 0 mean, 1 std
@@ -156,100 +156,104 @@ class ImageTransform():
         return trans_image_array, ftarget_type 
 
 class SetiDataset:
-    def __init__(self, image_paths, targets = None, ids = None, resize=None, augmentations = None):
-        self.image_paths = image_paths
-        self.targets = targets
-        self.ids = ids
-        self.resize = resize
+    def __init__(self, df, pred=False, augmentations = None):
+        self.df = df
         self.augmentations = augmentations
+        self.pred = pred
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.df)
         
     def __getitem__(self, item):
-        # image = Image.open(self.image_paths[item])
-        print(item)
-        image = np.load(self.image_paths[item])
+        if config.IMAGE_TYPE == 'norm':
+            image0 = np.load(f'{self.df.loc[item, "image_path"]}0.npy')
+            image1 = np.load(f'{self.df.loc[item, "image_path"]}1.npy')
+            image = np.zeros((2, image0.shape[0], image0.shape[1]))
+            image[0] = image0.reshape(1, image0.shape[0], image0.shape[1])
+            image[1] = image1.reshape(1, image1.shape[0], image1.shape[1])
         
-        id = self.ids[item]
+        else:
+            image = np.load(self.df.loc[item, 'image_path'])
+            
+        dfidx = self.df.loc[item, 'orig_index']
                 
-        if config.ORIG_IMAGE:
-#           converting 6 channels to 1 for original image, inverting off channels
-            image = np.vstack(image)
-            image = image.astype(np.float32)
             
-        if self.targets is not None:
-            target = self.targets[item]
+        if not self.pred:
+            target = self.df.loc[item, 'target']
+        
 
-        if self.resize is not None:
-            image = image.resize(self.resize[1], self.resize[0], resample = Image.BILINEAR)
+        ''''''
+        '''
+        Use following when 6 channels concatenated and 3 channel image generated
+        '''
+#         imt = ImageTransform()
+        
+#         if config.APPLY_NEEDLE:
+#             if target == 0 and np.random.uniform(0,1) <=0.55:
+#                 image, target = imt.apply_ext_needle()
+        
+#         if self.augmentations:
+#             image = imt.flip(image = image, p = 0.5)
+#             image = imt.swap_channels(image = image, p = 0.65)
+#             image = imt.drop_channels(image = image, p = 0.25)
 
+#         image0 = np.copy(image)
+#         if config.INVERT_OFF_CHANNELS:
+#             '''
+#             inverting off channels
+#             '''
+#             chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
+#             f = chnl_shape[1]
+#             t = chnl_shape[0]
+#             '''
+#             image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+#             '''
+#             chnls_to_invert = [1, 3, 5]
+#             for c in chnls_to_invert:
+#                 image0[c*t:(c+1)*t, : f] = np.amax(image0[c*t:(c+1)*t, : f]) - image0[c*t:(c+1)*t, : f]
+#             image0 = imt.normalize(image0, )
+
+#         image1 = np.copy(image)
+#         image1 = imt.normalize(image1)
+
+#         image2 = imt.normalize_ft(image, p=1)
+#         if config.INVERT_OFF_CHANNELS:
+#             '''
+#             inverting off channels
+#             '''
+#             chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
+#             f = chnl_shape[1]
+#             t = chnl_shape[0]
+#             '''
+#             image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
+#             '''
+#             chnls_to_invert = [1, 3, 5]
+#             for c in chnls_to_invert:
+#                 image2[c*t:(c+1)*t, : f] = np.amax(image2[c*t:(c+1)*t, : f]) - image2[c*t:(c+1)*t, : f]
+#             image2 = imt.normalize(image2, )
         
         
-        imt = ImageTransform(image)
-        
-        
-        if config.APPLY_NEEDLE:
-            if target == 0 and np.random.uniform(0,1) <=0.55:
-                image, target = imt.apply_ext_needle()
-        
-        if self.augmentations:
-            image = imt.flip(image = image, p = 0.5)
-            image = imt.swap_channels(image = image, p = 0.65)
-            image = imt.drop_channels(image = image, p = 0.25)
-#         print(target)    
-#         print('1ds', np.mean(image), np.std(image))
-#         image =  imt.normalize(cv2.resize(image, dsize=(256, 256), interpolation=cv2.INTER_AREA))
-        image1 = np.copy(image)
-        image1 = imt.normalize(image1)
-#         print(f'o im {image1.mean()},{image1.std()}')
-        
-        image0 = np.copy(image)
-        if config.INVERT_OFF_CHANNELS:
-            #inverting off channels
-            chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
-            f = chnl_shape[1]
-            t = chnl_shape[0]
-            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-            chnls_to_invert = [1, 3, 5]
-            for c in chnls_to_invert:
-                image0[c*t:(c+1)*t, : f] = np.amax(image0[c*t:(c+1)*t, : f]) - image0[c*t:(c+1)*t, : f]
-#                 image0[c*t:(c+1)*t, : f] = imt.normalize(image0[c*t:(c+1)*t, : f], )
-            image0 = imt.normalize(image0, )
-#             print(f'i im {image0.mean()},{image0.std()}')
-            
-        image2 = imt.normalize_ft(image, p=1)
-        if config.INVERT_OFF_CHANNELS:
-            #inverting off channels
-            chnl_shape = (config.IMAGE_SIZE[1]//6, config.IMAGE_SIZE[0]//1) #will be approx to note.(time,freq)
-            f = chnl_shape[1]
-            t = chnl_shape[0]
-            # image_patches = [self.image_array[c:(c+1)*t, : f]], c = 0, 1, 2 ,3, 4, 5
-            chnls_to_invert = [1, 3, 5]
-            for c in chnls_to_invert:
-                image2[c*t:(c+1)*t, : f] = np.amax(image2[c*t:(c+1)*t, : f]) - image2[c*t:(c+1)*t, : f]
-            image2 = imt.normalize(image2, )
-        
-        
-        image3ch = np.zeros((3, image.shape[0], image.shape[1]))
-        image3ch[0] = image0.reshape(1,image0.shape[0],image0.shape[1])
-        image3ch[1] = image1.reshape(1,image1.shape[0],image1.shape[1])
-        image3ch[2] = image2.reshape(1,image2.shape[0],image2.shape[1])
-        
+#         image3ch = np.zeros((3, image.shape[0], image.shape[1]))
+#         image3ch[0] = image0.reshape(1,image0.shape[0],image0.shape[1])
+#         image3ch[1] = image1.reshape(1,image1.shape[0],image1.shape[1])
+#         image3ch[2] = image2.reshape(1,image2.shape[0],image2.shape[1])
+
+        '''
+        Use when single channel image passed
+        '''  
 #         image = image.reshape(1,image.shape[0],image.shape[1])
         
-        #pytorch expects channelHeightWidth instead of HeightWidthChannel
-        # image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-    
-        if self.targets is not None:
-            return{'images': torch.tensor(image3ch, dtype = torch.float), 
+        '''
+        original image as per required
+        '''
+#         image2ch = np.zeros((2, image[0].shape[0], image[0].shape[1]))
+#         image2ch[0] = image[0].reshape(1, image[0].shape[0], image[0].shape[1])
+#         image2ch[1] = image[1].reshape(1, image[1].shape[0], image[1].shape[1])
+#         print(image2ch.shape)
+        if not self.pred:
+            return{'images': torch.tensor(image, dtype = torch.float), 
                     'targets': torch.tensor(target, dtype = torch.long),
-                  'ids': torch.tensor(id, dtype = torch.int32)}
+                  'ids': torch.tensor(dfidx, dtype = torch.int32)}
         else:
-            return{'images': torch.tensor(image3ch, dtype = torch.float),
-                  'ids': torch.tensor(id, dtype = torch.int32)}
-
-# i = SetiDataset([f'{config.DATA_PATH}train/1/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
-
-# i = SetiDataset([f'/content/drive/MyDrive/SETI/resized_images/256256/train/1a0a41c753e1.npy'], targets = [1], ids =[0], resize=None, augmentations = None)[0]
-# print(i)
+            return{'images': torch.tensor(image, dtype = torch.float),
+                  'ids': torch.tensor(dfidx, dtype = torch.int32)}

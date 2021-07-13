@@ -16,6 +16,7 @@ NORM_ORIG_IMAGE_SIZE = (256,273)
 
 IMAGE_SIZE = NORM_ORIG_IMAGE_SIZE
 ORIG_IMAGE = False
+IMAGE_TYPE = 'norm'
 
 norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -31,7 +32,7 @@ RESIZED_IMAGE_PATH = resize_image_path[i]
 
 SAVE_IMAGE = True
 
-IMAGE_TYPE = 'norm'
+
     
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''    
         
@@ -50,11 +51,11 @@ DEVICE = 'cuda'
 '''
 MODEL PARAMETERS
 '''
-FOLDS = 4
+FOLDS = 1
 EPOCHS = 150
 BATCH_SIZE = 32
 TARGET_SIZE = 1
-NET = 'SeResNet'
+NET = 'unet'
 MODEL_NAME = 'legacy_seresnet18'
 CHANNELS = 1
 MODEL_LOAD_FOR_INFER = 'auc'
@@ -66,8 +67,8 @@ OHEM_RATE = 0.7
 
 OPTIMIZER='Adam'
 SCHEDULER = 'CosineAnnealingWarmRestarts'
-INIT_LEARNING_RATE = 1e-6
-ETA_MIN = 1e-10
+INIT_LEARNING_RATE = 1e-4
+ETA_MIN = 1e-8
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-6

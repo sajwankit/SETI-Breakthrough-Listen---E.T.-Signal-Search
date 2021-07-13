@@ -6,28 +6,56 @@ import config
 # from skmultilearn.model_selection import IterativeStratification
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
+def get_noSplit(X, labels, n_folds=1, seed = 2021, shuffle = True):
+    '''
+    train set contains both train+test ids
+    valid set contains test ids
+    '''
+    noSplitData = []
+    X_valids = []
+    for i in range(len(labels)):
+        if labels[i] == -1 and len(X_valids)<=100:
+            X_valids.append(X[i])
+    noSplitData.append({'trIDs': X, 'vIDs': X_valids})
+    return noSplitData
+
+def simple_Split(X, labels, n_folds=1, seed = 2021, shuffle = True):
+    '''
+    train set contains both train+test ids
+    valid set contains test ids
+    '''
+    simpleSplitData = []
+    X_train_idx = np.random.choice(np.arange(X.shape[0]), size= int(0.9*len(X)))
+    
+    X_train = X[X_train_idx]
+    X_valid = X[~X_train_idx]
+    print(X_train.shape[0], X_train[0])
+    simpleSplitData.append({'trIDs': X_train, 'vIDs': X_valid})
+    return simpleSplitData
+
+
 # create kfolds, return: list of tuples: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number)
 # if fold_number specified, return: list with single tuple: (fold_number, training_indexes on that fold_number, validation indexes on that fold_number) 
 def get_Kfold(len_samples, n_folds, seed = 2021, shuffle = True):
     kFoldsData = {}
     kf = KFold(n_splits = n_folds,shuffle = shuffle,random_state = seed)
     for fold,(idxT,idxV) in enumerate(kf.split(np.arange(len_samples))):
-        kFoldsData[fold] = {'trIDs':idxT, 'vIDs':idxV}
+        kFoldsData[fold] = {'trIDs':X[idxT], 'vIDs':X[idxV]}
     return kFoldsData
 
-def get_SKFold(ids, targets, n_folds, seed = 2021, shuffle = True):
+def get_SKFold(X, labels, n_folds, seed = 2021, shuffle = True):
     skFoldsData = []
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
-    for fold,(idxT,idxV) in enumerate(skf.split(ids, targets)):
-        skFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
+    for fold,(idxT,idxV) in enumerate(skf.split(X, labels)):
+        skFoldsData.append({'trIDs': X[idxT], 'vIDs': X[idxV]})
     return skFoldsData
 
-def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
+def get_MSKFold(X, multi_labels, nfolds, seed = 2021):
     # mskf = IterativeStratification(n_splits=nfolds, order=1)
     mskf = MultilabelStratifiedKFold(n_splits=nfolds, shuffle=True, random_state=seed)
     msKFoldsData = []
-    for fold, (idxT, idxV) in enumerate(mskf.split(np.array(ids), np.array(multi_targets))):
-        msKFoldsData.append({'trIDs':idxT, 'vIDs':idxV})
+    for fold, (idxT, idxV) in enumerate(mskf.split(np.array(X), np.array(multi_labels))):
+        msKFoldsData.append({'trIDs':X[idxT], 'vIDs':X[idxV]})
     return msKFoldsData
 
 ############TRYING THE VALIDATION STRATEGY######################################
@@ -41,11 +69,11 @@ def get_MSKFold(ids, multi_targets, nfolds, seed = 2021):
 #         key = id_keys_map[key[0]]
 #     id_keys.append(key)
 # target = trl['target'].values.tolist()
-# multi_targets = [ [id_keys[x], target[x]] for x in range(len(trl))]
+# multi_labels = [ [id_keys[x], target[x]] for x in range(len(trl))]
 
 
 # mskFoldData = get_MSKFold(ids = trl.index.values,
-#                                 multi_targets = np.array(multi_targets),
+#                                 multi_labels = np.array(multi_labels),
 #                                 nfolds = config.FOLDS,
 #                                 seed = config.SEED)
 

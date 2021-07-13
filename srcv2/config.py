@@ -1,6 +1,6 @@
 
 import os
-i = 1
+i = 0
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
@@ -14,8 +14,9 @@ ORIG_IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse wi
 RESIZED_IMAGE_SIZE = (256, 258)
 NORM_ORIG_IMAGE_SIZE = (256,273)
 
-IMAGE_SIZE = RESIZED_IMAGE_SIZE
+IMAGE_SIZE = NORM_ORIG_IMAGE_SIZE
 ORIG_IMAGE = False
+IMAGE_TYPE = 'norm'
 
 norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
@@ -31,7 +32,7 @@ RESIZED_IMAGE_PATH = resize_image_path[i]
 
 SAVE_IMAGE = True
 
-IMAGE_TYPE = 'resized'
+
     
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''    
         
@@ -41,7 +42,7 @@ IMAGE_TYPE = 'resized'
 BASIC PARAMETERS
 '''    
 SEED = 42
-DEBUG = True
+DEBUG = False
 MIXED_PRECISION = True
 LOAD_SAVED_MODEL = False
 DEVICE = 'cuda'
@@ -50,8 +51,8 @@ DEVICE = 'cuda'
 '''
 MODEL PARAMETERS
 '''
-FOLDS = 4
-EPOCHS = 20
+FOLDS = 1
+EPOCHS = 150
 BATCH_SIZE = 32
 TARGET_SIZE = 1
 NET = 'unet'
@@ -66,8 +67,8 @@ OHEM_RATE = 0.7
 
 OPTIMIZER='Adam'
 SCHEDULER = 'CosineAnnealingWarmRestarts'
-INIT_LEARNING_RATE = 1e-6
-ETA_MIN = 1e-10
+INIT_LEARNING_RATE = 1e-4
+ETA_MIN = 1e-8
 FACTOR = 0.1
 PATIENCE = 2
 EPS = 1e-6
