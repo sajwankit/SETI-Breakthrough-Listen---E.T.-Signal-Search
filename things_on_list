@@ -2,6 +2,8 @@
 need to a way to either preserve the positive needles in the compressed image, or:
 read orig image chunkwise, run model on the chunks
 
+cut image along frequency axis, rearrange tiles
+
 
 
 

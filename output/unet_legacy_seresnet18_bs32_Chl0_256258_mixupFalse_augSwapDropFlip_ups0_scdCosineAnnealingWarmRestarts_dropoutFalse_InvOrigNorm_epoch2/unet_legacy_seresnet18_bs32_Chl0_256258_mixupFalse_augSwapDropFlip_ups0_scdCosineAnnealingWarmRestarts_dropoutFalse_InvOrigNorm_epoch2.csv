@@ -1,0 +1,5 @@
+fold,epoch,valid_loss,valid_recon_loss,valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+fold,epoch,valid_loss,valid_recon_loss,valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+fold,epoch,valid_loss,valid_recon_loss,valid_kld_loss, train_loss, train_recon_loss, train_kld_loss, time
+0,0,4322687.0,4322687.0,0.1313023567199707,10537040.727272727,10537040.727272727,1.004093199968338, 0.05775028864542643
+0,1,5087245.0,5087245.0,0.13446378707885742,10550557.363636363,10550557.363636363,1.249852031469345, 0.03709668715794881
