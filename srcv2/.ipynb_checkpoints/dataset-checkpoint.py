@@ -168,9 +168,9 @@ class SetiDataset:
         if config.IMAGE_TYPE == 'norm':
             image0 = np.load(f'{self.df.loc[item, "image_path"]}0.npy')
             image1 = np.load(f'{self.df.loc[item, "image_path"]}1.npy')
-            image = np.zeros((2, image0.shape[0], image0.shape[1]))
+            image = np.zeros((1, image0.shape[0], image0.shape[1]))
             image[0] = image0.reshape(1, image0.shape[0], image0.shape[1])
-            image[1] = image1.reshape(1, image1.shape[0], image1.shape[1])
+#             image[1] = image1.reshape(1, image1.shape[0], image1.shape[1])
         
         else:
             image = np.load(self.df.loc[item, 'image_path'])

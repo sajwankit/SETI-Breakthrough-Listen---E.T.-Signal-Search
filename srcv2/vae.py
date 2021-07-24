@@ -5,6 +5,13 @@ import timm
 import models
 import config
 import math
+import pytorch_lightning as pl
+from torch import nn
+from torch.nn import functional as F
+from pl_bolts.models.autoencoders.components import (
+    resnet18_decoder,
+    resnet18_encoder,
+)
 
 
 class VAE_loss(nn.Module):
@@ -40,16 +47,16 @@ class VAE_loss(nn.Module):
         return kl
     
     def forward(self, recon_x, x, mu, log_var, z):
-#         recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
-#         kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
+        recon_loss = self.gaussian_likelihood(recon_x, self.log_scale, x)
+        kld_loss = self.kl_divergence(z, mu, std=torch.exp(log_var / 2))
 # #         scale = pow(10, len(str(int(recon_loss.mean())).replace('-', '')) - len(str(int(kld_loss.mean())).replace('-', '')))
-#         #elbo loss
-#         loss = self.kldw*kld_loss - recon_loss
-        recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
-        kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        #elbo loss
+        elbo = self.kldw*kld_loss - recon_loss
+#         recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
+#         kld_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
 #         loss = recon_loss + self.kldw * kld_loss
-        loss = recon_loss 
+        loss = elbo 
         return [loss.mean(), recon_loss.mean(), kld_loss.mean()]
 
 # def decoder_final_layer():
@@ -242,30 +249,84 @@ class AE2(nn.Module):
 #     return [loss, recons_loss, -kld_loss]
 ######################################################################################################
 
-class VAE(nn.Module):
-    def __init__(self, latent_dim=1024, input_shape=(32, 3, 273, 256)):
+# class VAE(nn.Module):
+#     def __init__(self, latent_dim=1024, input_shape=(32, 3, 273, 256)):
+#         super().__init__()
+
+#         # self.encoder = resnet18_encoder(first_conv=False, maxpool1=False)
+#         self.encoder_backbone = models.Backbone(pretrained=True)
+#         # self.decoder_backbone = resnet18_decoder(
+#         #     latent_dim=latent_dim,
+#         #     input_height=256,
+#         #     first_conv=False,
+#         #     maxpool1=False
+#         # )
+
+#         self.decoder = Decoder(latent_dim=latent_dim, )
+
+#         # distribution parametersInterpolate
+#         self.fc_mu = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
+#         self.fc_var = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
+
+#         # for the gaussian likelihood
+#         self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+
+#     def forward(self, x):
+#         x_encoded = self.encoder_backbone(x)
+#         mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
+
+#         '''
+#         sample z from q
+#         '''
+#         std = torch.exp(log_var/2)
+#         q = torch.distributions.Normal(mu, std)
+#         z = q.rsample()
+
+#         '''
+#         reconstructed x from decoder
+#         '''
+#         z_temp = z.view(z.size(0), z.size(1), 1, 1)
+#         recon_x = self.decoder(z_temp)
+#         recon_x = nn.functional.interpolate(recon_x, size=(config.IMAGE_SIZE[1], config.IMAGE_SIZE[0]))
+#         recon_x = nn.functional.instance_norm(recon_x)
+#         return recon_x, x, mu, log_var, z
+    
+    
+# def vae_loss(recon_x, x, mu, logvar, kldw):
+#     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
+#     kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()), dim=1, dim=0)
+
+#     loss = recon_loss + kldw * kld_loss
+#     return [loss, recons_loss, -kld_loss]
+
+
+
+class VAE(pl.LightningModule):
+    def __init__(self, enc_out_dim=512, latent_dim=1024, input_height=256):
         super().__init__()
 
-        # self.encoder = resnet18_encoder(first_conv=False, maxpool1=False)
-        self.encoder_backbone = models.Backbone(pretrained=True)
-        # self.decoder_backbone = resnet18_decoder(
-        #     latent_dim=latent_dim,
-        #     input_height=256,
-        #     first_conv=False,
-        #     maxpool1=False
-        # )
+        self.save_hyperparameters()
 
-        self.decoder = Decoder(latent_dim=latent_dim, )
+        # encoder, decoder
+        self.encoder = resnet18_encoder(False, False)
+        self.decoder = resnet18_decoder(
+            latent_dim=latent_dim, 
+            input_height=input_height, 
+            first_conv=False, 
+            maxpool1=False
+        )
 
-        # distribution parametersInterpolate
-        self.fc_mu = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
-        self.fc_var = nn.Linear(self.encoder_backbone.model.last_linear.out_features, latent_dim)
+        # distribution parameters
+        self.fc_mu = nn.Linear(enc_out_dim, latent_dim)
+        self.fc_var = nn.Linear(enc_out_dim, latent_dim)
 
         # for the gaussian likelihood
         self.log_scale = nn.Parameter(torch.Tensor([0.0]))
 
     def forward(self, x):
-        x_encoded = self.encoder_backbone(x)
+        xt = nn.functional.interpolate(x, size=(256, 256))
+        xt = xt.repeat(1, 3, 1, 1)
+        x_encoded = self.encoder(xt)
         mu, log_var = self.fc_mu(x_encoded), self.fc_var(x_encoded)
 
         '''
@@ -278,24 +339,11 @@ class VAE(nn.Module):
         '''
         reconstructed x from decoder
         '''
-        z_temp = z.view(z.size(0), z.size(1), 1, 1)
-        recon_x = self.decoder(z_temp)
+#         z_temp = z.view(z.size(0), z.size(1), 1, 1)
+        recon_x = self.decoder(z)
         recon_x = nn.functional.interpolate(recon_x, size=(config.IMAGE_SIZE[1], config.IMAGE_SIZE[0]))
         recon_x = nn.functional.instance_norm(recon_x)
         return recon_x, x, mu, log_var, z
-    
-    
-# def vae_loss(recon_x, x, mu, logvar, kldw):
-#     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
-#     kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()), dim=1, dim=0)
-
-#     loss = recon_loss + kldw * kld_loss
-#     return [loss, recons_loss, -kld_loss]
-
-
-
-
-
 
 ######################################################################################################
 class BetaVAE(nn.Module):
