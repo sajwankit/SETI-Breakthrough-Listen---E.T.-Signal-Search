@@ -173,7 +173,7 @@ class SetiDataset:
 #             image[1] = image1.reshape(1, image1.shape[0], image1.shape[1])
         
         else:
-            image = np.load(self.df.loc[item, 'image_path'])
+            image = np.load(self.df.loc[item, 'image_path'])[0]
             
         dfidx = self.df.loc[item, 'orig_index']
                 

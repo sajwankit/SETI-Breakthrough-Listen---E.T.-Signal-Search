@@ -16,7 +16,7 @@ NORM_ORIG_IMAGE_SIZE = (256,273)
 
 IMAGE_SIZE = NORM_ORIG_IMAGE_SIZE
 ORIG_IMAGE = False
-IMAGE_TYPE = 'norm'
+IMAGE_TYPE = 'orig'
 
 norm_image_path = [f'/mnt/gfs/gv1/project_sonar_data/seti/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
                          f'/content/drive/MyDrive/SETI/normalized_images_seti/{IMAGE_SIZE[0]}{IMAGE_SIZE[1]}/',
