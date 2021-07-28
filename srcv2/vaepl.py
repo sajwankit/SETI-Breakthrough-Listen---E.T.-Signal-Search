@@ -127,6 +127,7 @@ class VAEPL(pl.LightningModule):
         return elbo
 
 imgset = 'train'
+data_path = config.DATA_PATH
 def get_test_file_path(image_id):
     if config.IMAGE_TYPE == 'orig':
         return f"{data_path}{imgset}/{image_id[0]}/{image_id}.npy"
@@ -135,10 +136,12 @@ def get_test_file_path(image_id):
     elif config.IMAGE_TYPE == 'resized':
         return f"{config.RESIZED_IMAGE_PATH}{imgset}/{image_id}.npy"
 
+df = pd.read_csv(data_path+'train_labels.csv')
 if config.DEBUG:
-    df = pd.read_csv(data_path+'train_labels.csv')[:10]
-else:
-    df = pd.read_csv(data_path+'train_labels.csv')
+    imgs = glob.glob(f'{data_path}{imgset}/*.npy')
+    df = df[df.image_path.isin(imgs)]
+    # df = df[:10]
+   
 
 # glob.glob(f"{data_path}{imgset}/{image_id[0]}/{image_id}.npy")
 df['image_path'] = df['id'].apply(get_test_file_path)

@@ -1,12 +1,12 @@
 
 import os
-i = 0
+i = 1
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
 INPUT PATHS
 '''
-input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/SETI/input/', '/kaggle/input/256258normed/']
+input_path = ['/mnt/gfs/gv1/project_sonar_data/seti/', '/content/drive/MyDrive/seti_dummy/', '/kaggle/input/256258normed/']
 DATA_PATH = input_path[i]
 
 
