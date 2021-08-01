@@ -162,10 +162,14 @@ inputs_loader = torch.utils.data.DataLoader(inputs,
 # ckp_clbk = ModelCheckpoint(dirpath='/home/asajw/SETI/notebooks/',
 #                        monitor='elbo',
 #                         filename='m-0ch-recon-vae_{epoch:02d}_{elbo:.2f}'
-                       )
+                    #    )
 pl.seed_everything(1234)
 
 # vae = VAE().load_from_checkpoint('/home/asajw/SETI/notebooks/m-0ch-recon-vae_epoch=02_elbo=260498.81.ckpt')
-vae = VAE()
-trainer = pl.Trainer(gpus=1, max_epochs=20, progress_bar_refresh_rate=10, callbacks=[ckp_clbk])
+vae = vae.VAE()
+trainer = pl.Trainer(gpus=1,
+                     max_epochs=20,
+                     progress_bar_refresh_rate=10,
+                    #  callbacks=[ckp_clbk]
+                     )
 trainer.fit(vae, inputs_loader)
