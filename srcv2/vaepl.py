@@ -146,7 +146,7 @@ df['orig_index'] = df.index.values
 
 if config.DEBUG:
     imgs = glob.glob(f'{data_path}{imgset}/*/*.npy')
-    df = df[df.image_path.isin(imgs)]
+    df = df[df.image_path.isin(imgs)].reset_index(drop=True)
     # df = df[:10]x             
 
 inputs = dataset.SetiDataset(df=df, pred=False, augmentations=False)
@@ -154,7 +154,7 @@ inputs = dataset.SetiDataset(df=df, pred=False, augmentations=False)
 inputs_loader = torch.utils.data.DataLoader(inputs,
                                                 batch_size = 32,
                                                 shuffle = True,
-                                                num_workers = 4,
+                                                num_workers = 1,
                                                 worker_init_fn = seedandlog.seed_torch(seed=config.SEED),
                                                       pin_memory = True)
 
@@ -166,10 +166,10 @@ inputs_loader = torch.utils.data.DataLoader(inputs,
 pl.seed_everything(1234)
 
 # vae = VAE().load_from_checkpoint('/home/asajw/SETI/notebooks/m-0ch-recon-vae_epoch=02_elbo=260498.81.ckpt')
-vae = vae.VAE()
+vae = VAEPL()
 trainer = pl.Trainer(gpus=1,
                      max_epochs=20,
-                     progress_bar_refresh_rate=10,
+                     progress_bar_refresh_rate=0,
                     #  callbacks=[ckp_clbk]
                      )
 trainer.fit(vae, inputs_loader)
