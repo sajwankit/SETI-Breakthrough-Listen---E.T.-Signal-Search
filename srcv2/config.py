@@ -1,6 +1,6 @@
 
 import os
-i = 1
+i = 2
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''
@@ -14,7 +14,7 @@ ORIG_IMAGE_SIZE = (256,273) # (freq, time): aligning with cv2, not to confuse wi
 RESIZED_IMAGE_SIZE = (256, 258)
 NORM_ORIG_IMAGE_SIZE = (256,273)
 
-IMAGE_SIZE = RESIZED_IMAGE_SIZE
+IMAGE_SIZE = ORIG_IMAGE_SIZE
 ORIG_IMAGE = False
 IMAGE_TYPE = 'orig'
 
